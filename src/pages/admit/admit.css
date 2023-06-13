@@ -1,0 +1,16 @@
+  .dropdown-toggle::after {
+    display: none;
+  }
+
+  .tooltip-inner {
+    text-align: left;
+    background-color: white !important;
+    color: black;
+    box-sizing: border-box;
+    border: 1px solid lightblue;
+    box-shadow: 5px 5px 5px 5px lightgray;
+  }
+
+  .tooltip.show {
+    opacity: 1;
+  }

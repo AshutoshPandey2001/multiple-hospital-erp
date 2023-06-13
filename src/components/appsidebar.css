@@ -1,0 +1,19 @@
+.showFull {
+    width: '200px'
+}
+
+.showicons {
+    width: 50px;
+}
+
+@media (max-width: 767.98px) {
+    html:not([dir=rtl]) .sidebar:not(.sidebar-end):not(.show) {
+        margin-left: 0 !important;
+    }
+}
+
+@media (min-width: 768px) {
+    html:not([dir=rtl]) .sidebar.hide:not(.sidebar-end) {
+        margin-left: 0 !important;
+    }
+}

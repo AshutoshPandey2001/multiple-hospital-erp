@@ -1,0 +1,54 @@
+.box {
+    /* justify-content: center; */
+    justify-content: space-around;
+    position: relative;
+    margin-bottom: 1.5rem;
+    width: 100%;
+    background-color: #ffffff;
+    border-radius: 10px;
+    padding: 0px;
+    -webkit-transition: .5s;
+    transition: .5s;
+    display: flex;
+    -ms-flex-direction: column;
+    flex-direction: column;
+    -webkit-box-shadow: 0 3px 5px 1px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 3px 5px 1px rgba(0, 0, 0, 0.05);
+    border: 1px solid #EFEFFD;
+    height: 150px;
+}
+
+.box-body {
+    padding: 1.5rem;
+    border-radius: 10px;
+}
+
+.box1 {
+    position: relative;
+    margin-bottom: 1.5rem;
+    width: 100%;
+    background-color: #ffffff;
+    border-radius: 10px;
+    padding: 0px;
+    -webkit-transition: .5s;
+    transition: .5s;
+    display: -ms-flexbox;
+    display: flex;
+    -ms-flex-direction: column;
+    flex-direction: column;
+    -webkit-box-shadow: 0 3px 5px 1px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 3px 5px 1px rgba(0, 0, 0, 0.05);
+    border: 1px solid #EFEFFD;
+}
+
+.apexcharts-tooltip.apexcharts-theme-chart1-tooltip-theme {
+    color: #fff !important;
+    /* Adjust the font color for the first chart's tooltip */
+}
+
+.apexcharts-tooltip.apexcharts-theme-chart2-tooltip-theme {
+    color: #000 !important;
+    /* Adjust the font color for the second chart's tooltip */
+}
+
+/* // colors: ['#cce5ff', '#e8e1ff', '#ffd6de', '#ebf9f5'], */

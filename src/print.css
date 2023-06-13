@@ -1,0 +1,30 @@
+@media print {
+
+    /* Header styles */
+    .header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        background-color: #ccc;
+    }
+
+    /* Footer styles */
+    .footer {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background-color: transparent;
+    }
+
+    /* Page styles */
+    @page {
+        margin: 50px 0;
+    }
+
+    body {
+        margin: 0;
+        padding: 0;
+    }
+}

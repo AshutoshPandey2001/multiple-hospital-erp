@@ -1,0 +1,20 @@
+// Here you can add other styles
+.jzYGyk {
+    display: flex;
+    justify-content: space-between;
+}
+
+.rdt_Table {
+    border: 1px solid black;
+    border-collapse: collapse
+}
+
+.rdt_Table .rdt_TableHead {
+    border-bottom: 1px solid black;
+    font-size: 1rem;
+    font-weight: bold;
+}
+
+.dropdown-toggle::after {
+    display: none;
+}

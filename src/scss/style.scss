@@ -1,0 +1,174 @@
+// If you want to override variables do it here
+@import "variables";
+
+$enable-ltr: true;
+$enable-rtl: true;
+
+// Import CoreUI for React components library
+@import "@coreui/coreui/scss/coreui";
+
+// Import Chart.js custom tooltips styles
+@import "@coreui/chartjs/scss/coreui-chartjs";
+
+@import "layout";
+@import "example";
+
+// If you want to add custom CSS you can put it here.
+@import "custom";
+
+.sidebar {
+    --cui-sidebar-bg: #fff;
+    --cui-sidebar-padding-x: 0;
+    --cui-sidebar-padding-y: 0;
+    --cui-sidebar-color: #5C607B;
+    --cui-sidebar-border-width: 0;
+    --cui-sidebar-border-color: transparent;
+    --cui-sidebar-brand-color: rgba(255, 255, 255, 0.87);
+    --cui-sidebar-brand-height: 4rem;
+    --cui-sidebar-brand-bg: #fff;
+    --cui-sidebar-header-height: 4rem;
+    --cui-sidebar-header-bg: rgba(0, 0, 21, 0.2);
+    --cui-sidebar-header-padding-x: 1rem;
+    --cui-sidebar-header-padding-y: 0.75rem;
+    --cui-sidebar-footer-bg: rgba(0, 0, 21, 0.2);
+    --cui-sidebar-footer-height: auto;
+    --cui-sidebar-footer-padding-x: 1rem;
+    --cui-sidebar-footer-padding-y: 0.75rem;
+    --cui-sidebar-toggler-bg: rgba(0, 0, 21, 0.2);
+    --cui-sidebar-toggler-height: 3rem;
+    --cui-sidebar-toggler-indicator: url(data:image/svg+xml;charset=utf8,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 11 14%27%3E%3Cpath fill=%27%238a93a2%27 d=%27M9.148 2.352l-4.148 4.148 4.148 4.148q0.148 0.148 0.148 0.352t-0.148 0.352l-1.297 1.297q-0.148 0.148-0.352 0.148t-0.352-0.148l-5.797-5.797q-0.148-0.148-0.148-0.352t0.148-0.352l5.797-5.797q0.148-0.148 0.352-0.148t0.352 0.148l1.297 1.297q0.148 0.148 0.148 0.352t-0.148 0.352z%27/%3E%3C/svg%3E);
+    --cui-sidebar-toggler-indicator-width: 4rem;
+    --cui-sidebar-toggler-indicator-height: 3rem;
+    --cui-sidebar-toggler-hover-bg: rgba(0, 0, 0, 0.3);
+    --cui-sidebar-toggler-indicator-hover: url(data:image/svg+xml;charset=utf8,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 11 14%27%3E%3Cpath fill=%27rgba%28255, 255, 255, 0.87%29%27 d=%27M9.148 2.352l-4.148 4.148 4.148 4.148q0.148 0.148 0.148 0.352t-0.148 0.352l-1.297 1.297q-0.148 0.148-0.352 0.148t-0.352-0.148l-5.797-5.797q-0.148-0.148-0.148-0.352t0.148-0.352l5.797-5.797q0.148-0.148 0.352-0.148t0.352 0.148l1.297 1.297q0.148 0.148 0.148 0.352t-0.148 0.352z%27/%3E%3C/svg%3E);
+    --cui-sidebar-narrow-width: 4rem;
+    --cui-sidebar-nav-title-padding-x: 1rem;
+    --cui-sidebar-nav-title-padding-y: 0.75rem;
+    --cui-sidebar-nav-title-margin-top: 1rem;
+    --cui-sidebar-nav-title-color: rgba(255, 255, 255, 0.6);
+    --cui-sidebar-nav-link-padding-x: 1rem;
+    --cui-sidebar-nav-link-padding-y: 0.8445rem;
+    --cui-sidebar-nav-link-color: #5C607B;
+    --cui-sidebar-nav-link-bg: transparent;
+    --cui-sidebar-nav-link-border-color: transparent;
+    --cui-sidebar-nav-link-border: 0 solid var(--cui-sidebar-nav-link-border-color);
+    --cui-sidebar-nav-link-border-radius: 0;
+    --cui-sidebar-nav-link-active-color: rgba(var(--bs-primary-rgb));
+    --cui-sidebar-nav-link-active-bg: rgba(255, 255, 255, 0.05);
+    --cui-sidebar-nav-link-active-icon-color: rgba(var(--bs-primary-rgb));
+    --cui-sidebar-nav-link-disabled-color: rgba(255, 255, 255, 0.38);
+    --cui-sidebar-nav-link-disabled-icon-color: rgba(255, 255, 255, 0.6);
+    --cui-sidebar-nav-link-hover-color: rgba(var(--bs-primary-rgb));
+    --cui-sidebar-nav-link-hover-bg: rgba(255, 255, 255, 0.05);
+    --cui-sidebar-nav-link-hover-icon-color: rgba(var(--bs-primary-rgb));
+    --cui-sidebar-nav-icon-width: 4rem;
+    --cui-sidebar-nav-icon-height: 1.25rem;
+    --cui-sidebar-nav-icon-font-size: 1.25rem;
+    --cui-sidebar-nav-link-icon-color: #5C607B;
+    --cui-sidebar-nav-group-bg: #f6f6f6;
+    --cui-sidebar-nav-group-items-padding-y: 0;
+    --cui-sidebar-nav-group-items-padding-x: 0;
+    --cui-sidebar-nav-group-indicator: url(data:image/svg+xml,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 16 16%27 fill=%27black%27%3e%3cpath fill-rule=%27evenodd%27 d=%27M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z%27/%3e%3c/svg%3e);
+    --cui-sidebar-nav-group-indicator-hover: url(data:image/svg+xml,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 16 16%27 fill=%27blue%27%3e%3cpath fill-rule=%27evenodd%27 d=%27M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z%27/%3e%3c/svg%3e);
+    --cui-sidebar-nav-group-toggle-show-color: #5C607B;
+    display: flex;
+    flex: 0 0 var(--cui-sidebar-width);
+    flex-direction: column;
+    order: -1;
+    width: var(--cui-sidebar-width);
+    padding: var(--cui-sidebar-padding-y) var(--cui-sidebar-padding-x);
+    color: var(--cui-sidebar-color);
+    background: var(--cui-sidebar-bg);
+    box-shadow: 0 3px 5px 1px rgba(0, 0, 0, 0.05);
+    transition: margin-left 0.15s, margin-right 0.15s, box-shadow 0.075s, transform 0.15s, width 0.15s, z-index 0s ease 0.15s;
+}
+
+.sidebarW {
+    --cui-sidebar-width: 16rem;
+    transition-duration: 600ms;
+
+}
+
+.sidebarWn {
+    --cui-sidebar-width: 4rem;
+    transition-duration: 600ms;
+}
+
+.contentWrapper {
+    padding-left: 17rem;
+    transition-duration: 600ms;
+}
+
+.contentWrapperN {
+    padding-left: 5rem;
+    transition-duration: 600ms;
+}
+
+.contentWrapperNot {
+    padding-left: 0rem;
+
+}
+
+.modelButtoncolor {
+    color: white;
+    background-color: rgba(var(--bs-primary-rgb))
+}
+
+.KTPim {
+    position: relative;
+    box-sizing: border-box;
+    overflow: hidden;
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-flex: 1 1 auto;
+    -ms-flex: 1 1 auto;
+    flex: 1 1 auto;
+    -webkit-align-items: center;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
+    align-items: center;
+    -webkit-box-pack: justify;
+    -webkit-justify-content: space-between;
+    -ms-flex-pack: justify;
+    justify-content: space-between;
+    width: 100%;
+    -webkit-flex-wrap: wrap;
+    -ms-flex-wrap: wrap;
+    flex-wrap: wrap;
+    font-size: 22px;
+    color: rgba(0, 0, 0, 0.87);
+    background-color: #FFFFFF;
+    min-height: 56px;
+    padding-left: 16px;
+    padding-right: 0px;
+}
+
+
+.bbLEEq {
+    position: relative;
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-flex: 1 1 auto;
+    -ms-flex: 1 1 auto;
+    flex: 1 1 auto;
+    box-sizing: border-box;
+    -webkit-align-items: center;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
+    align-items: center;
+    padding: 4px 0px 4px 24px;
+    width: 100%;
+    -webkit-box-pack: end;
+    -webkit-justify-content: flex-end;
+    -ms-flex-pack: end;
+    justify-content: flex-end;
+    -webkit-flex-wrap: wrap;
+    -ms-flex-wrap: wrap;
+    flex-wrap: wrap;
+    background-color: #FFFFFF;
+    min-height: 52px;
+}
