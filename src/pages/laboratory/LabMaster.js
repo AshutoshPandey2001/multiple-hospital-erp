@@ -9,18 +9,20 @@ import { MdEdit } from 'react-icons/md'
 import { useDispatch, useSelector } from 'react-redux';
 import { AiFillDelete } from 'react-icons/ai'
 import { ImCross } from 'react-icons/im'
-import { setData } from 'src/services/firebasedb';
+import { addDatainsubcollection, addSingltObject, deleteDatainSubcollection, deleteSingltObject, filDatainsubcollection, setData, updateDatainSubcollection, updateSingltObject } from 'src/services/firebasedb';
 import CommanTable from 'src/comman/table/CommanTable';
 import { confirmAlert } from 'react-confirm-alert';
 import { toast } from 'react-toastify';
 import Loaderspinner from 'src/comman/spinner/Loaderspinner';
 import { ADD_PARAMETER, DELETE_PARAMETER, EDIT_PARAMETER, selectAllparameters } from 'src/redux/slice/laborataryMaster';
+import { selectUserId } from 'src/redux/slice/authSlice';
 
 const initalValues = {
     reportuid: '',
     reportName: '',
     isUnitRequired: false,
     reportPrice: '',
+    hospitaluid: '',
     parameters: [
         {
             parameterName: '',
@@ -36,6 +38,7 @@ const LabMaster = () => {
     const [parametersFilter, setParametersFilter] = useState([]);
     const [update, setUpdate] = useState(false)
     const [isLoading, setIsLoading] = useState(true)
+    const hospitaluid = useSelector(selectUserId)
 
     const columns = [
         { name: 'Report UID', selector: row => row.reportuid, sortable: true },
@@ -72,10 +75,14 @@ const LabMaster = () => {
             let parameter1 = [...parametersFilter]
             if (!update) {
                 values.reportuid = Math.floor(1000 + Math.random() * 4905);
+                values.hospitaluid = hospitaluid;
                 let parameter = [...parametersFilter, Values]
                 try {
-                    await setData('LaboratoryParameters', 'CyBGA7dh7brcm7UlFyft', 'labParameters', parameter)
-                    dispatch(ADD_PARAMETER(Values))
+                    // await addSingltObject('LaboratoryParameters', 'CyBGA7dh7brcm7UlFyft', 'labParameters', values)
+                    await addDatainsubcollection('LaboratoryParameters', 'CyBGA7dh7brcm7UlFyft', 'labParameters', values)
+
+                    // await setData('LaboratoryParameters', 'CyBGA7dh7brcm7UlFyft', 'labParameters', parameter)
+                    // dispatch(ADD_PARAMETER(Values))
                     action.resetForm()
                     clearForm()
                     setShow(false)
@@ -89,8 +96,10 @@ const LabMaster = () => {
                 let findindex = parameter1.findIndex((item) => item.reportuid === Values.reportuid)
                 parameter1[findindex] = Values;
                 try {
-                    await setData('LaboratoryParameters', 'CyBGA7dh7brcm7UlFyft', 'labParameters', parameter1)
-                    dispatch(EDIT_PARAMETER(Values))
+                    // await updateSingltObject('LaboratoryParameters', 'CyBGA7dh7brcm7UlFyft', 'labParameters', Values, 'reportuid', 'hospitaluid')
+                    await updateDatainSubcollection('LaboratoryParameters', 'CyBGA7dh7brcm7UlFyft', 'labParameters', Values, 'reportuid', 'hospitaluid')
+                    // await setData('LaboratoryParameters', 'CyBGA7dh7brcm7UlFyft', 'labParameters', parameter1)
+                    // dispatch(EDIT_PARAMETER(Values))
                     action.resetForm()
                     clearForm()
                     setShow(false)
@@ -114,6 +123,7 @@ const LabMaster = () => {
             reportName: '',
             isUnitRequired: false,
             reportPrice: '',
+            hospitaluid: '',
             parameters: [
                 {
                     parameterName: '',
@@ -124,10 +134,12 @@ const LabMaster = () => {
         });
     };
     const editRooms = (item) => {
+        // filDatainsubcollection(allParameters, 'LaboratoryParameters', 'CyBGA7dh7brcm7UlFyft', 'labParameters')
         values.reportuid = item.reportuid;
         values.reportName = item.reportName;
         values.parameters = item.parameters;
         values.reportPrice = item.reportPrice;
+        values.hospitaluid = item.hospitaluid;
         values.isUnitRequired = item.isUnitRequired
         setShow(true)
         setUpdate(true)
@@ -143,8 +155,10 @@ const LabMaster = () => {
                     onClick: async () => {
                         let parameter = parametersFilter.filter((item) => item.reportuid !== item1.reportuid)
                         try {
-                            await setData('LaboratoryParameters', 'CyBGA7dh7brcm7UlFyft', 'labParameters', parameter)
-                            dispatch(DELETE_PARAMETER(item1))
+                            // await deleteSingltObject('LaboratoryParameters', 'CyBGA7dh7brcm7UlFyft', 'labParameters', item1, 'reportuid', 'hospitaluid')
+                            await deleteDatainSubcollection('LaboratoryParameters', 'CyBGA7dh7brcm7UlFyft', 'labParameters', item1, 'reportuid', 'hospitaluid')
+                            // await setData('LaboratoryParameters', 'CyBGA7dh7brcm7UlFyft', 'labParameters', parameter)
+                            // dispatch(DELETE_PARAMETER(item1))
                             toast.success("Deleted Successfully.......");
                         } catch (error) {
                             toast.error(error.message)

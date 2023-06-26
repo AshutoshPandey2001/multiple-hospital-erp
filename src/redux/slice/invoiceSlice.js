@@ -5,7 +5,7 @@ const initialState = {
     cgstValue: 0,
     sgstValue: 0,
     totalRoom: 0,
-    totalMedicine: 0,
+    // totalMedicine: 0,
     totalOflabReports: 0,
     totalofOpd: 0,
     cgstAmount: 0,
@@ -25,6 +25,8 @@ const initialState = {
     hospitalCharges: 0,
     totaladvance: 0,
     totalExtracharges: 0,
+    discount: 0,
+
 }
 
 const invoiceSlice = createSlice({
@@ -33,15 +35,13 @@ const invoiceSlice = createSlice({
     reducers: {
         SET_INVOICE: (state, actions) => {
 
-            const { cgstpercentage, sgstpercentage, totalRoom, totalMedicine, advance, totalOflabReports, totalofOpd } = actions.payload
+            const { cgstpercentage, sgstpercentage, totalRoom, advance, totalOflabReports } = actions.payload
             state.cgstValue = cgstpercentage;
             state.sgstValue = sgstpercentage;
             state.totalRoom = totalRoom;
             state.totaladvance = advance;
-            state.totalMedicine = totalMedicine;
             state.totalOflabReports = totalOflabReports;
-            state.totalofOpd = totalofOpd
-            let total = totalRoom + totalMedicine + totalOflabReports + totalofOpd;
+            let total = totalRoom + totalOflabReports;
             state.cgstAmount = cgstpercentage / 100 * total;
             state.sgstAmount = sgstpercentage / 100 * total;
             state.subTotalamount = total;
@@ -121,7 +121,7 @@ const invoiceSlice = createSlice({
         SET_HOSPITAL_CHARGES: (state, action) => {
             const { hospitalCharge } = action.payload;
             state.hospitalCharges = hospitalCharge
-            state.subTotalamount = state.totalRoom + state.totalMedicine + state.totalnursingCharge + state.totalicuCharges + state.totalotCharge + state.totalOflabReports + state.totalExtracharges + state.totalofOpd + hospitalCharge
+            state.subTotalamount = state.totalRoom + state.totalnursingCharge + state.totalicuCharges + state.totalotCharge + state.totalOflabReports + state.totalExtracharges + hospitalCharge
             state.cgstAmount = state.cgstValue / 100 * state.subTotalamount
             state.sgstAmount = state.sgstValue / 100 * state.subTotalamount
             state.totalBillingAmount = state.cgstAmount + state.sgstAmount + state.subTotalamount;
@@ -134,21 +134,26 @@ const invoiceSlice = createSlice({
                 // Do nothing
             } else {
                 state.totalExtracharges = extracharges
-                state.subTotalamount = state.totalRoom + state.totalMedicine + state.totalnursingCharge + state.totalicuCharges + state.totalotCharge + state.totalOflabReports + state.totalExtracharges + state.totalofOpd;
+                state.subTotalamount = state.totalRoom + state.totalOflabReports + state.totalExtracharges;
                 state.cgstAmount = state.cgstValue / 100 * state.subTotalamount
                 state.sgstAmount = state.sgstValue / 100 * state.subTotalamount
                 state.totalBillingAmount = state.cgstAmount + state.sgstAmount + state.subTotalamount;
-                state.totalPayableAmount = state.totalBillingAmount - state.totaladvance
+                state.totalPayableAmount = state.totalBillingAmount - state.totaladvance - state.discount
             }
 
+        },
+        SET_DISCOUNT: (state, action) => {
+            const { discount } = action.payload;
+            state.discount = discount
+            state.totalPayableAmount = state.totalBillingAmount - state.totaladvance - state.discount
         },
         CLEAR_FIELD: (state, action) => {
             state.cgstValue = 0;
             state.sgstValue = 0;
             state.totalRoom = 0;
-            state.totalMedicine = 0;
+            // state.totalMedicine = 0;
             state.totalOflabReports = 0;
-            state.totalofOpd = 0;
+            // state.totalofOpd = 0;
             state.cgstAmount = 0;
             state.sgstAmount = 0;
             state.nursingunit = 0;
@@ -166,11 +171,13 @@ const invoiceSlice = createSlice({
             state.totaladvance = 0;
             state.hospitalCharges = 0;
             state.totalExtracharges = 0;
+            state.discount = 0;
+
         }
     }
 });
 
-export const { SET_HOSPITAL_CHARGES, SET_INVOICE, SET_NURSINGCHARGE, SET_EXTRACHARGES_CHARGES, SET_NURSINGUNIT, SET_OTCHARGE, SET_OTUNIT, SET_ICUCHARGE, SET_ICUUNIT, SET_ADVANCE, CLEAR_FIELD } = invoiceSlice.actions;
+export const { SET_HOSPITAL_CHARGES, SET_INVOICE, SET_NURSINGCHARGE, SET_DISCOUNT, SET_EXTRACHARGES_CHARGES, SET_NURSINGUNIT, SET_OTCHARGE, SET_OTUNIT, SET_ICUCHARGE, SET_ICUUNIT, SET_ADVANCE, CLEAR_FIELD } = invoiceSlice.actions;
 export const selectcgstValue = (state) => state.invoice.cgstValue
 export const selectsgstValue = (state) => state.invoice.sgstValue
 export const selectcgstamount = (state) => state.invoice.cgstAmount
@@ -186,12 +193,12 @@ export const selectTotalNursingCharges = (state) => state.invoice.totalnursingCh
 export const selectotCharge = (state) => state.invoice.otRate
 export const selectotUnit = (state) => state.invoice.otunits
 export const selectTotalotCharges = (state) => state.invoice.totalotCharge
-
 export const selecticuCharge = (state) => state.invoice.icuRate
 export const selecticuUnit = (state) => state.invoice.icuunits
 export const selectTotalicuCharges = (state) => state.invoice.totalicuCharges
 export const selectAdvance = (state) => state.invoice.totaladvance
 export const selecthospitalcharges = (state) => state.invoice.hospitalCharges
+export const selectdiscount = (state) => state.invoice.discount
 
 
 export default invoiceSlice.reducer;

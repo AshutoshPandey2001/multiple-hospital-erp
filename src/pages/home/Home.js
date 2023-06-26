@@ -21,7 +21,7 @@ const Home = () => {
     useEffect(() => {
         // allRooms?.map((room, i) => {
         //     if (room.roomType === 'General') {
-        setSelectedRoom(allRooms[0].roomType)
+        setSelectedRoom(allRooms[0]?.roomType)
         setRoom(allRooms[0])
         //     }
         // })

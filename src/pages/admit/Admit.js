@@ -16,14 +16,14 @@ import { FiFilter } from 'react-icons/fi'
 import { selectAllPatients } from 'src/redux/slice/patientMasterslice';
 import { useDispatch, useSelector } from 'react-redux';
 import { ADD_ADMIT_PATIENTS, DELETE_ADMIT_PATIENTS, EDIT_ADMIT_PATIENTS, selectAdmitPatients } from 'src/redux/slice/admitPatientsSlice';
-import { FILL_ROOMS, selectAllRooms } from 'src/redux/slice/roomMasterSlice';
+import { EDIT_ROOM, FILL_ROOMS, selectAllRooms } from 'src/redux/slice/roomMasterSlice';
 import Addpatientscommanmodel from '../../comman/comman model/Addpatientscommanmodel';
 import { useNavigate } from 'react-router-dom';
 import { setTimeout } from 'core-js';
 import Table from 'react-bootstrap/Table';
 import Loaderspinner from '../../comman/spinner/Loaderspinner';
 import CommanTable from 'src/comman/table/CommanTable';
-import { setData } from 'src/services/firebasedb';
+import { addDatainsubcollection, deleteDatainSubcollection, deleteSingltObject, filDatainsubcollection, setData, updateDatainSubcollection, updateSingltObject } from 'src/services/firebasedb';
 import Dropdown from 'react-bootstrap/Dropdown';
 import { confirmAlert } from 'react-confirm-alert';
 import { toast } from 'react-toastify';
@@ -38,6 +38,7 @@ import billingicon from 'src/assets/images/billing-icon.png'
 import { OverlayTrigger, Tooltip, Overlay } from 'react-bootstrap';
 import { ddMMyyyy } from 'src/services/dateFormate';
 import { filterData } from 'src/services/dataFilter';
+import { selectUserId } from 'src/redux/slice/authSlice';
 
 const PrintComponent = ({ data }) => {
     const state = data.data1
@@ -124,7 +125,7 @@ const PrintComponent = ({ data }) => {
                             <td colSpan={2}>{state.hospitalCharges.toFixed(2)}</td>
                             <td>{state.hospitalCharges.toFixed(2)}</td>
                         </tr> */}
-                        {
+                        {/* {
                             state.pendingOpd?.map((opd, r) => {
                                 return <>
                                     <tr key={r}>
@@ -133,7 +134,7 @@ const PrintComponent = ({ data }) => {
                                     </tr>
                                 </>
                             })
-                        }
+                        } */}
                         {
                             state.reportDetails?.map((report, i) => {
                                 return <>
@@ -146,7 +147,7 @@ const PrintComponent = ({ data }) => {
                                 </>
                             })
                         }
-                        {!state.medicines.length ? null :
+                        {/* {!state.medicines.length ? null :
                             <tr>
 
                                 <td colSpan={3}>
@@ -175,7 +176,7 @@ const PrintComponent = ({ data }) => {
                                     </Table></td>
                                 <td>{state.totalMedicines.toFixed(2)}</td>
                             </tr>
-                        }
+                        } */}
                         <tr>
                             <td colSpan={3}>Sub Total</td>
                             <td>{state.subtotal.toFixed(2)}</td>
@@ -210,18 +211,24 @@ const PrintComponent = ({ data }) => {
                     <div>
                         <div>
                             <div><b>Invoice By :{state.userName}</b></div>
-                            <span>Payment Type <b>:{state.paymentType}</b></span>
+                            <span><b>Payment Type :{state.paymentType}</b></span>
                             <div><b>Payment Status :{state.paymentStatus}</b></div>
                         </div>
                     </div>
                 </div>
                 <div className='col-lg-6 col-md-6 col-sm-6 d-flex justify-content-end'>
                     <div>
-                        <h6>Total Bill Amount :{state.billingAmount.toFixed(2)}</h6>
-                        <span>Deposit: {Number(state.deposit).toFixed(2)}</span>
-                        <h6>Payable Amount : {state.payableAmount.toFixed(2)}</h6>
+                        <div><b>Total Bill Amount :{state.billingAmount.toFixed(2)}</b></div>
+                        <span> <b>Advance:{Number(state.deposit).toFixed(2)}</b></span>
+                        {state.discount ? <div><b>Discount :{Number(state.discount).toFixed(2)}</b></div> : null}
+                        <div> <b>Payable Amount:{state.payableAmount.toFixed(2)}</b></div>
                     </div>
                 </div>
+                {/* <div className="form-check" style={{ marginTop: '20px' }}>
+                                        <label className="form-check-label">
+                                            <input type="checkbox" className="form-check-input" name='paid' checked={paid} onChange={(e) => setPaid(e.target.checked)} />If You Want to Paid the bill Please check the check box and cilck on Paid
+                                        </label>
+                                    </div> */}
                 <b><hr></hr></b>
             </div>
 
@@ -260,6 +267,7 @@ const Admit = () => {
     const [admitPatientfilter, setAdmitPatientfilter] = useState([]);
     const [showtooltipadmit, setShowtooltipadmit] = useState(false);
     const [showtooltipDischarge, setShowtooltipDischarge] = useState(false);
+    const hospitaluid = useSelector(selectUserId)
 
     const [todayDate, setTodayDate] = useState()
     // const [allPatients, setAllPatients] = useState([]);
@@ -401,7 +409,7 @@ const Admit = () => {
         {
             name: 'Total',
             selector: row => row.payableAmount ? '₹' + row.payableAmount : '-',
-            cell: row => <div className='d-flex justifycontent-center' style={{ textAlign: 'center' }}>{row.payableAmount ? '₹' + row.payableAmount.toFixed(2) : '-'}</div>
+            cell: row => <div className='d-flex justifycontent-center' style={{ textAlign: 'center' }}>{row.payableAmount ? '₹' + (row.payableAmount + (row.deposit ? Number(row.deposit) : 0)).toFixed(2) : '-'}</div>
         },
         {
             name: 'Payment Status',
@@ -465,6 +473,7 @@ const Admit = () => {
     };
 
     useEffect(() => {
+        // addDatainsubcollection()
         setAdmitPatientList([...allAdmitPatients].reverse());
         setAdmitPatientfilter(allAdmitPatients);
         setRoom([...roomList]);
@@ -580,6 +589,7 @@ const Admit = () => {
     //     });
     // }
     const editPatientDetails = (item) => {
+        // filDatainsubcollection(allAdmitPatients, "admitPatients", 'jSqDGnjO21bpPGhb6O2y', 'admitPatient')
         // const { pid, pName, page, pGender, pAddress, pMobileNo, admitDate, dischargeDate, drName, roomType, priceperNignt, roomNo, bedNo, paymentStatus, admituid, deposit } = item;
         // formik.setValues({
         //     pid, pName, page, pGender, pAddress, pMobileNo, admitDate, dischargeDate, drName, roomType, priceperNignt, roomNo, bedNo, paymentStatus, admituid, deposit
@@ -598,22 +608,26 @@ const Admit = () => {
                 {
                     label: 'Yes',
                     onClick: async () => {
-                        let roomArray = undefined
+                        let roomArray = {}
                         if (!item1.dischargeDate) {
                             let findRoomindex = await room.findIndex((item) => item.roomType === item1.roomType)
                             let finRoomNoIndex = await room[findRoomindex].rooms.findIndex((item3) => item3.roomNo === item1.roomNo)
                             let newArray = await room[findRoomindex].rooms[finRoomNoIndex].BEDS.map((item3) => (item3.bedNo === item1.bedNo ? { ...item3, occupied: false } : item3))
                             let newArray1 = await room[findRoomindex].rooms.map((item3) => (item3.roomNo === item1.roomNo ? { ...item3, BEDS: newArray } : item3))
-                            roomArray = await room.map((item) => (item.roomType === item1.roomType ? { ...item, rooms: newArray1 } : item))
+                            // roomArray = await room.map((item) => (item.roomType === item1.roomType ? { ...item, rooms: newArray1 } : item))
+                            roomArray = { ...room[findRoomindex], rooms: newArray1 };
                         }
                         let admit = await admitPatientfilter.filter((item) => item.admituid !== item1.admituid);
                         try {
-                            await setData("admitPatients", 'jSqDGnjO21bpPGhb6O2y', 'admitPatient', admit)
-                            setAdmitPatientList(admitPatientList.filter((item) => item.admituid !== item1.admituid))
-                            dispatch(DELETE_ADMIT_PATIENTS(item1))
+                            // await setData("admitPatients", 'jSqDGnjO21bpPGhb6O2y', 'admitPatient', admit)
+                            // await deleteSingltObject("admitPatients", 'jSqDGnjO21bpPGhb6O2y', 'admitPatient', item1, 'admituid', 'hospitaluid')
+                            await deleteDatainSubcollection("admitPatients", 'jSqDGnjO21bpPGhb6O2y', 'admitPatient', item1, 'admituid', 'hospitaluid')
+                            // setAdmitPatientList(admitPatientList.filter((item) => item.admituid !== item1.admituid))
+                            // dispatch(DELETE_ADMIT_PATIENTS(item1))
                             if (!item1.dischargeDate) {
-                                await setData('Rooms', '3PvtQ2G1RbG3l5VtiCMI', 'rooms', roomArray)
-                                dispatch(FILL_ROOMS(roomArray))
+                                // await updateSingltObject('Rooms', '3PvtQ2G1RbG3l5VtiCMI', 'rooms', roomArray, 'roomuid', 'hospitaluid')
+                                await updateDatainSubcollection('Rooms', '3PvtQ2G1RbG3l5VtiCMI', 'rooms', roomArray, 'roomuid', 'hospitaluid')
+                                // dispatch(EDIT_ROOM(roomArray))
                             }
                             toast.success("Deleted successful.....");
 
@@ -646,6 +660,7 @@ const Admit = () => {
     }
 
     const generateInvoice = (item) => {
+        // filDatainsubcollection(allAdmitPatients, "admitPatients", 'jSqDGnjO21bpPGhb6O2y', 'admitPatient', hospitaluid)
         if (item.paymentStatus === "Completed") {
             setPrintContent(<PrintComponent data={{
                 data1: {

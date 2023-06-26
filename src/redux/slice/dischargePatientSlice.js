@@ -31,8 +31,6 @@ const dischargepatientSlice = createSlice({
             state.dischargepatientsList = state.dischargepatientsList.filter((item) => item.admituid !== actions.payload.admituid)
         },
         FILL_DISCHARGE_PATIENTS: (state, actions) => {
-
-
             state.dischargepatientsList = actions.payload;
         },
 

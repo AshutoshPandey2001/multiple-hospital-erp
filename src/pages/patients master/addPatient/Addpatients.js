@@ -13,10 +13,10 @@ import { BsEye } from 'react-icons/bs'
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { ADD_PATIENTS, DELETE_PATIENTS, EDIT_PATIENTS, selectAllPatients } from 'src/redux/slice/patientMasterslice';
-import { selectMobileNo, selectUsertype } from 'src/redux/slice/authSlice';
+import { selectMobileNo, selectUserId, selectUsertype } from 'src/redux/slice/authSlice';
 import CommanTable from 'src/comman/table/CommanTable';
 import Loaderspinner from 'src/comman/spinner/Loaderspinner';
-import { deleteSingltObject, setData } from 'src/services/firebasedb';
+import { addDatainsubcollection, deleteDatainSubcollection, deleteSingltObject, filDatainsubcollection, setData, updateDatainSubcollection } from 'src/services/firebasedb';
 import { confirmAlert } from 'react-confirm-alert';
 import { toast } from 'react-toastify';
 import Addpatientscommanmodel from 'src/comman/comman model/Addpatientscommanmodel';
@@ -55,6 +55,7 @@ const Addpatients = () => {
     const [isLoading, setIsLoading] = useState(true)
     const [printContent, setPrintContent] = useState(null);
     // const reversedArray = allPatientsList.slice().reverse();
+    const hospitaluid = useSelector(selectUserId)
 
 
     const columns = [
@@ -79,6 +80,12 @@ const Addpatients = () => {
         setPatientsFilter(allPatientsList)
         setIsLoading(false)
     }, [allPatientsList])
+
+    // const filDatainsubcollection = () => {
+    //     allPatientsList.map(async (item) => {
+    //         await addDatainsubcollection('Patients', 'fBoxFLrzXexT8WNBzGGh', 'patients', item)
+    //     })
+    // }
 
     // const handlePrint = useReactToPrint({
     //     content: () => <MyComponentToPrint name={'ashu'} />
@@ -175,6 +182,9 @@ const Addpatients = () => {
 
 
     const editPatientDetails = (item) => {
+        // addDatainsubcollection('Patients', 'fBoxFLrzXexT8WNBzGGh', 'patients', item)
+        // updateDatainSubcollection('Patients', 'fBoxFLrzXexT8WNBzGGh', 'patients', item)
+        // filDatainsubcollection(allPatientsList, 'Patients', 'fBoxFLrzXexT8WNBzGGh', 'patients', hospitaluid)
         setItems(item)
         setShow(true)
         setUpdate(true)
@@ -191,9 +201,11 @@ const Addpatients = () => {
                     onClick: async () => {
                         let patient = patientsFilter.filter((item) => item.pid !== item1.pid)
                         try {
+
                             // await setData('Patients', 'fBoxFLrzXexT8WNBzGGh', 'patients', patient)
-                            await deleteSingltObject('Patients', 'fBoxFLrzXexT8WNBzGGh', 'patients', item1, 'pid', 'hospitaluid')
-                            dispatch(DELETE_PATIENTS(item1))
+                            // await deleteSingltObject('Patients', 'fBoxFLrzXexT8WNBzGGh', 'patients', item1, 'pid', 'hospitaluid')
+                            await deleteDatainSubcollection('Patients', 'fBoxFLrzXexT8WNBzGGh', 'patients', item1, 'pid', 'hospitaluid')
+                            // dispatch(DELETE_PATIENTS(item1))
                             toast.success("Deleted Successfully.......")
                         } catch (error) {
                             toast.error(error.message)

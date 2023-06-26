@@ -40,7 +40,10 @@ const App = () => {
   const [isLoading, setIsLoading] = useState(true)
   const [user, setUser] = useState()
   const userType = useSelector(selectUsertype)
+  // const [hospitaluid1, setHospitaluid] = useState('')
+
   // const [userType, setUserType] = useState()
+
   const dispatch = useDispatch()
   const navigate = useNavigate()
   useEffect(() => {
@@ -66,6 +69,8 @@ const App = () => {
             mobileno = !res.exists ? null : res.data().userMobileNo;
             userName = !res.exists ? null : res.data().userName;
             hospitaluid = !res.exists ? null : res.data().hospitaluid;
+            console.log('hospitaluid', hospitaluid);
+            // setHospitaluid(hospitaluid)
             dispatch(SET_ACTIVE_USER({
               email: user.email,
               userName: userName,
@@ -90,6 +95,62 @@ const App = () => {
 
 
   }, [dispatch, userType])
+
+
+
+  // useEffect(() => {
+  //   // Create a variable to track the completion of all processes
+  //   let isProcessCompleted = false;
+
+  //   // Define a function to check if all processes are completed and set isLoading to false
+  //   const checkProcessCompletion = () => {
+  //     if (isProcessCompleted) {
+  //       setIsLoading(false);
+  //     }
+  //   };
+
+  //   startTransition(() => {
+  //     onAuthStateChanged(auth, (user) => {
+  //       let usertype = '';
+  //       let mobileno = '';
+  //       let userName = '';
+  //       let hospitaluid = '';
+  //       if (!user) {
+  //         setUser('');
+  //         isProcessCompleted = true; // Set process completion to true
+  //         checkProcessCompletion();
+  //       } else {
+  //         setUser(user.uid);
+  //         db.collection('UserList')
+  //           .doc(user.uid)
+  //           .get()
+  //           .then((res) => {
+  //             usertype = !res.exists ? null : res.data().userType;
+  //             mobileno = !res.exists ? null : res.data().userMobileNo;
+  //             userName = !res.exists ? null : res.data().userName;
+  //             hospitaluid = !res.exists ? null : res.data().hospitaluid;
+  //             dispatch(
+  //               SET_ACTIVE_USER({
+  //                 email: user.email,
+  //                 userName: userName,
+  //                 userID: hospitaluid,
+  //                 userType: usertype,
+  //                 mobileNo: mobileno,
+  //               })
+  //             );
+  //             isProcessCompleted = true; // Set process completion to true
+  //             checkProcessCompletion();
+  //           })
+  //           .catch((error) => {
+  //             console.error("Error updating document: ", error);
+  //             isProcessCompleted = true; // Set process completion to true
+  //             checkProcessCompletion();
+  //           });
+  //       }
+  //     });
+  //   });
+  // }, [dispatch, userType]);
+
 
   return (
     <>

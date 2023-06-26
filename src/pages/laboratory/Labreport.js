@@ -7,7 +7,7 @@ import { useEffect } from 'react'
 import { MdEdit } from 'react-icons/md'
 import { AiFillDelete } from 'react-icons/ai'
 import CommanTable from 'src/comman/table/CommanTable'
-import { getData, setData } from 'src/services/firebasedb'
+import { addDatainsubcollection, addSingltObject, deleteDatainSubcollection, deleteSingltObject, filDatainsubcollection, setData, updateDatainSubcollection, updateSingltObject } from 'src/services/firebasedb';
 import Button from 'react-bootstrap/Button';
 import Modal from 'react-bootstrap/Modal';
 import { useState } from 'react'
@@ -31,6 +31,7 @@ import Loaderspinner from 'src/comman/spinner/Loaderspinner'
 import SearchAutocomplete from 'src/comman/searchAutocomplete/SearchAutocomplete'
 import PrintButton from 'src/comman/printpageComponents/PrintButton'
 import { ddMMyyyy, yyyyMMdd } from 'src/services/dateFormate'
+import { selectUserId } from 'src/redux/slice/authSlice'
 
 const PrintComponent = ({ data }) => {
     const state = data.data1
@@ -127,6 +128,7 @@ const initalValues = {
     examinedBy: '',
     reportPrice: '',
     paymentStatus: 'Pending',
+    hospitaluid: '',
     pathalogyResults: [
         {
             parameter: '',
@@ -151,6 +153,7 @@ const Labreport = () => {
     const [isunitRequired, setIsunitRequired] = useState(false)
     const [isLoading, setIsLoading] = useState(true)
     const [printContent, setPrintContent] = useState(null);
+    const hospitaluid = useSelector(selectUserId)
 
     const columns = [
         { name: 'Patient Id', selector: row => row.pid, sortable: true },
@@ -197,7 +200,10 @@ const Labreport = () => {
                 values.labreportuid = Math.floor(2267 + Math.random() * 7395);
                 let report = [...allpatientsLabReportsfilter, Values]
                 try {
-                    await setData('PatientslaboratoryReports', 'QmwQr1wDcFK6K04hKMYc', 'labReports', report)
+                    // await addSingltObject('PatientslaboratoryReports', 'QmwQr1wDcFK6K04hKMYc', 'labReports', values)
+                    await addDatainsubcollection('PatientslaboratoryReports', 'QmwQr1wDcFK6K04hKMYc', 'labReports', values)
+
+                    // await setData('PatientslaboratoryReports', 'QmwQr1wDcFK6K04hKMYc', 'labReports', report)
                     dispatch(ADD_LABORATORY_REPORT(Values))
                     action.resetForm()
                     clearForm()
@@ -212,7 +218,10 @@ const Labreport = () => {
                 let findindex = report1.findIndex((item) => item.labreportuid === Values.labreportuid)
                 report1[findindex] = Values;
                 try {
-                    await setData('PatientslaboratoryReports', 'QmwQr1wDcFK6K04hKMYc', 'labReports', report1)
+                    // await updateSingltObject('PatientslaboratoryReports', 'QmwQr1wDcFK6K04hKMYc', 'labReports', Values, 'labreportuid', 'hospitaluid')
+                    await updateDatainSubcollection('PatientslaboratoryReports', 'QmwQr1wDcFK6K04hKMYc', 'labReports', Values, 'labreportuid', 'hospitaluid')
+
+                    // await setData('PatientslaboratoryReports', 'QmwQr1wDcFK6K04hKMYc', 'labReports', report1)
                     dispatch(EDIT_LABORATORY_REPORT(Values))
                     action.resetForm()
                     clearForm()
@@ -253,6 +262,7 @@ const Labreport = () => {
             isunitRequired: false,
             reportPrice: '',
             paymentStatus: 'Pending',
+            hospitaluid: '',
             pathalogyResults: [
                 {
                     parameter: '',
@@ -265,6 +275,7 @@ const Labreport = () => {
         setIsunitRequired(false)
     };
     const editLoboratoryreport = (item) => {
+        // filDatainsubcollection(allPatientsLaboratoryReports, 'PatientslaboratoryReports', 'QmwQr1wDcFK6K04hKMYc', 'labReports')
         values.pid = item.pid;
         values.pName = item.pName;
         values.pGender = item.pGender;
@@ -282,6 +293,7 @@ const Labreport = () => {
         values.paymentStatus = item.paymentStatus;
         values.pathalogyResults = item.pathalogyResults;
         values.isunitRequired = item.isunitRequired;
+        values.hospitaluid = item.hospitaluid;
         setIsunitRequired(item.isunitRequired)
         setShow(true)
         setUpdate(true)
@@ -297,7 +309,9 @@ const Labreport = () => {
                     onClick: async () => {
                         let report = allpatientsLabReportsfilter.filter((item) => item.labreportuid !== item1.labreportuid)
                         try {
-                            await setData('PatientslaboratoryReports', 'QmwQr1wDcFK6K04hKMYc', 'labReports', report)
+                            // await deleteSingltObject('PatientslaboratoryReports', 'QmwQr1wDcFK6K04hKMYc', 'labReports', item1, 'labreportuid', 'hospitaluid')
+                            await deleteDatainSubcollection('PatientslaboratoryReports', 'QmwQr1wDcFK6K04hKMYc', 'labReports', item1, 'labreportuid', 'hospitaluid')
+                            // await setData('PatientslaboratoryReports', 'QmwQr1wDcFK6K04hKMYc', 'labReports', report)
                             dispatch(DELETE_LABORATORY_REPORT(item1))
                             toast.success("Deleted Successfully.......");
                         } catch (error) {
@@ -336,6 +350,8 @@ const Labreport = () => {
         formik.setFieldValue('pGender', item.pGender);
         formik.setFieldValue('page', item.page);
         formik.setFieldValue('pAddress', item.pAddress);
+        formik.setFieldValue('hospitaluid', item.hospitaluid);
+
     };
     const handleOnSelectMobile = (item) => {
         values.pid = item.pid;

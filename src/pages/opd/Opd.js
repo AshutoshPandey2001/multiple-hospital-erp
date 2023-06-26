@@ -13,7 +13,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { ADD_OPD_PATIENTS, DELETE_OPD_PATIENTS, EDIT_OPD_PATIENTS, selectOpdPatients } from 'src/redux/slice/opdPatientsList';
 import Addpatientscommanmodel from '../../comman/comman model/Addpatientscommanmodel';
 import Table from 'react-bootstrap/Table';
-import { setData } from 'src/services/firebasedb';
+import { addDatainsubcollection, addSingltObject, deleteDatainSubcollection, deleteSingltObject, filDatainsubcollection, setData, updateDatainSubcollection, updateSingltObject } from 'src/services/firebasedb';
 import CommanTable from 'src/comman/table/CommanTable';
 import Loaderspinner from '../../comman/spinner/Loaderspinner';
 import { confirmAlert } from 'react-confirm-alert';
@@ -33,6 +33,8 @@ import { filterData } from 'src/services/dataFilter';
 import { OverlayTrigger, Tooltip } from 'react-bootstrap';
 import { FiFilter } from 'react-icons/fi'
 import '../admit/admit.css'
+import { selectUserId } from 'src/redux/slice/authSlice';
+
 const PrintComponent = ({ data }) => {
     const state = data.data1
     return (
@@ -93,7 +95,7 @@ const PrintComponent = ({ data }) => {
                                     <td>{Number(item.reportPrice).toFixed(2)}</td>
                                 </tr>)
                             })}
-                            {!state.medicineDetails?.length ? null :
+                            {/* {!state.medicineDetails?.length ? null :
                                 <tr>
                                     <td colSpan={2}>
                                         <Table bordered hover>
@@ -120,7 +122,7 @@ const PrintComponent = ({ data }) => {
                                         </Table></td>
                                     <td>{state.totalAmountofMedicines.toFixed(2)}</td>
                                 </tr>
-                            }
+                            } */}
                             <tr>
                                 <td colSpan={2}>Sub Total</td>
                                 <td>{state.subTotalamount.toFixed(2)}</td>
@@ -158,13 +160,11 @@ const PrintComponent = ({ data }) => {
 
                     </div>
                     <div className=' col-lg-6 col-md-6 col-sm-6 d-flex justify-content-end'>
-                        <div className='row' style={{ width: '200px', marginRight: '70px' }}>
-                            <div className='col-lg-6 '><div>Total</div>
-                                <span>Recived</span></div>
-                            <div className='col-lg-6'><div>:{state.payAbleAmount.toFixed(2)}</div>
-                                <h6>:{state.payAbleAmount.toFixed(2)}</h6></div>
+                        <div>
+                            <h6>Total:- {state.billingAmount ? state.billingAmount.toFixed(2) : state.payAbleAmount.toFixed(2)}</h6>
+                            {state.discount ? <h6>Discount :{Number(state.discount).toFixed(2)}</h6> : null}
+                            <h6>Recived : {state.payAbleAmount.toFixed(2)}</h6>
                         </div>
-
                     </div>
                     <b><hr></hr></b>
                     <div className='row'>
@@ -219,6 +219,7 @@ const initalValues = {
     opdCaseNo: '',
     paymentStatus: 'Pending',
     advices: [],
+    hospitaluid: '',
 }
 const Opd = () => {
     const dispatch = useDispatch();
@@ -239,6 +240,7 @@ const Opd = () => {
     const [startDate, setStartDate] = useState()
     const [endDate, setEndDate] = useState()
     const [showtooltip, setShowtooltip] = useState(false);
+    const hospitaluid = useSelector(selectUserId)
 
     const navigate = useNavigate()
 
@@ -298,6 +300,7 @@ const Opd = () => {
                 </OverlayTrigger>
             ),
             selector: row => row.consultingDate,
+
             // sortable: true
         },
         { name: 'Patient Name', selector: row => row.pName, sortable: true },
@@ -322,6 +325,122 @@ const Opd = () => {
             </span >
         }
     ]
+    // const columns = [
+    //     {
+    //         name: (
+    //             <OverlayTrigger
+    //                 placement="top"
+    //                 overlay={<Tooltip ><div >
+    //                     <div className='row'>
+    //                         <div className='col-lg-12'>
+    //                             <div className="form-group" >
+    //                                 <label >Form<b style={{ color: 'red' }}>*</b>:</label>
+    //                                 <input name='startDate'
+    //                                     type="date" className="form-control" defaultValue={startDate} onChange={(e) => setStartDate(e.target.value)} />
+
+    //                             </div>
+    //                         </div>
+    //                         <div className='col-lg-12'>
+    //                             <div className="form-group" >
+    //                                 <label >To<b style={{ color: 'red' }}>*</b>:</label>
+    //                                 <input name='endDate'
+    //                                     type="date" className="form-control" defaultValue={endDate} onChange={(e) => setEndDate(e.target.value)} min={startDate} />
+    //                             </div>
+    //                         </div>
+    //                     </div>
+    //                     <div className='d-flex mt-2 mb-1 justify-content-end'>
+    //                         <Button variant="secondary" onClick={clearfilterData}>
+    //                             Clear
+    //                         </Button>
+    //                         <Button variant="primary" style={{ marginLeft: '10px' }} onClick={() => filtertheData('consultingDate')}>
+    //                             Filter
+    //                         </Button>
+    //                     </div>
+
+
+    //                 </div></Tooltip>}
+    //                 trigger='click'
+    //                 show={showtooltip}
+
+    //             >
+    //                 <span style={{ cursor: 'pointer' }} onClick={() => setShowtooltip(!showtooltip)}>Date <FiFilter /></span>
+    //             </OverlayTrigger>
+    //         ),
+    //         selector: row => row.consultingDate,
+    //         className: 'col-lg-3 col-md-4 col-sm-6 col-12',
+    //     },
+    //     {
+    //         name: 'Patient Name',
+    //         selector: row => row.pName,
+    //         sortable: true,
+    //         className: 'col-lg-2 col-md-3 col-sm-4 col-6',
+    //     },
+    //     {
+    //         name: 'Age',
+    //         selector: row => row.page,
+    //         className: 'col-lg-1 col-md-2 col-sm-3 col-6',
+    //     },
+    //     {
+    //         name: 'Address',
+    //         selector: row => row.pAddress,
+    //         className: 'col-lg-2 col-md-3 col-sm-6 col-12',
+    //     },
+    //     {
+    //         name: 'Mobile No',
+    //         selector: row => row.pMobileNo,
+    //         className: 'col-lg-2 col-md-3 col-sm-6 col-12',
+    //     },
+    //     {
+    //         name: 'Total',
+    //         selector: row => row.payAbleAmount ? '₹' + row.payAbleAmount.toFixed(2) : '-',
+    //         className: 'col-lg-1 col-md-2 col-sm-3 col-6',
+    //     },
+    //     {
+    //         name: 'Payment Status',
+    //         cell: row => (
+    //             <div
+    //                 style={{
+    //                     backgroundColor: row.paymentStatus === 'Completed' ? 'green' : 'red',
+    //                     color: 'white',
+    //                     width: '80px',
+    //                     height: '20px',
+    //                     display: 'flex',
+    //                     borderRadius: '10px',
+    //                     alignContent: 'center',
+    //                     justifyContent: 'center',
+    //                 }}
+    //             >
+    //                 {row.paymentStatus}
+    //             </div>
+    //         ),
+    //         className: 'col-lg-1 col-md-2 col-sm-3 col-6',
+    //     },
+    //     {
+    //         name: 'Action',
+    //         cell: row => (
+    //             <span style={{ display: 'flex', justifyContent: 'center' }}>
+    //                 {row.paymentStatus === 'Completed' ? (
+    //                     <button onClick={() => viewInvoice(row)} style={{ color: 'skyblue', border: 'none' }}>
+    //                         <BsEye size={25} />
+    //                     </button>
+    //                 ) : (
+    //                     <>
+    //                         <button onClick={() => editPatientDetails(row)} style={{ color: 'orange', border: 'none' }}>
+    //                             <MdEdit size={25} />
+    //                         </button>
+    //                     </>
+    //                 )}
+    //                 <button onClick={() => generateInvoice(row)} style={{ color: 'skyblue', border: 'none' }}>
+    //                     {row.paymentStatus === 'Completed' ? <AiFillPrinter size={25} /> : <img src={billingicon} alt="billingicon" />}
+    //                 </button>
+    //                 <button onClick={() => deletePatientsDetails(row)} style={{ color: 'red', border: 'none' }}>
+    //                     <AiFillDelete size={25} />
+    //                 </button>
+    //             </span>
+    //         ),
+    //         className: 'col-lg-2 col-md-3 col-sm-4 col-6',
+    //     },
+    // ];
 
     const handleClose = () => {
         clearForm()
@@ -348,10 +467,14 @@ const Opd = () => {
             values.consultingCharge = Number(values.consultingCharge)
             const newValues = { ...values, opduid: Math.floor(2000 + Math.random() * 9000) };
             if (!update) {
+                // values.opduid=Math.floor(2000 + Math.random() * 9000);
+                // values.hospitaluid=hospitaluid
                 setOpdPatientfilter([...opdPatientfilter, newValues]);
                 try {
-                    await setData("opdPatients", 'm5JHl3l4zhaBCa8Vihcb', 'opdPatient', [...opdPatientfilter, newValues]);
-                    dispatch(ADD_OPD_PATIENTS(newValues));
+                    // await setData("opdPatients", 'm5JHl3l4zhaBCa8Vihcb', 'opdPatient', [...opdPatientfilter, newValues]);
+                    // await addSingltObject("opdPatients", 'm5JHl3l4zhaBCa8Vihcb', 'opdPatient', newValues)
+                    await addDatainsubcollection("opdPatients", 'm5JHl3l4zhaBCa8Vihcb', 'opdPatient', newValues)
+                    // dispatch(ADD_OPD_PATIENTS(newValues));
                     resetForm({ values: '' });
                     clearForm();
                     toast.success('Added Successfully.......')
@@ -363,8 +486,10 @@ const Opd = () => {
                 const findindex = opd1.findIndex((item) => item.opduid === values.opduid);
                 opd1[findindex] = values;
                 try {
-                    await setData("opdPatients", 'm5JHl3l4zhaBCa8Vihcb', 'opdPatient', opd1);
-                    dispatch(EDIT_OPD_PATIENTS(values));
+                    // await setData("opdPatients", 'm5JHl3l4zhaBCa8Vihcb', 'opdPatient', opd1);
+                    // await updateSingltObject("opdPatients", 'm5JHl3l4zhaBCa8Vihcb', 'opdPatient', values, 'opduid', 'hospitaluid')
+                    await updateDatainSubcollection("opdPatients", 'm5JHl3l4zhaBCa8Vihcb', 'opdPatient', values, 'opduid', 'hospitaluid')
+                    // dispatch(EDIT_OPD_PATIENTS(values));
                     resetForm({ values: '' });
                     clearForm();
                     setUpdate(false);
@@ -397,9 +522,12 @@ const Opd = () => {
             paymentStatus: 'Pending',
             opduid: '',
             advices: [],
-            opdCaseNo: ''
+            opdCaseNo: '',
+            hospitaluid: '',
+
         });
         setAdvices([])
+
     };
     const handleClear = () => {
         formik.setValues({
@@ -415,11 +543,16 @@ const Opd = () => {
             paymentStatus: 'Pending',
             opduid: '',
             advices: [],
-            opdCaseNo: ''
+            opdCaseNo: '',
+            hospitaluid: '',
+
         });
         setAdvices([])
+        setConsultingCharges([])
     }
     const generateInvoice = (item) => {
+        // filDatainsubcollection(allopdPatientList, 'opdPatients', 'm5JHl3l4zhaBCa8Vihcb', 'opdPatient', hospitaluid)
+
         if (item.paymentStatus === "Completed") {
             setPrintContent(<PrintComponent data={{
                 data1: {
@@ -436,6 +569,7 @@ const Opd = () => {
 
     }
     const editPatientDetails = async (item) => {
+        // filDatainsubcollection(allopdPatientList, 'opdPatients', 'm5JHl3l4zhaBCa8Vihcb', 'opdPatient',hospitaluid)
         const {
             pid,
             pName,
@@ -449,7 +583,9 @@ const Opd = () => {
             advices,
             opduid,
             opdCaseNo,
-            paymentStatus
+            paymentStatus,
+            hospitaluid
+
         } = await item;
 
         await formik.setValues({
@@ -465,7 +601,8 @@ const Opd = () => {
             advices,
             opduid,
             opdCaseNo,
-            paymentStatus
+            paymentStatus,
+            hospitaluid
         });
         const selectedDoctor = await allDoctors.find((doctor) => doctor.drName === drName);
         setConsultingCharges(selectedDoctor.consultingCharges)
@@ -484,8 +621,10 @@ const Opd = () => {
                         label: 'Yes',
                         onClick: async () => {
                             const opd = opdPatientfilter.filter((item) => item.opduid !== item1.opduid);
-                            await setData('opdPatients', 'm5JHl3l4zhaBCa8Vihcb', 'opdPatient', opd);
-                            dispatch(DELETE_OPD_PATIENTS(item1));
+                            // await setData('opdPatients', 'm5JHl3l4zhaBCa8Vihcb', 'opdPatient', opd);
+                            // await deleteSingltObject('opdPatients', 'm5JHl3l4zhaBCa8Vihcb', 'opdPatient', item1, 'opduid', 'hospitaluid')
+                            await deleteDatainSubcollection('opdPatients', 'm5JHl3l4zhaBCa8Vihcb', 'opdPatient', item1, 'opduid', 'hospitaluid')
+                            // dispatch(DELETE_OPD_PATIENTS(item1));
                             toast.success('Deleted Successfully.......')
                         }
                     },
@@ -522,6 +661,7 @@ const Opd = () => {
         formik.setFieldValue('pGender', item.pGender);
         formik.setFieldValue('page', item.page);
         formik.setFieldValue('pAddress', item.pAddress);
+        formik.setFieldValue('hospitaluid', item.hospitaluid);
 
     };
 

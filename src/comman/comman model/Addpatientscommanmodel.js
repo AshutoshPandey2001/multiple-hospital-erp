@@ -7,7 +7,7 @@ import { useFormik } from 'formik';
 import { addpatientsSchema } from 'src/schema';
 import { useDispatch, useSelector } from 'react-redux';
 import { ADD_PATIENTS, EDIT_PATIENTS, selectAllPatients } from 'src/redux/slice/patientMasterslice';
-import { addSingltObject, getDatawithhospitaluid, setData, updateSingltObject } from 'src/services/firebasedb';
+import { addDatainsubcollection, addSingltObject, getDatawithhospitaluid, setData, updateDatainSubcollection, updateSingltObject } from 'src/services/firebasedb';
 import { toast } from 'react-toastify';
 import { selectAllDr } from 'src/redux/slice/doctorsSlice';
 import Select from 'react-select';
@@ -51,8 +51,8 @@ const Addpatientscommanmodel = ({ show, handleClose, update, data }) => {
                     let patient = [...patientsFilter, Values]
                     try {
                         // await setData('Patients', 'fBoxFLrzXexT8WNBzGGh', 'patients', patient)
-                        await addSingltObject('Patients', 'fBoxFLrzXexT8WNBzGGh', 'patients', Values)
-                        dispatch(ADD_PATIENTS(Values))
+                        await addDatainsubcollection('Patients', 'fBoxFLrzXexT8WNBzGGh', 'patients', Values)
+                        // dispatch(ADD_PATIENTS(Values))
                         action.resetForm()
                         handelClear()
                         toast.success("Added Successfully.......");
@@ -68,8 +68,9 @@ const Addpatientscommanmodel = ({ show, handleClose, update, data }) => {
                 patient1[findindex] = Values;
                 try {
                     // await setData('Patients', 'fBoxFLrzXexT8WNBzGGh', 'patients', patient1)
-                    await updateSingltObject('Patients', 'fBoxFLrzXexT8WNBzGGh', 'patients', Values, 'pid', 'hospitaluid')
-                    dispatch(EDIT_PATIENTS(Values))
+
+                    await updateDatainSubcollection('Patients', 'fBoxFLrzXexT8WNBzGGh', 'patients', Values, 'pid', 'hospitaluid')
+                    // dispatch(EDIT_PATIENTS(Values))
                     action.resetForm()
                     handelClear()
                     toast.success("Updated Successfully.......");

@@ -10,12 +10,12 @@ import { useFormik } from 'formik';
 import { useDispatch, useSelector } from 'react-redux';
 import { selectAllPatients } from 'src/redux/slice/patientMasterslice';
 import { ADD_ADMIT_PATIENTS, EDIT_ADMIT_PATIENTS, selectAdmitPatients } from 'src/redux/slice/admitPatientsSlice';
-import { setData } from 'src/services/firebasedb';
-import { FILL_ROOMS, selectAllRooms } from 'src/redux/slice/roomMasterSlice';
+import { EDIT_ROOM, FILL_ROOMS, selectAllRooms } from 'src/redux/slice/roomMasterSlice';
 import { selectAllDr } from 'src/redux/slice/doctorsSlice';
 import { admitformSchema } from 'src/schema';
 import { toast } from 'react-toastify';
 import { ddMMyyyy, yyyyMMdd } from 'src/services/dateFormate';
+import { addDatainsubcollection, addSingltObject, deleteDatainSubcollection, deleteSingltObject, filDatainsubcollection, setData, updateDatainSubcollection, updateSingltObject } from 'src/services/firebasedb';
 
 const initalValues = {
     pid: '',
@@ -37,7 +37,8 @@ const initalValues = {
     paymentStatus: 'Pending',
     admituid: '',
     deposit: 0,
-    indoorCaseNo: ''
+    indoorCaseNo: '',
+    hospitaluid: '',
 }
 const AdmitModel = ({ show, update, handleClose, data, roomValues, todayDate }) => {
     const dispatch = useDispatch()
@@ -68,41 +69,43 @@ const AdmitModel = ({ show, update, handleClose, data, roomValues, todayDate }) 
             if (time_differ === 0) {
                 values.totalDayes = 1;
             } else {
-                values.totalDayes = time_differ / (1000 * 60 * 60 * 24);
+                values.totalDayes = time_differ / (1000 * 60 * 60 * 24) + 1;
             }
 
             values.admitDate = ddMMyyyy(values.admitDate)
-
             values.dischargeDate = values.dischargeDate ? ddMMyyyy(values.dischargeDate) : values.dischargeDate
-
             values.totalAmount = values.priceperNignt * values.totalDayes;
             let admit1 = [...admitPatientfilter]
-            let roomArray = undefined
+            let roomArray = {}
             let findRoomindex = room.findIndex((item) => item.roomType === values.roomType)
-
             let finRoomNoIndex = room[findRoomindex].rooms.findIndex((item3) => item3.roomNo === values.roomNo)
             if (values.dischargeDate) {
                 let newArray = room[findRoomindex].rooms[finRoomNoIndex].BEDS.map((item3) => (item3.bedNo === values.bedNo ? { ...item3, occupied: false } : item3))
                 let newArray1 = room[findRoomindex].rooms.map((item3) => (item3.roomNo === values.roomNo ? { ...item3, BEDS: newArray } : item3))
-                roomArray = room.map((item) => (item.roomType === values.roomType ? { ...item, rooms: newArray1 } : item))
+                // roomArray = room.map((item) => (item.roomType === values.roomType ? { ...item, rooms: newArray1 } : item))
+                roomArray = { ...room[findRoomindex], rooms: newArray1 };
 
             } else {
                 let newArray = room[findRoomindex].rooms[finRoomNoIndex].BEDS.map((item3) => (item3.bedNo === values.bedNo ? { ...item3, occupied: true } : item3))
                 let newArray1 = room[findRoomindex].rooms.map((item3) => (item3.roomNo === values.roomNo ? { ...item3, BEDS: newArray } : item3))
-                roomArray = room.map((item) => (item.roomType === values.roomType ? { ...item, rooms: newArray1 } : item))
-
+                // roomArray = room.map((item) => (item.roomType === values.roomType ? { ...item, rooms: newArray1 } : item))
+                roomArray = { ...room[findRoomindex], rooms: newArray1 };
             }
-
+            console.log('roomobject', roomArray);
             if (!update) {
                 values.admituid = Math.floor(3407 + Math.random() * 9000)
 
                 let admit = [...admitPatientfilter, Values]
 
                 try {
-                    await setData("admitPatients", 'jSqDGnjO21bpPGhb6O2y', 'admitPatient', admit)
-                    dispatch(ADD_ADMIT_PATIENTS(Values))
-                    await setData('Rooms', '3PvtQ2G1RbG3l5VtiCMI', 'rooms', roomArray)
-                    dispatch(FILL_ROOMS(roomArray))
+                    // await setData("admitPatients", 'jSqDGnjO21bpPGhb6O2y', 'admitPatient', admit)
+                    // await addSingltObject("admitPatients", 'jSqDGnjO21bpPGhb6O2y', 'admitPatient', Values)
+                    await addDatainsubcollection("admitPatients", 'jSqDGnjO21bpPGhb6O2y', 'admitPatient', Values)
+                    // dispatch(ADD_ADMIT_PATIENTS(Values))
+                    // await updateSingltObject('Rooms', '3PvtQ2G1RbG3l5VtiCMI', 'rooms', roomArray, 'roomuid', 'hospitaluid')
+                    await updateDatainSubcollection('Rooms', '3PvtQ2G1RbG3l5VtiCMI', 'rooms', roomArray, 'roomuid', 'hospitaluid')
+                    // await setData('Rooms', '3PvtQ2G1RbG3l5VtiCMI', 'rooms', roomArray)
+                    // dispatch(EDIT_ROOM(roomArray))
                     await resetForm({ values: '' })
                     closeModel()
                     toast.success("Admit successful.....");
@@ -114,10 +117,14 @@ const AdmitModel = ({ show, update, handleClose, data, roomValues, todayDate }) 
                 const find = admit1.findIndex((item) => item.admituid === Values.admituid)
                 admit1[find] = Values
                 try {
-                    await setData("admitPatients", 'jSqDGnjO21bpPGhb6O2y', 'admitPatient', admit1)
-                    dispatch(EDIT_ADMIT_PATIENTS(Values))
-                    await setData('Rooms', '3PvtQ2G1RbG3l5VtiCMI', 'rooms', roomArray)
-                    dispatch(FILL_ROOMS(roomArray))
+                    // await updateSingltObject("admitPatients", 'jSqDGnjO21bpPGhb6O2y', 'admitPatient', Values, 'admituid', 'hospitaluid')
+                    await updateDatainSubcollection("admitPatients", 'jSqDGnjO21bpPGhb6O2y', 'admitPatient', Values, 'admituid', 'hospitaluid')
+
+                    // await setData("admitPatients", 'jSqDGnjO21bpPGhb6O2y', 'admitPatient', admit1)
+                    // dispatch(EDIT_ADMIT_PATIENTS(Values))
+                    await updateDatainSubcollection('Rooms', '3PvtQ2G1RbG3l5VtiCMI', 'rooms', roomArray, 'roomuid', 'hospitaluid')
+                    // await setData('Rooms', '3PvtQ2G1RbG3l5VtiCMI', 'rooms', roomArray)
+                    // dispatch(EDIT_ROOM(roomArray))
                     resetForm({ values: '' })
                     closeModel();
                     toast.success("Updated successful.....");
@@ -153,6 +160,8 @@ const AdmitModel = ({ show, update, handleClose, data, roomValues, todayDate }) 
             formik.setFieldValue('admituid', data.admituid);
             formik.setFieldValue('deposit', data.deposit);
             formik.setFieldValue('indoorCaseNo', data.indoorCaseNo);
+            formik.setFieldValue('hospitaluid', data.hospitaluid);
+
             return
         }
 
@@ -189,7 +198,8 @@ const AdmitModel = ({ show, update, handleClose, data, roomValues, todayDate }) 
             paymentStatus: 'Pending',
             admituid: '',
             deposit: 0,
-            indoorCaseNo: ''
+            indoorCaseNo: '',
+            hospitaluid: '',
         });
     };
 
@@ -214,7 +224,8 @@ const AdmitModel = ({ show, update, handleClose, data, roomValues, todayDate }) 
             paymentStatus: 'Pending',
             admituid: '',
             deposit: 0,
-            indoorCaseNo: ''
+            indoorCaseNo: '',
+            hospitaluid: '',
         });
     }
     const handleOnSelect = (item) => {
@@ -224,6 +235,7 @@ const AdmitModel = ({ show, update, handleClose, data, roomValues, todayDate }) 
         formik.setFieldValue('pGender', item.pGender);
         formik.setFieldValue('page', item.page);
         formik.setFieldValue('pAddress', item.pAddress);
+        formik.setFieldValue('hospitaluid', item.hospitaluid);
     };
     const selectRoomprice = (e) => {
         values.roomType = e.roomType;

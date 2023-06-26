@@ -18,13 +18,13 @@ import { FcDownload } from 'react-icons/fc'
 import { selectAllPatients } from 'src/redux/slice/patientMasterslice';
 import { useDispatch, useSelector } from 'react-redux';
 import { ADD_ADMIT_PATIENTS, DELETE_ADMIT_PATIENTS, EDIT_ADMIT_PATIENTS, FILL_ADMIT_PATIENTS, selectAdmitPatients } from 'src/redux/slice/admitPatientsSlice';
-import { FILL_ROOMS, selectAllRooms } from 'src/redux/slice/roomMasterSlice';
+import { EDIT_ROOM, FILL_ROOMS, selectAllRooms } from 'src/redux/slice/roomMasterSlice';
 import Addpatientscommanmodel from '../../comman/comman model/Addpatientscommanmodel';
 import { useNavigate } from 'react-router-dom';
 import { setTimeout } from 'core-js';
 import Loaderspinner from '../../comman/spinner/Loaderspinner';
 import CommanTable from 'src/comman/table/CommanTable';
-import { setData } from 'src/services/firebasedb';
+import { addDatainsubcollection, addSingltObject, deleteDatainSubcollection, deleteSingltObject, filDatainsubcollection, setData, updateDatainSubcollection, updateSingltObject } from 'src/services/firebasedb';
 import Dropdown from 'react-bootstrap/Dropdown';
 import { confirmAlert } from 'react-confirm-alert';
 import { toast } from 'react-toastify';
@@ -40,6 +40,7 @@ import PrintFooter from 'src/comman/printpageComponents/PrintFooter';
 import SearchAutocomplete from 'src/comman/searchAutocomplete/SearchAutocomplete';
 import PrintButton from 'src/comman/printpageComponents/PrintButton';
 import { ddMMyyyy, yyyyMMdd } from 'src/services/dateFormate';
+import { selectUserId } from 'src/redux/slice/authSlice';
 
 const PrintComponent = ({ data }) => {
     const state = data.data1
@@ -204,6 +205,7 @@ const initalValues = {
     dischargeType: '',
     followUpDetails: '',
     advices: [],
+    hospitaluid: ''
 }
 
 const Discharge = () => {
@@ -229,6 +231,7 @@ const Discharge = () => {
     const [room, setRoom] = useState([])
     const [advice, setAdvice] = useState('')
     const [advices, setAdvices] = useState([])
+    const hospitaluid = useSelector(selectUserId)
 
     const columns = [
         // { name: 'Admit ID', selector: row => row.admituid, sortable: true },
@@ -272,7 +275,7 @@ const Discharge = () => {
             if (time_differ === 0) {
                 totalDayes = 1;
             } else {
-                totalDayes = time_differ / (1000 * 60 * 60 * 24);
+                totalDayes = time_differ / (1000 * 60 * 60 * 24) + 1;
             }
             // const date = new Date(values.admitDate); // Convert input value to Date object
             // const formattedDate = date.toLocaleDateString("en-GB").split('/').join('-');
@@ -283,36 +286,55 @@ const Discharge = () => {
             // let totalDayes = time_differ / (1000 * 60 * 60 * 24);
             let discharge1 = [...dischargePtientfilter]
             let admit = [...admitPatients]
-            let roomArray = undefined;
+            let roomArray = {};
             let findRoomindex = room.findIndex((item) => item.roomType === values.roomType)
             let finRoomNoIndex = room[findRoomindex].rooms.findIndex((item3) => item3.roomNo === values.roomNo)
             let findAmitIndex = admit.findIndex((item) => item.admituid === values.admituid)
             let newObj = { ...admit[findAmitIndex], dischargeDate: values.dischargeDate, totalDayes: totalDayes, totalAmount: admit[findAmitIndex].priceperNignt * totalDayes }
-            admit[findAmitIndex] = newObj;
+            // admit[findAmitIndex] = newObj;
+            // if (values.dischargeDate) {
+            //     let newArray = room[findRoomindex].rooms[finRoomNoIndex].BEDS.map((item3) => (item3.bedNo === values.bedNo ? { ...item3, occupied: false } : item3))
+            //     let newArray1 = room[findRoomindex].rooms.map((item3) => (item3.roomNo === values.roomNo ? { ...item3, BEDS: newArray } : item3))
+            //     roomArray = room.map((item) => (item.roomType === values.roomType ? { ...item, rooms: newArray1 } : item))
+
+            // } else {
+            //     let newArray = room[findRoomindex].rooms[finRoomNoIndex].BEDS.map((item3) => (item3.bedNo === values.bedNo ? { ...item3, occupied: true } : item3))
+            //     let newArray1 = room[findRoomindex].rooms.map((item3) => (item3.roomNo === values.roomNo ? { ...item3, BEDS: newArray } : item3))
+            //     roomArray = room.map((item) => (item.roomType === values.roomType ? { ...item, rooms: newArray1 } : item))
+
+            // }
             if (values.dischargeDate) {
                 let newArray = room[findRoomindex].rooms[finRoomNoIndex].BEDS.map((item3) => (item3.bedNo === values.bedNo ? { ...item3, occupied: false } : item3))
                 let newArray1 = room[findRoomindex].rooms.map((item3) => (item3.roomNo === values.roomNo ? { ...item3, BEDS: newArray } : item3))
-                roomArray = room.map((item) => (item.roomType === values.roomType ? { ...item, rooms: newArray1 } : item))
+                // roomArray = room.map((item) => (item.roomType === values.roomType ? { ...item, rooms: newArray1 } : item))
+                roomArray = { ...room[findRoomindex], rooms: newArray1 };
 
             } else {
                 let newArray = room[findRoomindex].rooms[finRoomNoIndex].BEDS.map((item3) => (item3.bedNo === values.bedNo ? { ...item3, occupied: true } : item3))
                 let newArray1 = room[findRoomindex].rooms.map((item3) => (item3.roomNo === values.roomNo ? { ...item3, BEDS: newArray } : item3))
-                roomArray = room.map((item) => (item.roomType === values.roomType ? { ...item, rooms: newArray1 } : item))
-
+                // roomArray = room.map((item) => (item.roomType === values.roomType ? { ...item, rooms: newArray1 } : item))
+                roomArray = { ...room[findRoomindex], rooms: newArray1 };
             }
-
+            console.log('values', values, newObj, roomArray);
 
             if (!update) {
                 // values.admituid = Math.floor(3407 + Math.random() * 9000)
                 let discharge = [...dischargePtientfilter, Values]
 
                 try {
-                    await setData("admitPatients", 'jSqDGnjO21bpPGhb6O2y', 'admitPatient', admit)
-                    dispatch(FILL_ADMIT_PATIENTS(admit))
-                    await setData("DischargePatients", 'cki4rIGKtNwyXr27cZBY', 'dischargePatients', discharge)
-                    dispatch(ADD_DISCHARGE_PATIENTS(Values))
-                    await setData('Rooms', '3PvtQ2G1RbG3l5VtiCMI', 'rooms', roomArray)
-                    dispatch(FILL_ROOMS(roomArray))
+                    // await updateSingltObject("admitPatients", 'jSqDGnjO21bpPGhb6O2y', 'admitPatient', newObj, 'admituid', 'hospitaluid')
+                    await updateDatainSubcollection("admitPatients", 'jSqDGnjO21bpPGhb6O2y', 'admitPatient', newObj, 'admituid', 'hospitaluid')
+                    // await setData("admitPatients", 'jSqDGnjO21bpPGhb6O2y', 'admitPatient', admit)
+                    // dispatch(EDIT_ADMIT_PATIENTS(newObj))
+                    // await addSingltObject("DischargePatients", 'cki4rIGKtNwyXr27cZBY', 'dischargePatients', Values)
+                    await addDatainsubcollection("DischargePatients", 'cki4rIGKtNwyXr27cZBY', 'dischargePatients', Values)
+                    // await setData("DischargePatients", 'cki4rIGKtNwyXr27cZBY', 'dischargePatients', discharge)
+                    // dispatch(ADD_DISCHARGE_PATIENTS(Values))
+                    // await updateSingltObject('Rooms', '3PvtQ2G1RbG3l5VtiCMI', 'rooms', roomArray, 'roomuid', 'hospitaluid')
+                    await updateDatainSubcollection('Rooms', '3PvtQ2G1RbG3l5VtiCMI', 'rooms', roomArray, 'roomuid', 'hospitaluid')
+
+                    // await setData('Rooms', '3PvtQ2G1RbG3l5VtiCMI', 'rooms', roomArray)
+                    // dispatch(EDIT_ROOM(roomArray))
                     await resetForm({ values: '' })
                     clearForm()
                     toast.success("Discharge Summery Created successful.....");
@@ -327,12 +349,22 @@ const Discharge = () => {
                 const find = discharge1.findIndex((item) => item.admituid === Values.admituid)
                 discharge1[find] = Values
                 try {
-                    await setData("admitPatients", 'jSqDGnjO21bpPGhb6O2y', 'admitPatient', admit)
-                    dispatch(FILL_ADMIT_PATIENTS(admit))
-                    await setData("DischargePatients", 'cki4rIGKtNwyXr27cZBY', 'dischargePatients', discharge1)
-                    dispatch(EDIT_DISCHARGE_PATIENTS(Values))
-                    await setData('Rooms', '3PvtQ2G1RbG3l5VtiCMI', 'rooms', roomArray)
-                    dispatch(FILL_ROOMS(roomArray))
+                    // await setData("admitPatients", 'jSqDGnjO21bpPGhb6O2y', 'admitPatient', newObj)
+                    // dispatch(FILL_ADMIT_PATIENTS(admit))
+                    // await setData("DischargePatients", 'cki4rIGKtNwyXr27cZBY', 'dischargePatients', discharge1)
+                    // dispatch(EDIT_DISCHARGE_PATIENTS(Values))
+                    // await setData('Rooms', '3PvtQ2G1RbG3l5VtiCMI', 'rooms', roomArray)
+                    // dispatch(FILL_ROOMS(roomArray))
+
+                    // await updateSingltObject("admitPatients", 'jSqDGnjO21bpPGhb6O2y', 'admitPatient', newObj, 'admituid', 'hospitaluid')
+                    await updateDatainSubcollection("admitPatients", 'jSqDGnjO21bpPGhb6O2y', 'admitPatient', newObj, 'admituid', 'hospitaluid')
+                    // dispatch(EDIT_ADMIT_PATIENTS(newObj))
+                    // await updateSingltObject("DischargePatients", 'cki4rIGKtNwyXr27cZBY', 'dischargePatients', Values, 'admituid', 'hospitaluid')
+                    await updateDatainSubcollection("DischargePatients", 'cki4rIGKtNwyXr27cZBY', 'dischargePatients', Values, 'admituid', 'hospitaluid')
+                    // dispatch(EDIT_DISCHARGE_PATIENTS(Values))
+                    // await updateSingltObject('Rooms', '3PvtQ2G1RbG3l5VtiCMI', 'rooms', roomArray, 'roomuid', 'hospitaluid')
+                    await updateDatainSubcollection('Rooms', '3PvtQ2G1RbG3l5VtiCMI', 'rooms', roomArray, 'roomuid', 'hospitaluid')
+                    // dispatch(EDIT_ROOM(roomArray))
                     resetForm({ values: '' })
                     clearForm()
                     toast.success("Discharge Summery updated successful.....");
@@ -382,6 +414,7 @@ const Discharge = () => {
             dischargeType: '',
             followUpDetails: '',
             advices: [],
+            hospitaluid: ''
         });
         setAdvices([])
         setPrint(false);
@@ -418,12 +451,13 @@ const Discharge = () => {
             dischargeType: '',
             followUpDetails: '',
             advices: [],
+            hospitaluid: ''
         });
         setAdvices([])
 
     }
     const editPatientDetails = (item) => {
-        const { pid, pName, page, pMobileNo, admitDate, dischargeDate, drName, roomType, roomNo, bedNo, admituid, diagnosis, history, medicalRx, surgeryName, investigation, surgeryNote, histopathologyReport, radiologyInvstigation, adviceonDischarge, conditionOnDischarge, dischargeType, followUpDetails, advices } = item;
+        const { pid, pName, page, pMobileNo, admitDate, dischargeDate, hospitaluid, drName, roomType, roomNo, bedNo, admituid, diagnosis, history, medicalRx, surgeryName, investigation, surgeryNote, histopathologyReport, radiologyInvstigation, adviceonDischarge, conditionOnDischarge, dischargeType, followUpDetails, advices } = item;
         // const dateStr = admitDate; // Original date string in "dd-mm-yyyy" format
         // const dateParts = dateStr.split("-"); // Split date string into day, month, year components
         // const yyyy_mm_ddadmit = `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`; // Join components in "yyyy-mm-dd" format
@@ -431,7 +465,7 @@ const Discharge = () => {
         // const dateParts1 = dateStr1.split("-"); // Split date string into day, month, year components
         // const yyyy_mm_dd_discharge = `${dateParts1[2]}-${dateParts1[1]}-${dateParts1[0]}`; // Join components in "yyyy-mm-dd" format
         formik.setValues({
-            pid, pName, page, pMobileNo, admitDate: yyyyMMdd(admitDate), dischargeDate: yyyyMMdd(dischargeDate), drName, roomType, roomNo, bedNo, admituid, diagnosis, history, medicalRx, surgeryName, investigation, surgeryNote, histopathologyReport, radiologyInvstigation, adviceonDischarge, conditionOnDischarge, dischargeType, followUpDetails, advices
+            pid, pName, page, pMobileNo, admitDate: yyyyMMdd(admitDate), dischargeDate: yyyyMMdd(dischargeDate), hospitaluid, drName, roomType, roomNo, bedNo, admituid, diagnosis, history, medicalRx, surgeryName, investigation, surgeryNote, histopathologyReport, radiologyInvstigation, adviceonDischarge, conditionOnDischarge, dischargeType, followUpDetails, advices
         });
 
         setAdvices(advices);
@@ -450,9 +484,11 @@ const Discharge = () => {
                     onClick: async () => {
                         let discharge = dischargePtientfilter.filter((item) => item.admituid !== item1.admituid);
                         try {
-                            await setData("DischargePatients", 'cki4rIGKtNwyXr27cZBY', 'dischargePatients', discharge)
-                            setDischargePatient(dischargePatient.filter((item) => item.admituid !== item1.admituid))
-                            dispatch(DELETE_DISCHARGE_PATIENTS(item1))
+                            // await deleteSingltObject("DischargePatients", 'cki4rIGKtNwyXr27cZBY', 'dischargePatients', item1, 'druid', 'hospitaluid')
+                            await deleteDatainSubcollection("DischargePatients", 'cki4rIGKtNwyXr27cZBY', 'dischargePatients', item1, 'admituid', 'hospitaluid')
+                            // await setData("DischargePatients", 'cki4rIGKtNwyXr27cZBY', 'dischargePatients', discharge)
+                            // setDischargePatient(dischargePatient.filter((item) => item.admituid !== item1.admituid))
+                            // dispatch(DELETE_DISCHARGE_PATIENTS(item1))
                             toast.error("Deleted successful.....");
 
                         } catch (error) {
@@ -468,6 +504,8 @@ const Discharge = () => {
 
     }
     const printDischargesummary = (item) => {
+        // filDatainsubcollection(allDischargePatients, "DischargePatients", 'cki4rIGKtNwyXr27cZBY', 'dischargePatients', hospitaluid)
+
         setPrintContent(<PrintComponent data={{
             data1: {
                 ...item,
@@ -496,7 +534,6 @@ const Discharge = () => {
             setDischargePatient(filteredRows)
         }
     }
-    console.log(values);
     const handleOnSelect = (item) => {
         formik.setFieldValue('pid', item.pid);
         formik.setFieldValue('pName', item.pName);
@@ -513,6 +550,7 @@ const Discharge = () => {
         formik.setFieldValue('admituid', item.admituid);
         formik.setFieldValue('bedNo', item.bedNo);
         formik.setFieldValue('diagnosis', item.diagnosis);
+        formik.setFieldValue('hospitaluid', item.hospitaluid);
 
         // values.pid = item.pid;
         // values.pName = item.pName;

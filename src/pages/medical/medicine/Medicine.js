@@ -14,7 +14,7 @@ import { selectAllPatients } from 'src/redux/slice/patientMasterslice';
 import { selectAllMedicines, UPDATE_MEDICINES } from 'src/redux/slice/medicinesMasterSlice';
 import { ADD_PATIENTS_MEDICINES, DELETE_PATIENTS_MEDICINES, EDIT_PATIENTS_MEDICINES, selectAllPatientsMedicines } from 'src/redux/slice/patientsMedicinesSlice';
 import { useDispatch, useSelector } from 'react-redux';
-import { setData } from 'src/services/firebasedb';
+import { addDatainsubcollection, addSingltObject, deleteDatainSubcollection, deleteSingltObject, filDatainsubcollection, setData, updateDatainSubcollection, updateSingltObject, uploadArray } from 'src/services/firebasedb';
 import Loaderspinner from 'src/comman/spinner/Loaderspinner';
 import CommanTable from 'src/comman/table/CommanTable';
 import { confirmAlert } from 'react-confirm-alert';
@@ -26,6 +26,7 @@ import SearchAutocomplete from 'src/comman/searchAutocomplete/SearchAutocomplete
 import { ddMMyyyy, yyyyMMdd } from 'src/services/dateFormate';
 import Table from 'react-bootstrap/Table';
 import PrintButton from 'src/comman/printpageComponents/PrintButton';
+import { selectUserId } from 'src/redux/slice/authSlice';
 
 const PrintComponent = ({ data }) => {
     const state = data.data1
@@ -141,6 +142,7 @@ let initalValues = {
     ],
     allMedTotalprice: '',
     pmeduid: '',
+    hospitaluid: ''
 }
 const Medicine = () => {
     const navigate = useNavigate()
@@ -158,6 +160,7 @@ const Medicine = () => {
     const [stockerror, setStockerror] = useState(false)
     const [medList, setMedList] = useState([])
     const [printContent, setPrintContent] = useState(null);
+    const hospitaluid = useSelector(selectUserId)
 
     // let medList = medicineList
     // const reversedArray = allPatientsMedicines.slice().reverse();
@@ -179,7 +182,6 @@ const Medicine = () => {
             }
                 <button onClick={() => generateInvoice(row)} style={{ color: 'skyblue', border: 'none' }} ><AiFillPrinter size={25} /></button>
                 <button onClick={() => deletePatientsDetails(row)} style={{ color: 'red', border: 'none' }} ><AiFillDelete size={25} /></button>
-
             </span>
         }
     ]
@@ -210,7 +212,8 @@ const Medicine = () => {
 
             let medd = [...patientsMedicineFilter]
             values.medicineDate = values.medicineDate ? ddMMyyyy(values.medicineDate) : values.medicineDate;
-            await Values.medicines.map((item) => updateStock(item))
+            // await Values.medicines.map((item) => updateStock(item))
+            await Promise.all(values.medicines.map((item) => updateStock(item)));
 
             if (!update) {
                 values.pmeduid = Math.floor(315 + Math.random() * 8000)
@@ -218,10 +221,12 @@ const Medicine = () => {
 
                 let med = [...patientsMedicineFilter, Values]
                 try {
-                    await setData("PatientsMedicines", 'GoKwC6l5NRWSonfUAal0', 'patientsMedicines', med)
-                    dispatch(ADD_PATIENTS_MEDICINES(Values))
-                    await setData("Medicines", 'dHFKEhdhbOM4v6WRMb6z', 'medicines', medList)
-                    dispatch(UPDATE_MEDICINES(medList))
+                    await addDatainsubcollection("PatientsMedicines", 'GoKwC6l5NRWSonfUAal0', 'patientsMedicines', values)
+                    // await setData("PatientsMedicines", 'GoKwC6l5NRWSonfUAal0', 'patientsMedicines', med)
+                    // dispatch(ADD_PATIENTS_MEDICINES(Values))
+                    // await uploadArray("Medicines", 'dHFKEhdhbOM4v6WRMb6z', 'medicines', medList, 'medicineuid', 'hospitaluid')
+                    // await setData("Medicines", 'dHFKEhdhbOM4v6WRMb6z', 'medicines', medList)
+                    // dispatch(UPDATE_MEDICINES(medList))
                     action.resetForm()
                     clearForm()
                     setShow(false)
@@ -239,24 +244,24 @@ const Medicine = () => {
                 medd[findindex] = Values;
 
                 try {
-                    await setTimeout(() => {
-                        setData("PatientsMedicines", 'GoKwC6l5NRWSonfUAal0', 'patientsMedicines', medd)
-                        dispatch(EDIT_PATIENTS_MEDICINES(Values))
-                        setData("Medicines", 'dHFKEhdhbOM4v6WRMb6z', 'medicines', medList)
-                        dispatch(UPDATE_MEDICINES(medList))
-                        action.resetForm()
-                        clearForm()
-                        setShow(false)
-                        setUpdate(false)
-                        toast.success("Updated Successfully.......");
-                    }, 1000)
+                    // await setTimeout(() => {
+                    await updateDatainSubcollection("PatientsMedicines", 'GoKwC6l5NRWSonfUAal0', 'patientsMedicines', Values, 'pmeduid', 'hospitaluid')
+                    // setData("PatientsMedicines", 'GoKwC6l5NRWSonfUAal0', 'patientsMedicines', medd)
+                    // dispatch(EDIT_PATIENTS_MEDICINES(Values))
+                    // await uploadArray("Medicines", 'dHFKEhdhbOM4v6WRMb6z', 'medicines', medList, 'medicineuid', 'hospitaluid')
+                    // setData("Medicines", 'dHFKEhdhbOM4v6WRMb6z', 'medicines', medList)
+                    // dispatch(UPDATE_MEDICINES(medList))
+                    action.resetForm()
+                    clearForm()
+                    setShow(false)
+                    setUpdate(false)
+                    toast.success("Updated Successfully.......");
+                    // }, 1000)
                 } catch (error) {
                     toast.error(error.message)
                     console.error(error.message);
                 }
-
             }
-
         }
     })
 
@@ -290,18 +295,21 @@ const Medicine = () => {
             ],
             allMedTotalprice: '',
             pmeduid: '',
+            hospitaluid: ''
         });
     };
 
     const updateStock = async (item) => {
         const findIndex = medList.findIndex((item1) => item1.medicineuid === item.meduid)
         let newObj = { ...medList[findIndex], availableStock: medList[findIndex].availableStock - parseInt(item.medQty) }
+        await updateDatainSubcollection("Medicines", 'dHFKEhdhbOM4v6WRMb6z', 'medicines', newObj, 'medicineuid', 'hospitaluid')
         medList[findIndex] = newObj;
     }
     const updateStockonUpdate = async (item) => {
         const findIndex = medList.findIndex((item1) => item1.medicineuid === item.meduid)
         let newObj = { ...medList[findIndex], availableStock: medList[findIndex].availableStock + parseInt(item.medQty) }
-        medList[findIndex] = newObj;
+        await updateDatainSubcollection("Medicines", 'dHFKEhdhbOM4v6WRMb6z', 'medicines', newObj, 'medicineuid', 'hospitaluid')
+        // medList[findIndex] = newObj;
     }
     const generateInvoice = (item) => {
         if (item.paymentStatus === "Completed") {
@@ -317,9 +325,9 @@ const Medicine = () => {
     }
     const viewInvoice = (item) => {
         navigate("/medical/medicine/medicineinvoice", { state: item })
-
     }
     const editPatientDetails = (item) => {
+        // filDatainsubcollection(allPatientsMedicines, "PatientsMedicines", 'GoKwC6l5NRWSonfUAal0', 'patientsMedicines')
         const {
             pid,
             pName,
@@ -332,6 +340,7 @@ const Medicine = () => {
             medicines,
             allMedTotalprice,
             pmeduid,
+            hospitaluid
         } = item;
 
         formik.setValues({
@@ -346,6 +355,7 @@ const Medicine = () => {
             medicines,
             allMedTotalprice,
             pmeduid,
+            hospitaluid
         });
         // values.pmeduid = item.pmeduid;
         // values.pid = item.pid;
@@ -361,7 +371,6 @@ const Medicine = () => {
         setShow(true)
         setUpdate(true)
     }
-
     const deletePatientsDetails = async (item1) => {
         confirmAlert({
             title: 'Confirm to Delete',
@@ -371,13 +380,16 @@ const Medicine = () => {
                     label: 'Yes',
                     onClick: async () => {
                         let med = await patientsMedicineFilter.filter((item) => item.pmeduid !== item1.pmeduid);
-                        await item1.medicines.map((item) => updateStockonUpdate(item))
                         console.log('medicine List', medList);
                         try {
-                            await setData("PatientsMedicines", 'GoKwC6l5NRWSonfUAal0', 'patientsMedicines', med)
-                            dispatch(DELETE_PATIENTS_MEDICINES(item1))
-                            await setData("Medicines", 'dHFKEhdhbOM4v6WRMb6z', 'medicines', medList)
-                            dispatch(UPDATE_MEDICINES(medList))
+                            // await deleteSingltObject("PatientsMedicines", 'GoKwC6l5NRWSonfUAal0', 'patientsMedicines', item1, 'pmeduid', 'hospitaluid')
+                            await deleteDatainSubcollection("PatientsMedicines", 'GoKwC6l5NRWSonfUAal0', 'patientsMedicines', item1, 'pmeduid', 'hospitaluid')
+                            await item1.medicines.map((item) => updateStockonUpdate(item))
+
+                            // await setData("PatientsMedicines", 'GoKwC6l5NRWSonfUAal0', 'patientsMedicines', med)
+                            // dispatch(DELETE_PATIENTS_MEDICINES(item1))
+                            // await setData("Medicines", 'dHFKEhdhbOM4v6WRMb6z', 'medicines', medList)
+                            // dispatch(UPDATE_MEDICINES(medList))
                             toast.success("Deleted Successfully.......");
                         } catch (error) {
                             toast.error(error.message)
@@ -393,8 +405,6 @@ const Medicine = () => {
 
 
     }
-
-
     const requestSearch = (searchvalue) => {
         const filteredRows = patientsMedicineFilter.filter((row) => {
             return row.pid.toString().includes(searchvalue.toLowerCase()) || row.pName.toLowerCase().includes(searchvalue.toLowerCase()) || row.pMobileNo.includes(searchvalue);
@@ -432,12 +442,6 @@ const Medicine = () => {
             setStockerror(true);
         }
     };
-
-
-
-
-
-
     const handleOnSelect = (item) => {
         formik.setFieldValue('pid', item.pid);
         formik.setFieldValue('pName', item.pName);
@@ -445,6 +449,7 @@ const Medicine = () => {
         formik.setFieldValue('pGender', item.pGender);
         formik.setFieldValue('page', item.page);
         formik.setFieldValue('pAddress', item.pAddress);
+        formik.setFieldValue('hospitaluid', item.hospitaluid);
 
     };
 

@@ -11,6 +11,8 @@ import CommanTable from 'src/comman/table/CommanTable';
 import Loaderspinner from 'src/comman/spinner/Loaderspinner';
 import { toast } from 'react-toastify';
 import firebase from 'firebase/compat/app'
+import { selectUserId } from 'src/redux/slice/authSlice';
+import { useSelector } from 'react-redux';
 
 const initalValues = {
     name: '',
@@ -22,6 +24,7 @@ const UsersMstersregistration = () => {
     const [userMasterList, setUserMasterList] = useState([])
     const [show, setShow] = useState(false);
     const [isLoading, setIsLoading] = useState(true)
+    const hospitaluid = useSelector(selectUserId)
 
     const columns = [
         { name: '#', selector: (row, index) => index + 1 },
@@ -34,10 +37,9 @@ const UsersMstersregistration = () => {
         db.collection("UserList").get().then((res) => {
             let temp_data = []
             res.docs.forEach((res1) => {
-                if (res1.data().userType === "Patient") {
-
-                } else {
+                if (res1.data().userType !== "Patient" && res1.data().hospitaluid === hospitaluid) {
                     temp_data.push(res1.data())
+                } else {
                 }
                 setUserMasterList(temp_data)
                 setIsLoading(false)
@@ -92,6 +94,7 @@ const UsersMstersregistration = () => {
                     userName: values.name,
                     userType: values.userType,
                     userPassword: values.password,
+                    hospitaluid: hospitaluid,
                 });
 
                 toast.success("User Registration successfully Completed.....");

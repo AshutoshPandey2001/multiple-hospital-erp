@@ -44,7 +44,7 @@ const ShowRoomcomponent = ({ roomType, selectedRoomDetails }) => {
     return (
         <>
             <div className="card w-100">
-                <div className="card-header">{roomType.roomType}</div>
+                <div className="card-header">{roomType?.roomType}</div>
                 <div className="card-body">
                     <div className="row">
                         {roomType.rooms?.map((room, i) => {
@@ -102,8 +102,11 @@ const ShowRoomcomponent = ({ roomType, selectedRoomDetails }) => {
                                                                     show={selectedBedIndex === `${i}-${j}` && showTooltip}
                                                                     placement="top"
                                                                 >
-                                                                    <Tooltip id={`tooltip-${i}-${j}`}>
-                                                                        {tooltipContent}
+                                                                    <Tooltip id={`tooltip-${i}-${j}`} >
+                                                                        <div style={{ color: 'black' }}>
+
+                                                                            {tooltipContent}
+                                                                        </div>
                                                                     </Tooltip>
                                                                 </Overlay>
                                                             )}

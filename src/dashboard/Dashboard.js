@@ -62,7 +62,19 @@ const Dashboard = () => {
   const [totalIndoorAmount, setTotalIndoorAmount] = useState(0)
   const [totalOpdcount, setTotalOpdcount] = useState(0)
   const [totalIndoorcount, setTotalIndoorcount] = useState(0)
-  const filteredOpdData = opdPatientsdata
+
+  const invoiceuidMap = new Map();
+  for (const entry of opdPatientsdata) {
+    const { invoiceuid } = entry;
+    if (invoiceuid) {
+      invoiceuidMap.set(parseInt(invoiceuid), entry);
+    }
+  }
+  const filteredOPDDataUnique = Array.from(invoiceuidMap.values());
+
+  // console.log('filteredOPDDataUnique', filteredOPDDataUnique);
+
+  const filteredOpdData = filteredOPDDataUnique
     .filter(entry => entry.paymentStatus === "Completed")
     .reduce((result, entry) => {
       const date = yyyyMMdd(entry.consultingDate);
@@ -75,20 +87,30 @@ const Dashboard = () => {
       return result;
     }, []);
 
+  const invoiceuidMapIndoor = new Map();
+  for (const entry of admitPatientsdata) {
+    const { invoiceuid } = entry;
+    if (invoiceuid) {
+      invoiceuidMapIndoor.set(parseInt(invoiceuid), entry);
+    }
+  }
+  const filteredIndoorDataUnique = Array.from(invoiceuidMapIndoor.values());
 
-  const filteredIndoorData = admitPatientsdata
+  console.log('filteredIndoorDataUnique', filteredIndoorDataUnique);
+
+  const filteredIndoorData = filteredIndoorDataUnique
     .filter(entry => entry.paymentStatus === "Completed")
     .reduce((result, entry) => {
       const date = yyyyMMdd(entry.admitDate);
       const existingEntry = result.find(item => item.date === date);
       if (existingEntry) {
-        existingEntry.payAbleAmount += entry.payableAmount;
+        existingEntry.payAbleAmount += entry.payableAmount + (entry.deposit ? Number(entry.deposit) : 0);
       } else {
-        result.push({ date, payAbleAmount: entry.payableAmount });
+        result.push({ date, payAbleAmount: entry.payableAmount + (entry.deposit ? Number(entry.deposit) : 0) });
       }
       return result;
     }, []);
-
+  console.log('filteredIndoorData', filteredIndoorData);
   const data = admitPatientsdata?.map((patient) => ({
     date: yyyyMMdd(patient.admitDate),
     count: 1,
@@ -244,13 +266,6 @@ const Dashboard = () => {
     totalindoorAmountmonth.push(dataPoint1);
   }
 
-
-
-
-
-
-
-
   const [chartDatapie, setChartDatapie] = useState({
     series: [admitPatientsdata?.length, opdPatientsdata?.length, allDoctors?.length, totalRooms],
     options: {
@@ -356,23 +371,27 @@ const Dashboard = () => {
     })
     const totalNoofRoom = total_rooms.reduce((partialSum, a) => partialSum + a, 0)
     setTotalRooms(totalNoofRoom)
-    const totalopd = opdPatientsdata.reduce((partialSum, a) => {
-      if (a.paymentStatus === "Completed") {
-        return partialSum + a.payAbleAmount;
-      }
-      return partialSum;
-    }, 0);
+    // const totalopd = opdPatientsdata.reduce((partialSum, a) => {
+    //   if (a.paymentStatus === "Completed") {
+    //     return partialSum + a.payAbleAmount;
+    //   }
+    //   return partialSum;
+    // }, 0);
+    const totalopd = filteredOpdData.reduce((partialSum, a) => partialSum + a.payAbleAmount, 0);
+
     setTotalOpdAmount(totalopd)
     setTotalOpdcount(opdPatientsdata.length)
-    const totalIndoor = admitPatientsdata.reduce((partialSum, a) => {
-      if (a.paymentStatus === "Completed") {
-        return partialSum + a.payableAmount;
-      }
-      return partialSum;
-    }, 0);
+    // const totalIndoor = admitPatientsdata.reduce((partialSum, a) => {
+    //   if (a.paymentStatus === "Completed") {
+    //     return partialSum + a.payableAmount;
+    //   }
+    //   return partialSum;
+    // }, 0);
+    const totalIndoor = filteredIndoorData.reduce((partialSum, a) => partialSum + a.payAbleAmount, 0);
+
     setTotalIndoorAmount(totalIndoor)
     setTotalIndoorcount(admitPatientsdata.length)
-
+    pieChartFiltertoday()
     setChartData(prevState => ({
       ...prevState,
       series: [
@@ -451,7 +470,16 @@ const Dashboard = () => {
     setTotalIndoorAmount(Number(indoormonthAmount))
     setTotalOpdAmount(Number(opdmonthAmount))
   }
+  const allTimeData = () => {
+    const totalIndoor = filteredIndoorData.reduce((partialSum, a) => partialSum + a.payAbleAmount, 0);
 
+    setTotalIndoorAmount(totalIndoor)
+    setTotalIndoorcount(admitPatientsdata.length)
+    const totalopd = filteredOpdData.reduce((partialSum, a) => partialSum + a.payAbleAmount, 0);
+
+    setTotalOpdAmount(totalopd)
+    setTotalOpdcount(opdPatientsdata.length)
+  }
 
   return (
     <>
@@ -465,6 +493,7 @@ const Dashboard = () => {
               <Dropdown.Item onClick={pieChartFiltertoday}>Today</Dropdown.Item>
               <Dropdown.Item onClick={pieChartFilterweek}>Last 7 Days</Dropdown.Item>
               <Dropdown.Item onClick={pieChartFiltermonth}>Last 30 Days</Dropdown.Item>
+              <Dropdown.Item onClick={allTimeData}>All Time</Dropdown.Item>
             </Dropdown.Menu>
           </Dropdown>
         </div>

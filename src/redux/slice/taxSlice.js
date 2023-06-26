@@ -18,7 +18,7 @@ const taxMsterSlice = createSlice({
             }
         },
         EDIT_TAX: (state, actions) => {
-            const findIndex = state.taxList.findIndex((item) => item.taxName === actions.payload.taxName)
+            const findIndex = state.taxList.findIndex((item) => item.taxUid === actions.payload.taxUid)
             state.taxList[findIndex] = actions.payload;
         },
         DELETE_TAX: (state, actions) => {

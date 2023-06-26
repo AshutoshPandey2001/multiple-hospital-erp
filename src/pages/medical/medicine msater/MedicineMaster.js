@@ -11,21 +11,26 @@ import { AiFillDelete } from 'react-icons/ai'
 import { useDispatch, useSelector } from 'react-redux';
 import { ADD_MEDICINES, DELETE_MEDICINES, EDIT_MEDICINES, UPLOAD_MEDICINES, selectAllMedicines } from 'src/redux/slice/medicinesMasterSlice';
 import Papa from "papaparse";
-import { setData } from 'src/services/firebasedb';
+import { addDatainsubcollection, addSingltObject, deleteDatainSubcollection, deleteSingltObject, filDatainsubcollection, setData, updateDatainSubcollection, updateSingltObject, uploadArray } from 'src/services/firebasedb';
 import Loaderspinner from 'src/comman/spinner/Loaderspinner';
 import CommanTable from 'src/comman/table/CommanTable';
 import { confirmAlert } from 'react-confirm-alert';
 import { toast } from 'react-toastify';
+import { selectUserId } from 'src/redux/slice/authSlice';
+
 const initalValues = {
     medicineuid: '',
     medicineName: '',
     medicineFormula: '',
     availableStock: '',
     medicinePrice: '',
+    hospitaluid: ''
 }
 const MedicineMaster = () => {
     const dispatch = useDispatch();
     const allMedicinesList = useSelector(selectAllMedicines)
+    const hospitaluid = useSelector(selectUserId)
+
     const [show, setShow] = useState(false);
     const [medicinesList, setMedicinesList] = useState([]);
     const [medicinessFilter, setMedicinessFilter] = useState([]);
@@ -53,6 +58,7 @@ const MedicineMaster = () => {
         values.medicineFormula = '';
         values.medicineuid = '';
         values.availableStock = '';
+        values.hospitaluid = '';
         setUpdate(false)
         formik.resetForm();
     }
@@ -74,7 +80,8 @@ const MedicineMaster = () => {
 
             let medd = [...medicinessFilter]
             if (!update) {
-                setMedicinessFilter([...medicinessFilter, Values])
+                values.hospitaluid = hospitaluid
+                // setMedicinessFilter([...medicinessFilter, Values])
                 let findMedicine = medd.findIndex((item1) => item1.medicineuid === Values.medicineuid)
                 if (findMedicine >= 0) {
 
@@ -86,7 +93,7 @@ const MedicineMaster = () => {
                 }
 
                 try {
-                    await setData("Medicines", 'dHFKEhdhbOM4v6WRMb6z', 'medicines', medd)
+                    await addDatainsubcollection("Medicines", 'dHFKEhdhbOM4v6WRMb6z', 'medicines', values)
                     dispatch(ADD_MEDICINES(Values))
                     action.resetForm()
                     setShow(false)
@@ -104,15 +111,15 @@ const MedicineMaster = () => {
                 medd[findindex] = Values;
 
                 try {
-                    await setTimeout(() => {
-                        setData("Medicines", 'dHFKEhdhbOM4v6WRMb6z', 'medicines', medd)
-                        dispatch(EDIT_MEDICINES(Values))
-                        action.resetForm()
-                        setShow(false)
-                        setUpdate(false)
-                        toast.success("Updated Successfully.......");
-                        setIsLoading(false)
-                    }, 3000)
+
+                    await updateDatainSubcollection("Medicines", 'dHFKEhdhbOM4v6WRMb6z', 'medicines', values, 'medicineuid', 'hospitaluid')
+                    dispatch(EDIT_MEDICINES(Values))
+                    action.resetForm()
+                    setShow(false)
+                    setUpdate(false)
+                    toast.success("Updated Successfully.......");
+                    setIsLoading(false)
+
                 } catch (error) {
                     setIsLoading(false)
                     toast.error(error.message)
@@ -123,11 +130,14 @@ const MedicineMaster = () => {
     });
     const { values, errors, touched, handleBlur, handleChange, handleSubmit } = formik;
     const editMedicines = (item) => {
+        // filDatainsubcollection(allMedicinesList, "Medicines", 'dHFKEhdhbOM4v6WRMb6z', 'medicines')
         values.medicineuid = item.medicineuid;
         values.medicineName = item.medicineName;
         values.medicinePrice = item.medicinePrice;
         values.availableStock = item.availableStock;
         values.medicineFormula = item.medicineFormula;
+        values.hospitaluid = item.hospitaluid;
+
         setShow(true)
         setUpdate(true)
     }
@@ -142,7 +152,9 @@ const MedicineMaster = () => {
                     onClick: async () => {
                         let med = medicinessFilter.filter((item) => item.medicineuid !== item1.medicineuid);
                         try {
-                            await setData("Medicines", 'dHFKEhdhbOM4v6WRMb6z', 'medicines', med)
+                            // await deleteSingltObject("Medicines", 'dHFKEhdhbOM4v6WRMb6z', 'medicines', item1, 'medicineuid', 'hospitaluid')
+                            await deleteDatainSubcollection("Medicines", 'dHFKEhdhbOM4v6WRMb6z', 'medicines', item1, 'medicineuid', 'hospitaluid')
+                            // await setData("Medicines", 'dHFKEhdhbOM4v6WRMb6z', 'medicines', med)
                             dispatch(DELETE_MEDICINES(item1))
                             toast.success("Deleted Successfully.......");
                         } catch (error) {
@@ -193,26 +205,26 @@ const MedicineMaster = () => {
                         if (item.medicineFormula) {
                             let findMedicine = medicine.findIndex((item1) => item1.medicineuid === item.medicineuid)
                             if (findMedicine >= 0) {
-
                                 let totalStock = medicine[findMedicine].availableStock + item.availableStock;
                                 let newObj = { ...medicine[findMedicine], availableStock: totalStock }
-                                medicine[findMedicine] = newObj
+                                updateDatainSubcollection("Medicines", 'dHFKEhdhbOM4v6WRMb6z', 'medicines', newObj, 'medicineuid', 'hospitaluid')
+                                // medicine[findMedicine] = newObj
                             } else {
-                                medicine.push(item)
+                                addDatainsubcollection("Medicines", 'dHFKEhdhbOM4v6WRMb6z', 'medicines', { ...item, hospitaluid: hospitaluid })
+                                // medicine.push({ ...item, hospitaluid: hospitaluid })
                             }
-                            tempData.push(item)
+                            tempData.push({ ...item, hospitaluid: hospitaluid })
                         }
                     })
 
                     setFiles('')
-                    // let med = [...medicinessFilter, ...tempData]
-                    try {
-                        await setData("Medicines", 'dHFKEhdhbOM4v6WRMb6z', 'medicines', medicine)
-                        dispatch(UPLOAD_MEDICINES(medicine))
-                    } catch (error) {
-                        console.error(error.message);
-                    }
-
+                    // try {
+                    //     await uploadArray("Medicines", 'dHFKEhdhbOM4v6WRMb6z', 'medicines', medicine, 'medicineuid', 'hospitaluid')
+                    //     // await setData("Medicines", 'dHFKEhdhbOM4v6WRMb6z', 'medicines', medicine)
+                    //     dispatch(UPLOAD_MEDICINES(medicine))
+                    // } catch (error) {
+                    //     console.error(error.message);
+                    // }
                 }
             }
             )

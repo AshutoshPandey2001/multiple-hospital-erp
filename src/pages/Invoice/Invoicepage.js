@@ -7,9 +7,9 @@ import Table from 'react-bootstrap/Table';
 import { CHANGE_STATUS_PATIENTS_MEDICINES, selectAllPatientsMedicines } from 'src/redux/slice/patientsMedicinesSlice';
 import { useDispatch, useSelector } from 'react-redux';
 import Loaderspinner from '../../comman/spinner/Loaderspinner';
-import { getData, setData } from 'src/services/firebasedb';
+import { getData, setData, updateMultiDatainSubcollection, updatemultitObject, uploadArray } from 'src/services/firebasedb';
 import { EDIT_ADMIT_PATIENTS, FILL_ADMIT_PATIENTS, selectAdmitPatients } from 'src/redux/slice/admitPatientsSlice';
-import { CLEAR_FIELD, selectAdvance, selectcgstamount, selectcgstValue, selecthospitalcharges, selecticuCharge, selecticuUnit, selectnursingCharge, selectnursingUnit, selectotCharge, selectotUnit, selectsgstamount, selectsgstValue, selectsubTotalamount, selectTotalBillingAmount, selectTotalicuCharges, selecttotalMedicine, selectTotalNursingCharges, selectTotalotCharges, selectTotalpyableAmount, SET_ADVANCE, SET_EXTRACHARGES_CHARGES, SET_HOSPITAL_CHARGES, SET_ICUCHARGE, SET_ICUUNIT, SET_INVOICE, SET_NURSINGCHARGE, SET_NURSINGUNIT, SET_OTCHARGE, SET_OTUNIT } from 'src/redux/slice/invoiceSlice';
+import { CLEAR_FIELD, selectAdvance, selectcgstamount, selectcgstValue, selectdiscount, selecthospitalcharges, selecticuCharge, selecticuUnit, selectnursingCharge, selectnursingUnit, selectotCharge, selectotUnit, selectsgstamount, selectsgstValue, selectsubTotalamount, selectTotalBillingAmount, selectTotalicuCharges, selecttotalMedicine, selectTotalNursingCharges, selectTotalotCharges, selectTotalpyableAmount, SET_ADVANCE, SET_DISCOUNT, SET_EXTRACHARGES_CHARGES, SET_HOSPITAL_CHARGES, SET_ICUCHARGE, SET_ICUUNIT, SET_INVOICE, SET_NURSINGCHARGE, SET_NURSINGUNIT, SET_OTCHARGE, SET_OTUNIT } from 'src/redux/slice/invoiceSlice';
 import { toast } from 'react-toastify';
 import PrintButton from 'src/comman/printpageComponents/PrintButton';
 import { FILL_LABORATORY_REPORTS, selectAlllaboratoryReports } from 'src/redux/slice/patientsLaboratoryReportsSlice';
@@ -21,6 +21,7 @@ import { FieldArray, useFormik, FormikProvider } from 'formik';
 import { ImCross } from 'react-icons/im'
 import { BiPlus } from 'react-icons/bi'
 import { selectAllCharges } from 'src/redux/slice/chargesSlice';
+import { selectAlltax } from 'src/redux/slice/taxSlice';
 
 const PrintComponent = ({ data }) => {
     const state = data.data1
@@ -106,7 +107,7 @@ const PrintComponent = ({ data }) => {
                             <td colSpan={2}>{state.hospitalCharges.toFixed(2)}</td>
                             <td>{state.hospitalCharges.toFixed(2)}</td>
                         </tr> */}
-                        {
+                        {/* {
                             state.pendingOpd?.map((opd, r) => {
                                 return <>
                                     <tr key={r}>
@@ -115,7 +116,7 @@ const PrintComponent = ({ data }) => {
                                     </tr>
                                 </>
                             })
-                        }
+                        } */}
                         {
                             state.reportDetails?.map((report, i) => {
                                 return <>
@@ -129,7 +130,7 @@ const PrintComponent = ({ data }) => {
                             })
                         }
 
-                        {!state.medicines.length ? null :
+                        {/* {!state.medicines.length ? null :
                             <tr>
 
                                 <td colSpan={3}>
@@ -158,7 +159,7 @@ const PrintComponent = ({ data }) => {
                                     </Table></td>
                                 <td>{state.totalMedicines.toFixed(2)}</td>
                             </tr>
-                        }
+                        } */}
                         <tr>
                             <td colSpan={3}>Sub Total</td>
                             <td>{state.subtotal.toFixed(2)}</td>
@@ -202,16 +203,17 @@ const PrintComponent = ({ data }) => {
                     <div>
                         <div>
                             <div><b>Invoice By :{state.userName}</b></div>
-                            <span>Payment Type <b>:{state.paymentType}</b></span>
+                            <span><b>Payment Type :{state.paymentType}</b></span>
                             <div><b>Payment Status :{state.paymentStatus}</b></div>
                         </div>
                     </div>
                 </div>
                 <div className='col-lg-6 col-md-6 col-sm-6 d-flex justify-content-end'>
                     <div>
-                        <h6>Total Bill Amount :{state.billingAmount.toFixed(2)}</h6>
-                        <span>Deposit: {Number(state.deposit).toFixed(2)}</span>
-                        <h6>Payable Amount : {state.payableAmount.toFixed(2)}</h6>
+                        <div><b>Total Bill Amount :{state.billingAmount.toFixed(2)}</b></div>
+                        <span> <b>Advance:{Number(state.deposit).toFixed(2)}</b></span>
+                        {state.discount ? <div><b>Discount :{Number(state.discount).toFixed(2)}</b></div> : null}
+                        <div> <b>Payable Amount:{state.payableAmount.toFixed(2)}</b></div>
                     </div>
                 </div>
                 {/* <div className="form-check" style={{ marginTop: '20px' }}>
@@ -265,6 +267,8 @@ const Invoicepage = () => {
     //     navigate('/indoor')
     //     return null;
     // }
+    const allTaxs = useSelector(selectAlltax)
+
     const patientMedicine = useSelector(selectAllPatientsMedicines);
     const allPatientsLaboratoryReports = useSelector(selectAlllaboratoryReports)
     const allopdPatients = useSelector(selectOpdPatients)
@@ -287,6 +291,7 @@ const Invoicepage = () => {
     const icuRate = useSelector(selecticuCharge)
     const icuUnits = useSelector(selecticuUnit)
     const advance = useSelector(selectAdvance)
+    const discount = useSelector(selectdiscount)
     const hospitalCharges = useSelector(selecthospitalcharges)
     const payable = useSelector(selectTotalpyableAmount)
     const componentRef = useRef();
@@ -321,29 +326,29 @@ const Invoicepage = () => {
     const fetchData = async () => {
         let temp_data = [];
         setTimeout(async () => {
-            const medicineDetails = {};
+            // const medicineDetails = {};
 
-            for (const item of patientMedicine || []) {
-                if (item.pid !== state.pid || item.paymentStatus !== 'Pending') continue;
+            // for (const item of patientMedicine || []) {
+            //     if (item.pid !== state.pid || item.paymentStatus !== 'Pending') continue;
 
-                for (const medicine of item.medicines || []) {
-                    const existingMedicine = medicineDetails[medicine.medname];
-                    if (existingMedicine) {
-                        existingMedicine.medQty += parseInt(medicine.medQty);
-                        existingMedicine.totalmedPrice += medicine.totalmedPrice;
-                    } else {
-                        medicineDetails[medicine.medname] = {
-                            medname: medicine.medname,
-                            medPrice: medicine.medPrice,
-                            medQty: parseInt(medicine.medQty),
-                            totalmedPrice: medicine.totalmedPrice,
-                        };
-                    }
-                }
-            }
-            const medicineDetailsArray = Object.values(medicineDetails);
-            setMedicines([...medicineDetailsArray]);
-            const totalmedicineCharge = await medicineDetailsArray.reduce((total, item) => total + item.totalmedPrice, 0);
+            //     for (const medicine of item.medicines || []) {
+            //         const existingMedicine = medicineDetails[medicine.medname];
+            //         if (existingMedicine) {
+            //             existingMedicine.medQty += parseInt(medicine.medQty);
+            //             existingMedicine.totalmedPrice += medicine.totalmedPrice;
+            //         } else {
+            //             medicineDetails[medicine.medname] = {
+            //                 medname: medicine.medname,
+            //                 medPrice: medicine.medPrice,
+            //                 medQty: parseInt(medicine.medQty),
+            //                 totalmedPrice: medicine.totalmedPrice,
+            //             };
+            //         }
+            //     }
+            // }
+            // const medicineDetailsArray = Object.values(medicineDetails);
+            // setMedicines([...medicineDetailsArray]);
+            // const totalmedicineCharge = await medicineDetailsArray.reduce((total, item) => total + item.totalmedPrice, 0);
 
             const prevRoom = admtPatients
                 .filter(patient => patient.pid === state.pid && patient.paymentStatus === "Pending" && patient.dischargeDate)
@@ -359,18 +364,18 @@ const Invoicepage = () => {
             setAllprevRooms(prevRoom)
             const totalOfRooms = await prevRoom.reduce((total, item) => total + item.totalRoomrent, 0);
 
-            const pendingopd = allopdPatients
-                .filter(patient => patient.pid === state.pid && patient.paymentStatus === "Pending")
-                .map(patient => ({
-                    opduid: patient.opduid,
-                    drName: patient.drName,
-                    consultingCharges: patient.consultingCharge,
-                    consultingDate: patient.consultingDate
-                }));
-            setPendingOpd(pendingopd)
-            const totalOfopd = await pendingopd.reduce((total, item) => total + item.consultingCharges, 0);
+            // const pendingopd = allopdPatients
+            //     .filter(patient => patient.pid === state.pid && patient.paymentStatus === "Pending")
+            //     .map(patient => ({
+            //         opduid: patient.opduid,
+            //         drName: patient.drName,
+            //         consultingCharges: patient.consultingCharge,
+            //         consultingDate: patient.consultingDate
+            //     }));
+            // setPendingOpd(pendingopd)
+            // const totalOfopd = await pendingopd.reduce((total, item) => total + item.consultingCharges, 0);
 
-            console.log('pending opd', pendingopd, totalOfopd);
+            // console.log('pending opd', pendingopd, totalOfopd);
             let labReportss = await allPatientsLaboratoryReports?.filter((item) => item.pid === state.pid && item.paymentStatus === "Pending")
             const reportDetails = await labReportss.map(report => {
                 return {
@@ -379,38 +384,30 @@ const Invoicepage = () => {
                 };
             });
             await setLabReports(reportDetails)
+            // console.log('reportDetails', reportDetails, labReportss, allPatientsLaboratoryReports);
             let totalOflabReports = await reportDetails.reduce((total, item) => total + Number(item.reportPrice), 0)
-            console.log('mediciness', mediciness);
             let totalcgstpercentage = undefined;
             let totalsgstpercentage = undefined
-            await getData('Tax', 'LZnOzIOavFxXLPkmFaWc').then((res) => {
-                let data3 = res.data().tax
-                data3.forEach((item, i) => {
-                    if (item.taxName === "CGST") {
-                        // setCgstValue(item.taxValue)
-                        totalcgstpercentage = item.taxValue
-                        // totalcgst = item.taxValue / 100 * (state.totalAmount + (totalmedicineChargee - paidmedicines))
-                        // setCgstamount(totalcgst)
-                    } else if (item.taxName === "SGST") {
-                        // setSgstValue(item.taxValue)
-                        totalsgstpercentage = item.taxValue
-                        // totalsgst = item.taxValue / 100 * (state.totalAmount + (totalmedicineChargee - paidmedicines))
-                        // setSgstamount(totalsgst)
-                    }
-                    else {
+            // await getData('Tax', 'LZnOzIOavFxXLPkmFaWc').then((res) => {
+            //     let data3 = res.data().tax
+            await allTaxs.forEach((item, i) => {
+                if (item.taxName === "CGST") {
+                    totalcgstpercentage = item.taxValue
+                } else if (item.taxName === "SGST") {
+                    totalsgstpercentage = item.taxValue
+                }
 
-                    }
-                });
-            }).catch((err) => {
-                console.error(err);
-            })
+            });
+            // }).catch((err) => {
+            //     console.error(err);
+            // })
             dispatch(SET_INVOICE({
                 cgstpercentage: totalcgstpercentage,
                 sgstpercentage: totalsgstpercentage,
                 totalRoom: totalOfRooms,
-                totalMedicine: totalmedicineCharge,
+                // totalMedicine: totalmedicineCharge,
                 totalOflabReports: totalOflabReports,
-                totalofOpd: totalOfopd,
+                // totalofOpd: totalOfopd,
                 advance: state.deposit
             }))
             // let totalBill = (state.totalAmount + (totalmedicineCharge - paidmedicines) + totalsgst + totalcgst);
@@ -461,7 +458,7 @@ const Invoicepage = () => {
             ],
             totalExtraCharges: '',
         });
-        formik.resetForm();
+        // formik.resetForm();
     };
     const printInvoice = (item) => {
         if (item) {
@@ -475,22 +472,23 @@ const Invoicepage = () => {
                 data1: {
                     ...state,
                     deposit: advance,
+                    discount: discount,
                     payableAmount: payable,
                     billingAmount: billingAmount,
                     subtotal: subtotal,
-                    totalMedicines: totalMedicines,
+                    // totalMedicines: totalMedicines,
                     cgstValue: cgstValue,
                     cgstAmount: cgstAmount,
                     sgstValue: sgstValue,
                     sgstAmount: sgstAmount,
                     extraCharges: values.extraCharges,
-                    medicines: mediciness,
+                    // medicines: mediciness,
                     reportDetails: labReports,
                     userName: userName,
                     paymentType: paymentType,
                     allprevRooms,
-                    pendingOpd,
-                    hospitalCharges,
+                    // pendingOpd,
+                    // hospitalCharges,
                     invoiceuid
                 }
             }} />)
@@ -517,10 +515,11 @@ const Invoicepage = () => {
             // ...state,
             paymentStatus: 'Completed',
             deposit: advance,
+            discount: discount,
             payableAmount: payable,
             billingAmount: billingAmount,
             subtotal: subtotal,
-            totalMedicines: totalMedicines,
+            // totalMedicines: totalMedicines,
             cgstValue: cgstValue,
             cgstAmount: cgstAmount,
             sgstValue: sgstValue,
@@ -535,13 +534,13 @@ const Invoicepage = () => {
             // icuRate: icuRate,
             // icuUnits: icuUnits,
             extraCharges: values.extraCharges,
-            medicines: mediciness,
+            // medicines: mediciness,
             reportDetails: labReports,
             userName: userName,
             paymentType: paymentType,
             allprevRooms,
-            pendingOpd,
-            hospitalCharges,
+            // pendingOpd,
+            // hospitalCharges,
             invoiceuid,
         };
         // let newopdArray = await opdPatients.map((item) => (item.pid === state.pid && item.paymentStatus === "Pending" ? {
@@ -550,78 +549,88 @@ const Invoicepage = () => {
         //     paymentType,
         //     userName
         // } : item))
-        const newopdArray = await opdPatients.map((item) => {
-            if (item.pid === state.pid && item.paymentStatus === "Pending") {
-                const cgstAmountopd = cgstValue / 100 * item.consultingCharge;
-                const sgstAmountopd = sgstValue / 100 * item.consultingCharge;
-                const payAbleAmountopd = item.consultingCharge + cgstAmountopd + sgstAmountopd;
-                return {
-                    ...item,
-                    paymentStatus: 'Completed',
-                    cgstValue,
-                    sgstValue,
-                    cgstAmount: cgstAmountopd,
-                    sgstAmount: sgstAmountopd,
-                    subTotalamount: item.consultingCharge,
-                    payAbleAmount: payAbleAmountopd,
-                    paymentType,
-                    userName,
-                    pendingOpd,
-                    invoiceuid,
-                }
-            } else {
-                return item
-            }
-        })
+        // const newopdArray = await opdPatients.map((item) => {
+        //     if (item.pid === state.pid && item.paymentStatus === "Pending") {
+        //         const cgstAmountopd = cgstValue / 100 * item.consultingCharge;
+        //         const sgstAmountopd = sgstValue / 100 * item.consultingCharge;
+        //         const payAbleAmountopd = item.consultingCharge + cgstAmountopd + sgstAmountopd;
+        //         return {
+        //             ...item,
+        //             paymentStatus: 'Completed',
+        //             cgstValue,
+        //             sgstValue,
+        //             cgstAmount: cgstAmountopd,
+        //             sgstAmount: sgstAmountopd,
+        //             subTotalamount: item.consultingCharge,
+        //             payAbleAmount: payAbleAmountopd,
+        //             paymentType,
+        //             userName,
+        //             pendingOpd,
+        //             invoiceuid,
+        //         }
+        //     } else {
+        //         return item
+        //     }
+        // })
 
         // console.log('newopdArray', newopdArray);
         // let newObj = await { ...state, paymentStatus: 'Complete', deposit: advance, payableAmount: payable, billingAmount: billingAmount, subtotal: subtotal, totalMedicines: totalMedicines, cgstValue: cgstValue, cgstAmount: cgstAmount, sgstValue: sgstValue, sgstAmount: sgstAmount, nursingRate: nursingRate, nursingUnits: nursingUnits, totalNursing: totalNursing, otRate: otRate, otUnits: otUnits, totalOt: totalOt, icuRate: icuRate, icuUnits: icuUnits, totalIcu: totalIcu, medicines: mediciness }
         // const newMedarray = await medicines.map((item) => (item.pid === state.pid ? { ...item, paymentStatus: 'Completed' } : item))
-        const newMedarray = await medicines.map((item) => {
-            if (item.pid === state.pid && item.paymentStatus === "Pending") {
-                const cgstAmountmedicine = cgstValue / 100 * item.allMedTotalprice;
-                const sgstAmountmedicine = sgstValue / 100 * item.allMedTotalprice;
-                const payAbleAmountmedicine = item.allMedTotalprice + cgstAmountmedicine + sgstAmountmedicine;
-                return {
-                    ...item,
-                    paymentStatus: 'Completed',
-                    cgstValue,
-                    sgstValue,
-                    cgstAmount: cgstAmountmedicine,
-                    sgstAmount: sgstAmountmedicine,
-                    subTotalamount: item.allMedTotalprice,
-                    payableAmount: payAbleAmountmedicine,
-                    paymentType,
-                    userName,
-                    invoiceuid
-                }
-            } else {
-                return item
-            }
-        })
-        console.log('newMedarray', newMedarray);
-
+        // const newMedarray = await medicines.map((item) => {
+        //     if (item.pid === state.pid && item.paymentStatus === "Pending") {
+        //         const cgstAmountmedicine = cgstValue / 100 * item.allMedTotalprice;
+        //         const sgstAmountmedicine = sgstValue / 100 * item.allMedTotalprice;
+        //         const payAbleAmountmedicine = item.allMedTotalprice + cgstAmountmedicine + sgstAmountmedicine;
+        //         return {
+        //             ...item,
+        //             paymentStatus: 'Completed',
+        //             cgstValue,
+        //             sgstValue,
+        //             cgstAmount: cgstAmountmedicine,
+        //             sgstAmount: sgstAmountmedicine,
+        //             subTotalamount: item.allMedTotalprice,
+        //             payableAmount: payAbleAmountmedicine,
+        //             paymentType,
+        //             userName,
+        //             invoiceuid
+        //         }
+        //     } else {
+        //         return item
+        //     }
+        // })
+        // console.log('newMedarray', newMedarray);
+        const newLabobj = { paymentStatus: 'Completed' }
         const newLabReportsarray = patientsLabReports.map((item) =>
             item.pid === state.pid ? { ...item, paymentStatus: 'Completed' } : item
         );
         const newArray = await patients.map((item) => (item.pid === state.pid && item.paymentStatus === "Pending" && item.dischargeDate ? { ...item, ...newObj } : item))
         try {
             await Promise.all([
-                setData('admitPatients', 'jSqDGnjO21bpPGhb6O2y', 'admitPatient', newArray),
-                setData('PatientsMedicines', 'GoKwC6l5NRWSonfUAal0', 'patientsMedicines', newMedarray),
-                setData(
-                    'PatientslaboratoryReports',
+                // updatemultitObject('admitPatients', 'jSqDGnjO21bpPGhb6O2y', 'admitPatient', newObj, 'pid', 'hospitaluid', 'paymentStatus', state),
+                updateMultiDatainSubcollection('admitPatients', 'jSqDGnjO21bpPGhb6O2y', 'admitPatient', newObj, 'pid', 'hospitaluid', 'paymentStatus', state),
+                // uploadArray('admitPatients', 'jSqDGnjO21bpPGhb6O2y', 'admitPatient', newArray, 'admituid', 'hospitaluid'),
+                // setData('admitPatients', 'jSqDGnjO21bpPGhb6O2y', 'admitPatient', newArray),
+                // setData('PatientsMedicines', 'GoKwC6l5NRWSonfUAal0', 'patientsMedicines', newMedarray),
+                // uploadArray('PatientslaboratoryReports',
+                //     'QmwQr1wDcFK6K04hKMYc',
+                //     'labReports', newLabReportsarray, 'labreportuid', 'hospitaluid')
+
+                updateMultiDatainSubcollection('PatientslaboratoryReports',
                     'QmwQr1wDcFK6K04hKMYc',
-                    'labReports',
-                    newLabReportsarray
-                ),
-                setData("opdPatients", 'm5JHl3l4zhaBCa8Vihcb', 'opdPatient', newopdArray)
+                    'labReports', newLabobj, 'pid', 'hospitaluid', 'paymentStatus', state)
+                // setData(
+                //     'PatientslaboratoryReports',
+                //     'QmwQr1wDcFK6K04hKMYc',
+                //     'labReports',
+                //     newLabReportsarray
+                // ),
+                // setData("opdPatients", 'm5JHl3l4zhaBCa8Vihcb', 'opdPatient', newopdArray)
             ]);
 
             dispatch(FILL_ADMIT_PATIENTS(newArray))
-            dispatch(CHANGE_STATUS_PATIENTS_MEDICINES(newMedarray))
+            // dispatch(CHANGE_STATUS_PATIENTS_MEDICINES(newMedarray))
             dispatch(FILL_LABORATORY_REPORTS(newLabReportsarray));
-            dispatch(FILL_OPD_PATIENTS(newopdArray))
+            // dispatch(FILL_OPD_PATIENTS(newopdArray))
             toast.success("All unpaid bill paid SuccessFully...")
             window.history.back()
         } catch (error) {
@@ -802,7 +811,7 @@ const Invoicepage = () => {
                                                 <td colSpan={2}>{state.hospitalCharges.toFixed(2)}</td>
                                                 <td>{state.hospitalCharges.toFixed(2)}</td>
                                             </tr> */}
-                                            {
+                                            {/* {
                                                 state.pendingOpd?.map((opd, r) => {
                                                     return <>
                                                         <tr key={r}>
@@ -811,7 +820,7 @@ const Invoicepage = () => {
                                                         </tr>
                                                     </>
                                                 })
-                                            }
+                                            } */}
                                             {
                                                 state.reportDetails?.map((report, i) => {
                                                     return <>
@@ -824,7 +833,7 @@ const Invoicepage = () => {
                                                     </>
                                                 })
                                             }
-                                            {!state.medicines.length ? null :
+                                            {/* {!state.medicines.length ? null :
                                                 <tr>
                                                     <td colSpan={3}>
                                                         <Table bordered hover>
@@ -852,7 +861,7 @@ const Invoicepage = () => {
                                                         </Table></td>
                                                     <td>{state.totalMedicines.toFixed(2)}</td>
                                                 </tr>
-                                            }
+                                            } */}
 
                                             <tr>
                                                 <td colSpan={3}>Sub Total</td>
@@ -888,16 +897,17 @@ const Invoicepage = () => {
                                         <div>
                                             <div>
                                                 <div><b>Invoice By :{state.userName}</b></div>
-                                                <span>Payment Type <b>:{state.paymentType}</b></span>
+                                                <span><b>Payment Type :{state.paymentType}</b></span>
                                                 <div><b>Payment Status :{state.paymentStatus}</b></div>
                                             </div>
                                         </div>
                                     </div>
                                     <div className='col-lg-6 col-md-6 col-sm-6 d-flex justify-content-end'>
                                         <div>
-                                            <h6>Total Bill Amount :{state.billingAmount.toFixed(2)}</h6>
-                                            <span>Deposit: {Number(state.deposit).toFixed(2)}</span>
-                                            <h6>Payable Amount : {state.payableAmount.toFixed(2)}</h6>
+                                            <div><b>Total Bill Amount :{state.billingAmount.toFixed(2)}</b></div>
+                                            <span> <b>Advance:{Number(state.deposit).toFixed(2)}</b></span>
+                                            {state.discount ? <div><b>Discount :{Number(state.discount).toFixed(2)}</b></div> : null}
+                                            <div> <b>Payable Amount:{state.payableAmount.toFixed(2)}</b></div>
                                         </div>
                                     </div>
                                     {/* <div className="form-check" style={{ marginTop: '20px' }}>
@@ -1234,7 +1244,7 @@ const Invoicepage = () => {
                                                 <td colSpan={2}><input type='number' style={{ width: '150px' }} onChange={(e) => dispatch(SET_HOSPITAL_CHARGES({ hospitalCharge: Number(e.target.value) }))} defaultValue={hospitalCharges} /></td>
                                                 <td>{hospitalCharges.toFixed(2)}</td>
                                             </tr> */}
-                                            {
+                                            {/* {
                                                 pendingOpd?.map((opd, r) => {
                                                     return <>
                                                         <tr key={r}>
@@ -1243,7 +1253,7 @@ const Invoicepage = () => {
                                                         </tr>
                                                     </>
                                                 })
-                                            }
+                                            } */}
                                             {
                                                 labReports?.map((report, i) => {
                                                     return <>
@@ -1256,7 +1266,7 @@ const Invoicepage = () => {
                                                     </>
                                                 })
                                             }
-                                            {!mediciness.length ? null :
+                                            {/* {!mediciness.length ? null :
                                                 <tr>
                                                     <td colSpan={3}>
                                                         <Table bordered hover>
@@ -1284,7 +1294,7 @@ const Invoicepage = () => {
                                                         </Table></td>
                                                     <td>{totalMedicines.toFixed(2)}</td>
                                                 </tr>
-                                            }
+                                            } */}
                                             <tr>
                                                 <td colSpan={3}>Sub Total</td>
                                                 <td>{subtotal.toFixed(2)}</td>
@@ -1349,7 +1359,16 @@ const Invoicepage = () => {
                                     <div className='col-lg-6 col-md-6 col-sm-6 d-flex justify-content-end'>
                                         <div>
                                             <h6>Total Bill Amount :{billingAmount.toFixed(2)}</h6>
-                                            <span>Advance : <input type='number' defaultValue={advance} onChange={(e) => dispatch(SET_ADVANCE({ advance: e.target.value }))} /></span>
+                                            {/* <span>Advance : <input type='number' defaultValue={advance} onChange={(e) => dispatch(SET_ADVANCE({ advance: e.target.value }))} /></span>
+                                            <p>Discount : <input type='number' className='form-control' defaultValue={discount} onChange={(e) => dispatch(SET_DISCOUNT({ discount: e.target.value }))} /></p> */}
+                                            <div className="form-group" >
+                                                <label >Advance:</label>
+                                                <input type='number' defaultValue={advance} className='form-control' onChange={(e) => dispatch(SET_ADVANCE({ advance: Number(e.target.value) }))} />
+                                            </div>
+                                            <div className="form-group" >
+                                                <label >Discount:</label>
+                                                <input type='number' className='form-control' defaultValue={discount} onChange={(e) => dispatch(SET_DISCOUNT({ discount: Number(e.target.value) }))} />
+                                            </div>
                                             <h6>Payable Amount : {payable.toFixed(2)}</h6>
 
                                         </div>
@@ -1502,7 +1521,7 @@ const Invoicepage = () => {
                                 </div>
                             } /> */}
 
-                            <button className='btn btn-primary mx-2' onClick={() => printInvoice()}>Print</button>
+                            <button className='btn btn-primary mx-2' disabled={values.extraCharges && values.extraCharges.some(charge => !charge.chargeName || !charge.rate || !charge.qty)} onClick={() => printInvoice()}>Print</button>
                             <button className='btn btn-primary ' disabled={paymentStatus !== "Completed" || !invoiceuid || values.extraCharges && values.extraCharges.some(charge => !charge.chargeName || !charge.rate || !charge.qty)} onClick={saveInvoice}>Paid</button>
                         </div>
                     </>

@@ -1,5 +1,5 @@
 /* eslint-disable prettier/prettier */
-import { configureStore, combineReducers } from '@reduxjs/toolkit'
+import { configureStore, combineReducers, getDefaultMiddleware } from '@reduxjs/toolkit'
 import admitPatientsReducer from './slice/admitPatientsSlice';
 import authSliceReducer from './slice/authSlice';
 import changeStateReducer from './slice/changeStateslice';
@@ -43,6 +43,10 @@ const rooReducer = combineReducers({
 const store = configureStore({
     reducer: rooReducer,
     devTools: false,
+    middleware: (getDefaultMiddleware) =>
+        getDefaultMiddleware({
+            serializableCheck: false
+        }),
 })
 
 

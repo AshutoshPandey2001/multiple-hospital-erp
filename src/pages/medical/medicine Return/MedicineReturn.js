@@ -15,7 +15,7 @@ import { selectAllPatients } from 'src/redux/slice/patientMasterslice';
 import { selectAllMedicines, UPDATE_MEDICINES } from 'src/redux/slice/medicinesMasterSlice';
 import { ADD_PATIENTS_MEDICINES, DELETE_PATIENTS_MEDICINES, EDIT_PATIENTS_MEDICINES, selectAllPatientsMedicines } from 'src/redux/slice/patientsMedicinesSlice';
 import { useDispatch, useSelector } from 'react-redux';
-import { setData } from 'src/services/firebasedb';
+import { addDatainsubcollection, addSingltObject, deleteDatainSubcollection, deleteSingltObject, filDatainsubcollection, setData, updateDatainSubcollection, updateSingltObject, uploadArray } from 'src/services/firebasedb';
 import Loaderspinner from 'src/comman/spinner/Loaderspinner';
 import CommanTable from 'src/comman/table/CommanTable';
 import { confirmAlert } from 'react-confirm-alert';
@@ -28,6 +28,7 @@ import { TfiArrowCircleLeft } from 'react-icons/tfi'
 import SearchAutocomplete from 'src/comman/searchAutocomplete/SearchAutocomplete';
 import PrintButton from 'src/comman/printpageComponents/PrintButton';
 import { ddMMyyyy, yyyyMMdd } from 'src/services/dateFormate';
+import { selectUserId } from 'src/redux/slice/authSlice';
 
 const PrintComponent = ({ data }) => {
     const state = data.data1
@@ -121,6 +122,8 @@ let initalValues = {
     ],
     allMedTotalprice: '',
     returnuid: '',
+    hospitaluid: ''
+
 }
 const MedicineReturn = () => {
     const navigate = useNavigate()
@@ -139,6 +142,7 @@ const MedicineReturn = () => {
     const [stockerror, setStockerror] = useState(false)
     const [medList, setMedList] = useState([])
     const [printContent, setPrintContent] = useState(null);
+    const hospitaluid = useSelector(selectUserId)
 
     // let medList = medicineList
     // const reversedArray = allPatientsMedicines.slice().reverse();
@@ -198,10 +202,14 @@ const MedicineReturn = () => {
                 console.log('after', medList, med);
 
                 try {
-                    await setData('ReturnMedicine', 'lGxMW7T2f7Dsb93A19qa', 'returnMedicine', med)
-                    dispatch(ADD_RETURN_PATIENTS_MEDICINES(Values))
-                    await setData("Medicines", 'dHFKEhdhbOM4v6WRMb6z', 'medicines', medList)
-                    dispatch(UPDATE_MEDICINES(medList))
+                    // await addSingltObject('ReturnMedicine', 'lGxMW7T2f7Dsb93A19qa', 'returnMedicine', values)
+                    await addDatainsubcollection('ReturnMedicine', 'lGxMW7T2f7Dsb93A19qa', 'returnMedicine', values)
+                    // await addSingltObject('ReturnMedicine', 'lGxMW7T2f7Dsb93A19qa', 'returnMedicine', med)
+                    // await setData('ReturnMedicine', 'lGxMW7T2f7Dsb93A19qa', 'returnMedicine', med)
+                    // dispatch(ADD_RETURN_PATIENTS_MEDICINES(Values))
+                    // await setData("Medicines", 'dHFKEhdhbOM4v6WRMb6z', 'medicines', medList)
+                    await uploadArray("Medicines", 'dHFKEhdhbOM4v6WRMb6z', 'medicines', medList, 'medicineuid', 'hospitaluid')
+                    // dispatch(UPDATE_MEDICINES(medList))
                     action.resetForm()
                     clearForm()
                     setShow(false)
@@ -216,15 +224,18 @@ const MedicineReturn = () => {
                 medd[findindex] = Values;
 
                 try {
-                    await setTimeout(() => {
-                        setData('ReturnMedicine', 'lGxMW7T2f7Dsb93A19qa', 'returnMedicine', medd)
-                        dispatch(EDIT_RETURN_PATIENTS_MEDICINES(Values))
-                        action.resetForm()
-                        clearForm()
-                        setShow(false)
-                        setUpdate(false)
-                        toast.success("Updated Successfully.......");
-                    }, 1000)
+                    // await setTimeout(() => {
+                    // await updateSingltObject('ReturnMedicine', 'lGxMW7T2f7Dsb93A19qa', 'returnMedicine', Values, 'returnuid', 'hospitaluid')
+                    await updateDatainSubcollection('ReturnMedicine', 'lGxMW7T2f7Dsb93A19qa', 'returnMedicine', Values, 'returnuid', 'hospitaluid')
+
+                    // setData('ReturnMedicine', 'lGxMW7T2f7Dsb93A19qa', 'returnMedicine', medd)
+                    // dispatch(EDIT_RETURN_PATIENTS_MEDICINES(Values))
+                    action.resetForm()
+                    clearForm()
+                    setShow(false)
+                    setUpdate(false)
+                    toast.success("Updated Successfully.......");
+                    // }, 1000)
                 } catch (error) {
                     toast.error(error.message)
                     console.error(error.message);
@@ -265,6 +276,8 @@ const MedicineReturn = () => {
             ],
             allMedTotalprice: '',
             returnuid: '',
+            hospitaluid: ''
+
         });
     };
     const updatStock = async (item) => {
@@ -274,6 +287,7 @@ const MedicineReturn = () => {
 
     }
     const generateInvoice = (item) => {
+        filDatainsubcollection(allreturnPatientsMedicines, 'ReturnMedicine', 'lGxMW7T2f7Dsb93A19qa', 'returnMedicine')
         setPrintContent(<PrintComponent data={{
             data1: {
                 ...item,
@@ -308,7 +322,10 @@ const MedicineReturn = () => {
                     onClick: async () => {
                         let med = patientsReturnMedicineFilter.filter((item) => item.returnuid !== item1.returnuid);
                         try {
-                            await setData('ReturnMedicine', 'lGxMW7T2f7Dsb93A19qa', 'returnMedicine', med)
+                            // await deleteSingltObject('ReturnMedicine', 'lGxMW7T2f7Dsb93A19qa', 'returnMedicine', item1, 'returnuid', 'hospitaluid')
+                            await deleteDatainSubcollection('ReturnMedicine', 'lGxMW7T2f7Dsb93A19qa', 'returnMedicine', item1, 'returnuid', 'hospitaluid')
+
+                            // await setData('ReturnMedicine', 'lGxMW7T2f7Dsb93A19qa', 'returnMedicine', med)
                             dispatch(DELETE_RETURN_PATIENTS_MEDICINES(item1))
                             toast.success("Deleted Successfully.......");
                         } catch (error) {
@@ -364,6 +381,7 @@ const MedicineReturn = () => {
         formik.setFieldValue('pGender', item.pGender);
         formik.setFieldValue('page', item.page);
         formik.setFieldValue('pAddress', item.pAddress);
+        formik.setFieldValue('hospitaluid', item.hospitaluid);
 
     };
 

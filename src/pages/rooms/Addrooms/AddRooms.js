@@ -10,15 +10,18 @@ import { useDispatch, useSelector } from 'react-redux';
 import { AiFillDelete } from 'react-icons/ai'
 import { ImCross } from 'react-icons/im'
 import { ADD_ROOM, DELETE_ROOM, EDIT_ROOM, selectAllRooms } from 'src/redux/slice/roomMasterSlice';
-import { setData } from 'src/services/firebasedb';
+import { addDatainsubcollection, addSingltObject, deleteDatainSubcollection, deleteSingltObject, filDatainsubcollection, setData, updateDatainSubcollection, updateSingltObject } from 'src/services/firebasedb';
 import CommanTable from 'src/comman/table/CommanTable';
 import { confirmAlert } from 'react-confirm-alert';
 import { toast } from 'react-toastify';
 import Loaderspinner from 'src/comman/spinner/Loaderspinner';
+import { selectUserId } from 'src/redux/slice/authSlice';
+
 const initalValues = {
     roomuid: '',
     roomType: '',
     priceperNight: '',
+    hospitaluid: '',
     rooms: [
         {
             roomNo: '',
@@ -37,6 +40,7 @@ const AddRooms = () => {
     const [allRoomNo, setAllRoomNo] = useState([])
     const [roomnoError, setRoomnoError] = useState(false)
     const [roomNum, setRoomnum] = useState()
+    const hospitaluid = useSelector(selectUserId)
 
     const columns = [
         { name: '#', selector: (row, index) => index + 1 },
@@ -57,7 +61,7 @@ const AddRooms = () => {
     const handleShow = () => setShow(true);
 
     useEffect(() => {
-        const roomNumbers = allRooms?.map((item) => item.rooms?.map((room) => room.roomNo)).flat();
+        const roomNumbers = allRooms?.map((item) => item.rooms?.map((room) => Number(room.roomNo))).flat();
         setAllRoomNo(roomNumbers)
         console.log('roomNumbers', roomNumbers);
         setRoomList(allRooms)
@@ -74,12 +78,14 @@ const AddRooms = () => {
 
             let room1 = [...roomsFilter]
             if (!update) {
+                values.hospitaluid = hospitaluid;
                 values.roomuid = Math.floor(1000 + Math.random() * 9000);
                 let room = [...roomsFilter, Values]
-
                 try {
-                    await setData('Rooms', '3PvtQ2G1RbG3l5VtiCMI', 'rooms', room)
-                    dispatch(ADD_ROOM(Values))
+                    // await setData('Rooms', '3PvtQ2G1RbG3l5VtiCMI', 'rooms', room)
+                    // await addSingltObject('Rooms', '3PvtQ2G1RbG3l5VtiCMI', 'rooms', Values)
+                    await addDatainsubcollection('Rooms', '3PvtQ2G1RbG3l5VtiCMI', 'rooms', Values)
+                    // dispatch(ADD_ROOM(Values))
                     action.resetForm()
                     clearForm()
                     setShow(false)
@@ -93,7 +99,10 @@ const AddRooms = () => {
                 let findindex = room1.findIndex((item) => item.roomuid === Values.roomuid)
                 room1[findindex] = Values;
                 try {
-                    await setData('Rooms', '3PvtQ2G1RbG3l5VtiCMI', 'rooms', room1)
+                    // await setData('Rooms', '3PvtQ2G1RbG3l5VtiCMI', 'rooms', room1)
+                    // await updateSingltObject('Rooms', '3PvtQ2G1RbG3l5VtiCMI', 'rooms', Values, 'roomuid', 'hospitaluid')
+                    await updateDatainSubcollection('Rooms', '3PvtQ2G1RbG3l5VtiCMI', 'rooms', Values, 'roomuid', 'hospitaluid')
+
                     dispatch(EDIT_ROOM(Values))
                     action.resetForm()
                     clearForm()
@@ -117,6 +126,7 @@ const AddRooms = () => {
             roomuid: '',
             roomType: '',
             priceperNight: '',
+            hospitaluid: '',
             rooms: [
                 {
                     roomNo: '',
@@ -127,10 +137,12 @@ const AddRooms = () => {
         });
     };
     const editRooms = (item) => {
+        // filDatainsubcollection(allRooms, 'Rooms', '3PvtQ2G1RbG3l5VtiCMI', 'rooms', hospitaluid)
         values.roomType = item.roomType;
         values.roomuid = item.roomuid;
         values.priceperNight = item.priceperNight;
         values.rooms = item.rooms;
+        values.hospitaluid = item.hospitaluid
         setShow(true)
         setUpdate(true)
     }
@@ -145,8 +157,10 @@ const AddRooms = () => {
                     onClick: async () => {
                         let room = roomsFilter.filter((item) => item.roomuid !== item1.roomuid)
                         try {
-                            await setData('Rooms', '3PvtQ2G1RbG3l5VtiCMI', 'rooms', room)
-                            dispatch(DELETE_ROOM(item1))
+                            // await setData('Rooms', '3PvtQ2G1RbG3l5VtiCMI', 'rooms', room)
+                            // await deleteSingltObject('Rooms', '3PvtQ2G1RbG3l5VtiCMI', 'rooms', item1, 'roomuid', 'hospitaluid')
+                            await deleteDatainSubcollection('Rooms', '3PvtQ2G1RbG3l5VtiCMI', 'rooms', item1, 'roomuid', 'hospitaluid')
+                            // dispatch(DELETE_ROOM(item1))
                             toast.success("Deleted Successfully.......");
                         } catch (error) {
                             toast.error(error.message)
@@ -159,10 +173,6 @@ const AddRooms = () => {
                 }
             ]
         });
-
-
-
-
     }
     const roomNumber = (e, room) => {
         console.log('room before', e, room, allRoomNo.includes(Number(e)));

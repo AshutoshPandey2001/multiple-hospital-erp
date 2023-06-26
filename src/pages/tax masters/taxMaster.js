@@ -5,20 +5,26 @@ import { useEffect } from 'react'
 import { MdEdit } from 'react-icons/md'
 import { AiFillDelete } from 'react-icons/ai'
 import CommanTable from 'src/comman/table/CommanTable'
-import { getData, setData } from 'src/services/firebasedb'
+import { getData, setData, updateDatainSubcollection, updateMultiDatainSubcollection, updateSingltObject } from 'src/services/firebasedb'
 import Button from 'react-bootstrap/Button';
 import Modal from 'react-bootstrap/Modal';
 import { useState } from 'react'
 import { useFormik } from 'formik'
 import { taxSchema } from 'src/schema'
+import { useDispatch, useSelector } from 'react-redux'
+import { EDIT_TAX, selectAlltax } from 'src/redux/slice/taxSlice'
 
 const initalValues = {
+    taxUid: '',
     taxName: '',
     taxValue: undefined,
+    hospitaluid: ''
 }
 const taxMaster = () => {
     const [show, setShow] = useState(false);
+    const allTax = useSelector(selectAlltax)
     const [taxData, setTaxData] = useState([])
+    const dispatch = useDispatch()
     const columns = [
         { name: '#', selector: (row, index) => index + 1 },
         { name: 'Tax Name', selector: row => row.taxName, sortable: true },
@@ -30,12 +36,13 @@ const taxMaster = () => {
         }
     ]
     useEffect(() => {
-        getData('Tax', 'LZnOzIOavFxXLPkmFaWc').then((res) => {
-            setTaxData(res.data().tax);
-        }).catch((err) => {
-            console.error(err);
-        })
-    }, [])
+        // getData('Tax', 'LZnOzIOavFxXLPkmFaWc').then((res) => {
+        //     setTaxData(res.data().tax);
+        // }).catch((err) => {
+        //     console.error(err);
+        // })
+        setTaxData(allTax)
+    }, [allTax])
 
     const handleClose = () => {
         setShow(false);
@@ -47,12 +54,13 @@ const taxMaster = () => {
         initialValues: initalValues,
         validationSchema: taxSchema,
         onSubmit: async (Values, action) => {
-            let temp_Data = [...taxData]
-            let findIndex = temp_Data.findIndex((item) => item.taxName === Values.taxName);
-            temp_Data[findIndex] = Values;
+
             try {
-                await setData('Tax', 'LZnOzIOavFxXLPkmFaWc', 'tax', temp_Data)
-                await setTaxData(taxData.map((item) => (item.taxName === Values.taxName ? { ...item, taxValue: Values.taxValue } : item)))
+                // await updateSingltObject('Tax', 'LZnOzIOavFxXLPkmFaWc', 'tax', Values, 'taxUid', 'hospitaluid')
+                await updateDatainSubcollection('Tax', 'LZnOzIOavFxXLPkmFaWc', 'tax', Values, 'taxUid', 'hospitaluid')
+                // dispatch(EDIT_TAX(Values))
+                // await setData('Tax', 'LZnOzIOavFxXLPkmFaWc', 'tax', temp_Data)
+                // await setTaxData(taxData.map((item) => (item.taxName === Values.taxName ? { ...item, taxValue: Values.taxValue } : item)))
                 action.resetForm();
 
                 setShow(false);
@@ -66,8 +74,10 @@ const taxMaster = () => {
 
     const editTax = (item) => {
         setShow(true)
+        values.taxUid = item.taxUid;
         values.taxName = item.taxName;
         values.taxValue = item.taxValue;
+        values.hospitaluid = item.hospitaluid;
     }
     const deleteTax = () => {
 

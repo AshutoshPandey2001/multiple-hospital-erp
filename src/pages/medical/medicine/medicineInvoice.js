@@ -18,6 +18,8 @@ import PrintFooter from 'src/comman/printpageComponents/PrintFooter';
 import { TfiArrowCircleLeft } from 'react-icons/tfi'
 import PrintButton from 'src/comman/printpageComponents/PrintButton';
 import { selectUserName } from 'src/redux/slice/authSlice';
+import { selectAlltax } from 'src/redux/slice/taxSlice';
+
 const PrintComponent = ({ data }) => {
     const state = data.data1
     return (
@@ -131,6 +133,7 @@ const medicineInvoice = () => {
     // } 
     const dispatch = useDispatch()
     const allMedicinePatient = useSelector(selectAllPatientsMedicines)
+    const alltax = useSelector(selectAlltax)
     const [cgstAmount, setCgstamount] = useState(0)
     const [sgstAmount, setSgstamount] = useState(0)
     const [cgstValue, setCgstValue] = useState(0)
@@ -152,25 +155,22 @@ const medicineInvoice = () => {
         setTimeout(async () => {
             let totalcgst = undefined;
             let totalsgst = undefined;
-            await getData('Tax', 'LZnOzIOavFxXLPkmFaWc').then((res) => {
-                let data3 = res.data().tax
-                data3.forEach((item, i) => {
-                    if (item.taxName === "CGST") {
-                        setCgstValue(item.taxValue)
-                        totalcgst = item.taxValue / 100 * state.allMedTotalprice
-                        setCgstamount(totalcgst)
-                    } else if (item.taxName === "SGST") {
-                        setSgstValue(item.taxValue)
-                        totalsgst = item.taxValue / 100 * state.allMedTotalprice
-                        setSgstamount(totalsgst)
-                    }
-                    else {
-
-                    }
-                });
-            }).catch((err) => {
-                console.error(err);
-            })
+            // await getData('Tax', 'LZnOzIOavFxXLPkmFaWc').then((res) => {
+            //     let data3 = res.data().tax
+            alltax.forEach((item, i) => {
+                if (item.taxName === "CGST") {
+                    setCgstValue(item.taxValue)
+                    totalcgst = item.taxValue / 100 * state.allMedTotalprice
+                    setCgstamount(totalcgst)
+                } else if (item.taxName === "SGST") {
+                    setSgstValue(item.taxValue)
+                    totalsgst = item.taxValue / 100 * state.allMedTotalprice
+                    setSgstamount(totalsgst)
+                }
+            });
+            // }).catch((err) => {
+            //     console.error(err);
+            // })
             let totalBill = state.allMedTotalprice + totalcgst + totalsgst;
             setPayableamount(totalBill)
             setIsLoading(false)
