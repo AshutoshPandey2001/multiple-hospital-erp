@@ -22,8 +22,8 @@ const ShowRoomcomponent = ({ roomType, selectedRoomDetails }) => {
             return (
                 patient.dischargeDate === "" &&
                 patient.roomType === item.roomType &&
-                patient.roomNo === item.roomNo &&
-                patient.bedNo === item.bedNo
+                Number(patient.roomNo) === Number(item.roomNo) &&
+                Number(patient.bedNo) === Number(item.bedNo)
             );
         });
         if (patientDetails) {

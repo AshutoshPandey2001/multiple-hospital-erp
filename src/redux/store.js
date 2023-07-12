@@ -17,6 +17,8 @@ import changeMenustyleReducer from './slice/changeMenustyleSlice';
 import returnMedicineReducer from './slice/returnMedicineslice';
 import taxReducer from './slice/taxSlice';
 import chargesReducer from './slice/chargesSlice';
+import hospitalProfileReducer from './slice/hospitalProfileSlice';
+import prevBillNoReducer from './slice/prevBillNoSlice';
 
 const rooReducer = combineReducers({
     changeState: changeStateReducer,
@@ -35,7 +37,9 @@ const rooReducer = combineReducers({
     changeMenustyle: changeMenustyleReducer,
     returnpatientsmedicines: returnMedicineReducer,
     alltax: taxReducer,
-    allCharges: chargesReducer
+    allCharges: chargesReducer,
+    hospitalProfile: hospitalProfileReducer,
+    prevBillNo: prevBillNoReducer,
 }
 
 )

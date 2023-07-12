@@ -52,7 +52,7 @@ const Addpatientscommanmodel = ({ show, handleClose, update, data }) => {
                     try {
                         // await setData('Patients', 'fBoxFLrzXexT8WNBzGGh', 'patients', patient)
                         await addDatainsubcollection('Patients', 'fBoxFLrzXexT8WNBzGGh', 'patients', Values)
-                        // dispatch(ADD_PATIENTS(Values))
+                        dispatch(ADD_PATIENTS(Values))
                         action.resetForm()
                         handelClear()
                         toast.success("Added Successfully.......");
@@ -70,7 +70,7 @@ const Addpatientscommanmodel = ({ show, handleClose, update, data }) => {
                     // await setData('Patients', 'fBoxFLrzXexT8WNBzGGh', 'patients', patient1)
 
                     await updateDatainSubcollection('Patients', 'fBoxFLrzXexT8WNBzGGh', 'patients', Values, 'pid', 'hospitaluid')
-                    // dispatch(EDIT_PATIENTS(Values))
+                    dispatch(EDIT_PATIENTS(Values))
                     action.resetForm()
                     handelClear()
                     toast.success("Updated Successfully.......");

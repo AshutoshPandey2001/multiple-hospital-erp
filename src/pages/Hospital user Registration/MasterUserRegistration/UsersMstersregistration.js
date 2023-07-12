@@ -54,30 +54,6 @@ const UsersMstersregistration = () => {
     }
 
 
-    // const formik = useFormik({
-    //     initialValues: initalValues,
-    //     validationSchema: masterUserRegistration,
-    //     onSubmit: (Values, action) => {
-    //         createUserWithEmailAndPassword(auth, Values.email, Values.password)
-    //             .then((userCredential) => {
-    //                 var user = userCredential.user;
-    //                 db.collection('UserList').doc(user.uid).set({
-    //                     userEmail: Values.email,
-    //                     userName: Values.name,
-    //                     userType: Values.userType,
-    //                     userPassword: Values.password,
-    //                 }).then((res) => {
-
-    //                 }).catch((err) => {
-
-    //                 })
-    //             })
-    //             .catch((error) => {
-
-    //             });
-    //     }
-    // });
-
 
     const formik = useFormik({
         initialValues: initalValues,

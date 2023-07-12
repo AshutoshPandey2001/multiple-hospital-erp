@@ -37,11 +37,15 @@ import laboratoryNav from 'src/_laboratoryNav'
 import { startTransition } from 'react';
 import adminnav from 'src/_adminNav'
 import '../pages/admit/admit.css'
+import { selectHospitalLogo } from 'src/redux/slice/hospitalProfileSlice'
+import ManagementNav from 'src/_managementNav'
+
 const AppHeader = () => {
   const dispatch = useDispatch()
   const navigate = useNavigate()
   // const sidebarShow = useSelector((state) => state.sidebarShow)
   const selectedMenu = useSelector(selectmenuStyle)
+  const hospitslLogo = useSelector(selectHospitalLogo)
 
   const sidebarShow = useSelector(selectChangeState)
   const userType = useSelector(selectUsertype)
@@ -163,7 +167,7 @@ const AppHeader = () => {
             <CHeader position="sticky" className="mb-4" style={{ backgroundColor: '#fff' }}>
               <CContainer fluid >
                 <div className="ps-1">
-                  <NavLink to="/" ><img src={hospitalimg} className="sidebar-brand-full" width="80px" height="70px" alt="hospital_logo" /></NavLink>
+                  <NavLink to="/" ><img src={hospitslLogo ? hospitslLogo : hospitalimg} className="sidebar-brand-full" width="80px" height="70px" alt="hospital_logo" /></NavLink>
                 </div>
                 <CHeaderNav className=" " >
                   {
@@ -182,6 +186,9 @@ const AppHeader = () => {
                         case 'Laboratory':
                           return (
                             <NavigationBar menuItems={laboratoryNav} />)
+                        case 'Management':
+                          return (
+                            <NavigationBar menuItems={ManagementNav} />)
                         default:
                           return (
                             <NavigationBar menuItems={navigation} />)
@@ -265,10 +272,16 @@ const AppHeader = () => {
                       <Dropdown.Toggle className='dropdown-toggle' variant="light" id="dropdown-autoclose-outside">
                         < CgProfile size={28} color='rgba(var(--bs-primary-rgb))' />
                       </Dropdown.Toggle>
-                      <Dropdown.Menu >
+                      <Dropdown.Menu className='text center'>
                         <Dropdown.Item ><b>Name:-{userName}</b> </Dropdown.Item>
                         <Dropdown.Item ><b>Email:-{userEmail}</b> </Dropdown.Item>
                         <Dropdown.Item ><b>User Type:-{userType}</b></Dropdown.Item>
+                        {(userType === 'Admin' || userType === "Super Admin") ?
+                          <Dropdown.Item className='d-flex justify-content-center'>
+                            <Button onClick={() => { navigate('/subscription') }}>Subscribe</Button>
+                          </Dropdown.Item> : null
+                        }
+
                       </Dropdown.Menu>
                     </Dropdown>
                   </CNavItem>
@@ -316,7 +329,7 @@ const AppHeader = () => {
               </CContainer>
               <CHeaderDivider />
               <CContainer fluid >
-                <AppBreadcrumb />
+                <AppBreadcrumb width='100%' />
               </CContainer>
             </CHeader>
         }

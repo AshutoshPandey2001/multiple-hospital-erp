@@ -49,7 +49,34 @@ const invoiceSlice = createSlice({
             state.totalPayableAmount = state.totalBillingAmount - state.totaladvance
 
         },
+        SET_SAVE_PENDING_INVOICE: (state, actions) => {
 
+            const { cgstpercentage, sgstpercentage, totalRoom, advance, totalOflabReports, discount, extraCharges } = actions.payload
+
+            // cgstpercentage: state.cgstValue,
+            // sgstpercentage: state.sgstValue,
+            // totalRoom: state.allprevRooms.reduce((total, item) => total + item.totalRoomrent, 0),
+            // totalOflabReports: totalOflabReports,
+            // advance: state.deposit,
+            // discount: state.discount,
+            // extraCharges: state.extraCharges.reduce((price, item) => price + item.rate * item.qty, 0),
+
+
+            state.cgstValue = cgstpercentage;
+            state.sgstValue = sgstpercentage;
+            state.totalRoom = totalRoom;
+            state.totaladvance = advance;
+            state.discount = discount;
+            state.totalOflabReports = totalOflabReports;
+            state.totalExtracharges = extraCharges;
+            let total = totalRoom + totalOflabReports + extraCharges;
+            state.cgstAmount = cgstpercentage / 100 * total;
+            state.sgstAmount = sgstpercentage / 100 * total;
+            state.subTotalamount = total;
+            state.totalBillingAmount = state.cgstAmount + state.sgstAmount + total;
+            state.totalPayableAmount = state.totalBillingAmount - state.totaladvance - state.discount
+
+        },
         SET_NURSINGCHARGE: (state, actions) => {
             const { nursingCharges } = actions.payload
             state.nursingRate = nursingCharges
@@ -177,7 +204,7 @@ const invoiceSlice = createSlice({
     }
 });
 
-export const { SET_HOSPITAL_CHARGES, SET_INVOICE, SET_NURSINGCHARGE, SET_DISCOUNT, SET_EXTRACHARGES_CHARGES, SET_NURSINGUNIT, SET_OTCHARGE, SET_OTUNIT, SET_ICUCHARGE, SET_ICUUNIT, SET_ADVANCE, CLEAR_FIELD } = invoiceSlice.actions;
+export const { SET_HOSPITAL_CHARGES, SET_INVOICE, SET_SAVE_PENDING_INVOICE, SET_NURSINGCHARGE, SET_DISCOUNT, SET_EXTRACHARGES_CHARGES, SET_NURSINGUNIT, SET_OTCHARGE, SET_OTUNIT, SET_ICUCHARGE, SET_ICUUNIT, SET_ADVANCE, CLEAR_FIELD } = invoiceSlice.actions;
 export const selectcgstValue = (state) => state.invoice.cgstValue
 export const selectsgstValue = (state) => state.invoice.sgstValue
 export const selectcgstamount = (state) => state.invoice.cgstAmount

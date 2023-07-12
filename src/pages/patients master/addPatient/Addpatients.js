@@ -12,11 +12,11 @@ import { AiFillDelete } from 'react-icons/ai'
 import { BsEye } from 'react-icons/bs'
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { ADD_PATIENTS, DELETE_PATIENTS, EDIT_PATIENTS, selectAllPatients } from 'src/redux/slice/patientMasterslice';
+import { ADD_PATIENTS, DELETE_PATIENTS, EDIT_PATIENTS, FILL_PATIENTS, selectAllPatients } from 'src/redux/slice/patientMasterslice';
 import { selectMobileNo, selectUserId, selectUsertype } from 'src/redux/slice/authSlice';
 import CommanTable from 'src/comman/table/CommanTable';
 import Loaderspinner from 'src/comman/spinner/Loaderspinner';
-import { addDatainsubcollection, deleteDatainSubcollection, deleteSingltObject, filDatainsubcollection, setData, updateDatainSubcollection } from 'src/services/firebasedb';
+import { addDatainsubcollection, deleteDatainSubcollection, deleteSingltObject, filDatainsubcollection, getSubcollectionData, setData, updateDatainSubcollection } from 'src/services/firebasedb';
 import { confirmAlert } from 'react-confirm-alert';
 import { toast } from 'react-toastify';
 import Addpatientscommanmodel from 'src/comman/comman model/Addpatientscommanmodel';
@@ -24,6 +24,7 @@ import { AiFillPrinter } from 'react-icons/ai'
 import { useReactToPrint } from 'react-to-print';
 import ReactToPrint from 'react-to-print';
 import PrintButton from 'src/comman/printpageComponents/PrintButton';
+import { TfiReload } from 'react-icons/tfi'
 
 // const initalValues = {
 //     pid: '',
@@ -64,7 +65,7 @@ const Addpatients = () => {
         { name: 'Age', selector: row => row.page, width: '100px' },
         { name: 'Gender', selector: row => row.pGender, width: '100px' },
         { name: 'Address', selector: row => row.pAddress },
-        { name: 'Mobile No', selector: row => row.pMobileNo },
+        { name: 'Mobile No', selector: row => row.pMobileNo ? row.pMobileNo : '-' },
         {
             name: 'Action', cell: row => <span className='d-flex justify-content-center'><button style={{ color: 'skyblue', border: 'none' }} onClick={() => patientHistory(row)} ><BsEye size={25} /></button><button onClick={() => editPatientDetails(row)} style={{ color: 'orange', border: 'none' }}><MdEdit size={25} /></button>
                 <button onClick={() => deletePatientsDetails(row)} style={{ color: 'red', border: 'none' }} ><AiFillDelete size={25} /></button>
@@ -78,69 +79,21 @@ const Addpatients = () => {
     useEffect(() => {
         setPatientsList([...allPatientsList].reverse())
         setPatientsFilter(allPatientsList)
-        setIsLoading(false)
+
     }, [allPatientsList])
 
-    // const filDatainsubcollection = () => {
-    //     allPatientsList.map(async (item) => {
-    //         await addDatainsubcollection('Patients', 'fBoxFLrzXexT8WNBzGGh', 'patients', item)
-    //     })
-    // }
+    useEffect(() => {
+        getSubcollectionData('Patients', 'fBoxFLrzXexT8WNBzGGh', 'patients', hospitaluid, (data) => {
+            // Handle the updated data in the callback function
+            dispatch(FILL_PATIENTS(data))
+            setIsLoading(false)
+            console.log('Received real-time data patients:', data);
+        }).catch((error) => {
+            setIsLoading(false)
+            console.error('Error:', error);
+        });
+    }, [])
 
-    // const handlePrint = useReactToPrint({
-    //     content: () => <MyComponentToPrint name={'ashu'} />
-    // });
-    // const { values, errors, touched, handleBlur, handleChange, handleSubmit } = useFormik({
-    //     initialValues: initalValues,
-    //     validationSchema: addpatientsSchema,
-    //     onSubmit: async (Values, action) => {
-    //         let timestamp = new Date().getTime();
-
-
-    //         let patient1 = [...patientsFilter]
-    //         if (!update) {
-    //             values.pid = Math.floor(Math.random() + timestamp)
-    //             const index = patientsFilter.findIndex(obj => obj.pMobileNo === Values.pMobileNo);
-    //             if (index === -1) {
-    //                 let patient = [...patientsFilter, Values]
-    //                 try {
-    //                     await setData('Patients', 'fBoxFLrzXexT8WNBzGGh', 'patients', patient)
-    //                     dispatch(ADD_PATIENTS(Values))
-    //                     action.resetForm()
-    //                     setShow(false)
-    //                     toast.success("Added Successfully.......");
-    //                 } catch (error) {
-    //                     toast.error(error.message)
-    //                     console.error(error.message)
-    //                 }
-    //             } else {
-    //                 toast.error("This Mobile No already Exist")
-
-    //             }
-
-
-
-    //         } else {
-    //             let findindex = patient1.findIndex((item) => item.pid === Values.pid);
-    //             patient1[findindex] = Values;
-    //             try {
-    //                 await setData('Patients', 'fBoxFLrzXexT8WNBzGGh', 'patients', patient1)
-    //                 dispatch(EDIT_PATIENTS(Values))
-    //                 action.resetForm()
-    //                 setShow(false)
-    //                 setUpdate(false)
-    //                 toast.success("Updated Successfully.......");
-    //             } catch (error) {
-    //                 toast.error(error.message)
-    //                 console.error(error.message)
-    //             }
-
-
-    //         }
-
-
-    //     }
-    // });
     const handleClose = () => {
         setShow(false);
         setUpdate(false);
@@ -205,7 +158,7 @@ const Addpatients = () => {
                             // await setData('Patients', 'fBoxFLrzXexT8WNBzGGh', 'patients', patient)
                             // await deleteSingltObject('Patients', 'fBoxFLrzXexT8WNBzGGh', 'patients', item1, 'pid', 'hospitaluid')
                             await deleteDatainSubcollection('Patients', 'fBoxFLrzXexT8WNBzGGh', 'patients', item1, 'pid', 'hospitaluid')
-                            // dispatch(DELETE_PATIENTS(item1))
+                            dispatch(DELETE_PATIENTS(item1))
                             toast.success("Deleted Successfully.......")
                         } catch (error) {
                             toast.error(error.message)
@@ -245,7 +198,20 @@ const Addpatients = () => {
 
         navigate(`/patients/patientslist/patientshistory`, { state: item })
     }
+    const reloadData = () => {
+        setIsLoading(true)
+        getSubcollectionData('Patients', 'fBoxFLrzXexT8WNBzGGh', 'patients', hospitaluid, (data) => {
+            // Handle the updated data in the callback function
+            dispatch(FILL_PATIENTS(data))
+            setIsLoading(false)
 
+            console.log('Received real-time data:', data);
+        }).catch((error) => {
+            setIsLoading(false)
+
+            console.error('Error:', error);
+        })
+    }
     return <>
         {isLoading ? <Loaderspinner /> :
             <>
@@ -256,7 +222,7 @@ const Addpatients = () => {
                         columns={columns}
                         data={patientsList}
                         action={<button className='btn btn-primary' onClick={handleShow}><span>  <BiPlus size={30} /></span></button>}
-                        subHeaderComponent={<>
+                        subHeaderComponent={<> <button className='btn btn-dark' onClick={reloadData} style={{ marginRight: '20px' }}><span>  <TfiReload size={18} />&nbsp;Reload</span></button>
                             <input type='search' placeholder='Search...' className='w-25 form-control' onChange={(e) => requestSearch(e.target.value)} /></>}
                     />
                 </div>

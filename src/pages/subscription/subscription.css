@@ -1,0 +1,107 @@
+/* @import url('https://fonts.googleapis.com/css2?family=Poppins&display=swap'); */
+/* * {
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif
+}
+
+body {
+    margin-top: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center
+} */
+
+.card1 {
+    max-width: 250px;
+    height: 380px;
+    position: relative;
+    padding: 20px;
+    box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px
+}
+
+.h-1 {
+    text-transform: uppercase
+}
+
+.ribon {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    transform: translate(-50%, -50%);
+    width: 80px;
+    height: 80px;
+    background-color: #2b98f0;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center
+}
+
+.ribon .fas.fa-spray-can,
+.ribon .fas.fa-broom,
+.ribon .fas.fa-shower,
+.ribon .fas.fa-infinity {
+    font-size: 30px;
+    color: white
+}
+
+.card1 .price {
+    color: #2b98f0;
+    font-size: 30px
+}
+
+.card1 ul {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center
+}
+
+.card1 ul li {
+    font-size: 12px;
+    margin-bottom: 8px
+}
+
+.card1 ul .fa.fa-check {
+    font-size: 8px;
+    color: gold
+}
+
+.card1:hover {
+    background-color: gainsboro
+}
+
+.card1:hover .fa.fa-check {
+    color: #2b98f0
+}
+
+.card1 .btn {
+    width: 200px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 0px;
+    box-shadow: none;
+    margin-top: 5px;
+
+}
+
+.btn-monthly {
+    background-color: #F44336;
+    color: #ffffff;
+}
+
+.btn-yearly {
+    background-color: #4CAF50;
+    color: #ffffff;
+}
+
+@media (max-width:500px) {
+    .card1 {
+        max-width: 100%
+    }
+}

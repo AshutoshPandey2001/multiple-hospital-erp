@@ -9,13 +9,14 @@ import { MdEdit } from 'react-icons/md'
 import { useDispatch, useSelector } from 'react-redux';
 import { AiFillDelete } from 'react-icons/ai'
 import { ImCross } from 'react-icons/im'
-import { ADD_ROOM, DELETE_ROOM, EDIT_ROOM, selectAllRooms } from 'src/redux/slice/roomMasterSlice';
-import { addDatainsubcollection, addSingltObject, deleteDatainSubcollection, deleteSingltObject, filDatainsubcollection, setData, updateDatainSubcollection, updateSingltObject } from 'src/services/firebasedb';
+import { ADD_ROOM, DELETE_ROOM, EDIT_ROOM, FILL_ROOMS, selectAllRooms } from 'src/redux/slice/roomMasterSlice';
+import { addDatainsubcollection, addSingltObject, deleteDatainSubcollection, deleteSingltObject, filDatainsubcollection, getSubcollectionData, setData, updateDatainSubcollection, updateSingltObject } from 'src/services/firebasedb';
 import CommanTable from 'src/comman/table/CommanTable';
 import { confirmAlert } from 'react-confirm-alert';
 import { toast } from 'react-toastify';
 import Loaderspinner from 'src/comman/spinner/Loaderspinner';
 import { selectUserId } from 'src/redux/slice/authSlice';
+import { TfiReload } from 'react-icons/tfi'
 
 const initalValues = {
     roomuid: '',
@@ -59,14 +60,24 @@ const AddRooms = () => {
         setUpdate(false)
     }
     const handleShow = () => setShow(true);
-
+    useEffect(() => {
+        getSubcollectionData('Rooms', '3PvtQ2G1RbG3l5VtiCMI', 'rooms', hospitaluid, (data) => {
+            // Handle the updated data in the callback function
+            dispatch(FILL_ROOMS(data))
+            setIsLoading(false)
+            console.log('Received real-time data:', data);
+        }).catch((error) => {
+            setIsLoading(false)
+            console.error('Error:', error);
+        })
+    }, [])
     useEffect(() => {
         const roomNumbers = allRooms?.map((item) => item.rooms?.map((room) => Number(room.roomNo))).flat();
         setAllRoomNo(roomNumbers)
         console.log('roomNumbers', roomNumbers);
         setRoomList(allRooms)
         setRoomsFilter(allRooms)
-        setIsLoading(false)
+
     }, [allRooms])
 
 
@@ -85,7 +96,7 @@ const AddRooms = () => {
                     // await setData('Rooms', '3PvtQ2G1RbG3l5VtiCMI', 'rooms', room)
                     // await addSingltObject('Rooms', '3PvtQ2G1RbG3l5VtiCMI', 'rooms', Values)
                     await addDatainsubcollection('Rooms', '3PvtQ2G1RbG3l5VtiCMI', 'rooms', Values)
-                    // dispatch(ADD_ROOM(Values))
+                    dispatch(ADD_ROOM(Values))
                     action.resetForm()
                     clearForm()
                     setShow(false)
@@ -160,7 +171,7 @@ const AddRooms = () => {
                             // await setData('Rooms', '3PvtQ2G1RbG3l5VtiCMI', 'rooms', room)
                             // await deleteSingltObject('Rooms', '3PvtQ2G1RbG3l5VtiCMI', 'rooms', item1, 'roomuid', 'hospitaluid')
                             await deleteDatainSubcollection('Rooms', '3PvtQ2G1RbG3l5VtiCMI', 'rooms', item1, 'roomuid', 'hospitaluid')
-                            // dispatch(DELETE_ROOM(item1))
+                            dispatch(DELETE_ROOM(item1))
                             toast.success("Deleted Successfully.......");
                         } catch (error) {
                             toast.error(error.message)
@@ -185,7 +196,20 @@ const AddRooms = () => {
         }
 
     }
+    const reloadData = () => {
+        setIsLoading(true)
+        getSubcollectionData('Rooms', '3PvtQ2G1RbG3l5VtiCMI', 'rooms', hospitaluid, (data) => {
+            // Handle the updated data in the callback function
+            dispatch(FILL_ROOMS(data))
+            setIsLoading(false)
 
+            console.log('Received real-time data:', data);
+        }).catch((error) => {
+            setIsLoading(false)
+
+            console.error('Error:', error);
+        })
+    }
     return <>
         {isLoading ? <Loaderspinner /> :
             <div>
@@ -193,7 +217,8 @@ const AddRooms = () => {
                     title={"Rooms"}
                     columns={columns}
                     data={roomList}
-                    action={<button className='btn btn-primary' onClick={handleShow}><span>  <BiPlus size={25} /></span></button>}
+                    action={<><button className='btn btn-dark' onClick={reloadData} style={{ marginRight: '20px' }}><span> <TfiReload size={18} />&nbsp;Reload</span></button> <button className='btn btn-primary' onClick={handleShow}><span>  <BiPlus size={25} /></span></button></>}
+
                 />
             </div>
         }

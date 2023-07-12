@@ -27,6 +27,7 @@ import { ddMMyyyy, yyyyMMdd } from 'src/services/dateFormate';
 import Table from 'react-bootstrap/Table';
 import PrintButton from 'src/comman/printpageComponents/PrintButton';
 import { selectUserId } from 'src/redux/slice/authSlice';
+import { TfiReload } from 'react-icons/tfi'
 
 const PrintComponent = ({ data }) => {
     const state = data.data1

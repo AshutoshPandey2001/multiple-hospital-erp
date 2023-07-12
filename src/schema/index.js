@@ -27,7 +27,7 @@ export const addpatientsSchema = Yup.object({
     page: Yup.number().required("Patient Age is Required"),
     pGender: Yup.string().required("Gendre is Required"),
     pAddress: Yup.string().required("Address is Required"),
-    pMobileNo: Yup.string().required("Patient Mobile No is Required").matches(/^[0-9]{10}$/, 'Mobile number must be 10 digits'),
+    // pMobileNo: Yup.string().required("Patient Mobile No is Required").matches(/^[0-9]{10}$/, 'Mobile number must be 10 digits'),
 
 })
 
@@ -38,7 +38,7 @@ export const opdformSchema = Yup.object({
     page: Yup.number().required("Patient Age is Required"),
     pGender: Yup.string().required("Gendre is Required"),
     pAddress: Yup.string().required("Address is Required"),
-    pMobileNo: Yup.string().required("Patient Mobile No is Required"),
+    // pMobileNo: Yup.string().required("Patient Mobile No is Required"),
     drName: Yup.string().required("Doctor Name is Required"),
     consultingDate: Yup.date().required("Consulting Date is Required"),
     consultingCharge: Yup.number().required("Consulting Charge is Required"),
@@ -52,7 +52,7 @@ export const admitformSchema = Yup.object({
     page: Yup.number().required("Patient Age is Required"),
     pGender: Yup.string().required("Gendre is Required"),
     pAddress: Yup.string().required("Address is Required"),
-    pMobileNo: Yup.string().required("Patient Mobile No is Required"),
+    // pMobileNo: Yup.string().required("Patient Mobile No is Required"),
     drName: Yup.string().required("Doctor Name is Required"),
     admitDate: Yup.date().required("Admit Date is Required"),
     dischargeDate: Yup.date(),
@@ -92,7 +92,7 @@ export const medicineSchema = Yup.object({
 export const padtientmedicineSchema = Yup.object({
     pid: Yup.string().required("Patient id is required"),
     pName: Yup.string().required("Patient Name is required"),
-    pMobileNo: Yup.string().required("Patient Mobile No is required"),
+    // pMobileNo: Yup.string().required("Patient Mobile No is required"),
     medicineDate: Yup.string().required("Date is required"),
     paymentStatus: Yup.string().required("Payment Status in Required"),
     medicines: Yup.array()
@@ -111,7 +111,7 @@ export const padtientmedicineSchema = Yup.object({
 export const returnpadtientmedicineSchema = Yup.object({
     pid: Yup.string().required("Patient id is required"),
     pName: Yup.string().required("Patient Name is required"),
-    pMobileNo: Yup.string().required("Patient Mobile No is required"),
+    // pMobileNo: Yup.string().required("Patient Mobile No is required"),
     returnDate: Yup.string().required("Date is required"),
     medicines: Yup.array()
         .of(
@@ -145,7 +145,7 @@ export const dischargeSchema = Yup.object({
     pid: Yup.string().required("Patient id is Required"),
     pName: Yup.string().required("Patient Name is Required"),
     page: Yup.number().required("Patient Age is Required"),
-    pMobileNo: Yup.string().required("Patient Mobile No is Required"),
+    // pMobileNo: Yup.string().required("Patient Mobile No is Required"),
     drName: Yup.string().required("Doctor Name is Required"),
     admitDate: Yup.date().required("Admit Date is Required"),
     dischargeDate: Yup.date().required("Discharge Date is Required"),
@@ -180,7 +180,7 @@ export const laboratoryReportschema = Yup.object({
     page: Yup.string().required('Patient age is required.'),
     pGender: Yup.string().required('Patient gender is required.'),
     pAddress: Yup.string().required('Patient address is required.'),
-    pMobileNo: Yup.string().required('Patient mobile number is required.'),
+    // pMobileNo: Yup.string().required('Patient mobile number is required.'),
     drName: Yup.string().required('Doctor name is required.'),
     date: Yup.string().required('Date is required.'),
     reportName: Yup.string().required('Report name is required.'),

@@ -31,7 +31,7 @@ import { selectOpdPatients } from 'src/redux/slice/opdPatientsList'
 import { selectAllRooms } from 'src/redux/slice/roomMasterSlice'
 import { selectAllDr } from 'src/redux/slice/doctorsSlice'
 import ReactApexChart from 'react-apexcharts';
-import { yyyyMMdd } from 'src/services/dateFormate'
+import { formatDateYYYYMMDD, yyyyMMdd, yyyy_MM_dd } from 'src/services/dateFormate'
 import Dropdown from 'react-bootstrap/Dropdown';
 import { FiFilter } from 'react-icons/fi'
 import { date } from 'yup'
@@ -77,7 +77,7 @@ const Dashboard = () => {
   const filteredOpdData = filteredOPDDataUnique
     .filter(entry => entry.paymentStatus === "Completed")
     .reduce((result, entry) => {
-      const date = yyyyMMdd(entry.consultingDate);
+      const date = formatDateYYYYMMDD(entry.consultingDate);
       const existingEntry = result.find(item => item.date === date);
       if (existingEntry) {
         existingEntry.payAbleAmount += entry.payAbleAmount;
@@ -86,6 +86,7 @@ const Dashboard = () => {
       }
       return result;
     }, []);
+  console.log('filteredOpdData', filteredOpdData);
 
   const invoiceuidMapIndoor = new Map();
   for (const entry of admitPatientsdata) {
@@ -101,7 +102,8 @@ const Dashboard = () => {
   const filteredIndoorData = filteredIndoorDataUnique
     .filter(entry => entry.paymentStatus === "Completed")
     .reduce((result, entry) => {
-      const date = yyyyMMdd(entry.admitDate);
+      // const date = yyyyMMdd(entry.admitDate);
+      const date = formatDateYYYYMMDD(entry.admitDate);
       const existingEntry = result.find(item => item.date === date);
       if (existingEntry) {
         existingEntry.payAbleAmount += entry.payableAmount + (entry.deposit ? Number(entry.deposit) : 0);
@@ -112,7 +114,8 @@ const Dashboard = () => {
     }, []);
   console.log('filteredIndoorData', filteredIndoorData);
   const data = admitPatientsdata?.map((patient) => ({
-    date: yyyyMMdd(patient.admitDate),
+    // date: yyyyMMdd(patient.admitDate),
+    date: formatDateYYYYMMDD(patient.admitDate),
     count: 1,
   }));
   // Aggregate the data to get the total number of patients for each day
@@ -127,7 +130,7 @@ const Dashboard = () => {
   }, []);
 
   const data1 = opdPatientsdata?.map((patient) => ({
-    date: yyyyMMdd(patient.consultingDate),
+    date: formatDateYYYYMMDD(patient.consultingDate),
     count: 1,
   }));
 
@@ -420,8 +423,10 @@ const Dashboard = () => {
 
 
   const pieChartFiltertoday = () => {
-    const indoortoday = groupedData.find((item, a) => item.date === formattedDate)
-    const opdtoday = groupedDataopd.find((item, a) => item.date === formattedDate)
+    const indoortoday = groupedData.find((item) => item.date === formattedDate)
+    const opdtoday = groupedDataopd.find((item) => item.date === formattedDate)
+    console.log('indoortoday', groupedData);
+    console.log('opdtoday', groupedDataopd);
     setChartDatapie(prevState => ({
       ...prevState,
       series: [

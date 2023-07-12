@@ -95,12 +95,12 @@ $enable-rtl: true;
 }
 
 .contentWrapper {
-    padding-left: 17rem;
+    padding-left: 16rem;
     transition-duration: 600ms;
 }
 
 .contentWrapperN {
-    padding-left: 5rem;
+    padding-left: 4rem;
     transition-duration: 600ms;
 }
 
@@ -171,4 +171,8 @@ $enable-rtl: true;
     flex-wrap: wrap;
     background-color: #FFFFFF;
     min-height: 52px;
+}
+
+.container-fluid [aria-label="breadcrumb"] {
+    width: 100%;
 }

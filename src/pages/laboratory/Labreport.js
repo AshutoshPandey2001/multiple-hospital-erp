@@ -32,6 +32,7 @@ import SearchAutocomplete from 'src/comman/searchAutocomplete/SearchAutocomplete
 import PrintButton from 'src/comman/printpageComponents/PrintButton'
 import { ddMMyyyy, yyyyMMdd } from 'src/services/dateFormate'
 import { selectUserId } from 'src/redux/slice/authSlice'
+import { TfiReload } from 'react-icons/tfi'
 
 const PrintComponent = ({ data }) => {
     const state = data.data1

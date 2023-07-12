@@ -89,7 +89,7 @@
 
 // export default React.memo(AppBreadcrumb)
 /* eslint-disable prettier/prettier */
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { CBreadcrumb, CBreadcrumbItem } from '@coreui/react';
 import { useSelector } from 'react-redux';
@@ -98,9 +98,12 @@ import receptionRoutes from 'src/receptionRoutes';
 import medroutes from 'src/medRoutes';
 import laboratoryRoutes from 'src/laboratoryRoutes';
 import { selectUsertype } from 'src/redux/slice/authSlice';
+import moment from 'moment-timezone';
+import managementRoutes from 'src/managementRoutes';
 
 const AppBreadcrumb = () => {
   const navigate = useNavigate()
+  const [currentDateTime, setCurrentDateTime] = useState('');
 
   const currentLocation = useLocation().pathname;
   const userType = useSelector(selectUsertype);
@@ -112,37 +115,17 @@ const AppBreadcrumb = () => {
   const goBack = () => {
     navigate(-1)
   }
-  // const getRouteName = (pathname, routes) => {
-  //   const currentRoute = routes.find((route) => {
-  //     if (route.path.includes(':')) {
-  //       return false;
-  //     }
-  //     return route.path === pathname;
-  //   });
-  //   return currentRoute ? currentRoute.name : false;
-  // };
-  // const getRouteName = (pathname, routes) => {
-  //   const currentRoute = routes.find((route) => {
-  //     const routePath = route.path;
-  //     const isParameterized = routePath.includes(':');
-  //     if (isParameterized) {
-  //       const pathSegments = pathname.split('/');
-  //       const routeSegments = routePath.split('/');
-  //       console.log('pathSegments', pathSegments, pathname);
-  //       if (pathSegments.length !== routeSegments.length) {
-  //         return false;
-  //       }
-  //       for (let i = 0; i < pathSegments.length; i++) {
-  //         if (!routeSegments[i].startsWith(':') && pathSegments[i] !== routeSegments[i]) {
-  //           return false;
-  //         }
-  //       }
-  //       return true;
-  //     }
-  //     return routePath === pathname;
-  //   });
-  //   return currentRoute ? currentRoute.name : false;
-  // };
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const formattedDate = moment().tz('Asia/Kolkata').format('MMMM Do YYYY, hh:mm A');
+      setCurrentDateTime(formattedDate);
+    }, 1000);
+
+    return () => {
+      clearInterval(interval);
+    };
+  }, []);
+
   const getBreadcrumbs = (location) => {
     const breadcrumbs = [];
     location.split('/').reduce((prev, curr, index, array) => {
@@ -161,6 +144,9 @@ const AppBreadcrumb = () => {
         case 'Laboratory':
           routeName = getRouteName(currentPathname, laboratoryRoutes);
           break;
+        case 'Management':
+          routeName = getRouteName(currentPathname, managementRoutes);
+          break;
         default:
           routeName = getRouteName(currentPathname, routes);
       }
@@ -177,27 +163,35 @@ const AppBreadcrumb = () => {
 
   const breadcrumbs = getBreadcrumbs(currentLocation);
 
-  return (
-    <CBreadcrumb className="m-0 ms-2">
-      {breadcrumbs.map((breadcrumb, index) => {
-        return (
-          <CBreadcrumbItem key={index}>
-            <NavLink
-              to={breadcrumb.pathname}
-              style={({ isActive }) => {
-                return { color: isActive ? 'blue' : '#5C607B' };
-              }}
-            >
-              {breadcrumb.name}
-            </NavLink>
-          </CBreadcrumbItem>
-        );
-      })}
+  return <>
+    <CBreadcrumb className="m-0 ms-2" style={{ width: '100%' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
+        <div className='d-flex'>
+
+
+          {breadcrumbs.map((breadcrumb, index) => {
+            return (
+              <CBreadcrumbItem key={index}>
+                <NavLink
+                  to={breadcrumb.pathname}
+                  style={({ isActive }) => {
+                    return { color: isActive ? 'blue' : '#5C607B' };
+                  }}
+                >
+                  {breadcrumb.name}
+                </NavLink>
+              </CBreadcrumbItem>
+            );
+          })}
+        </div>
+        <div style={{ color: 'blue' }}>{currentDateTime}</div>
+      </div>
     </CBreadcrumb>
-  );
+  </>
+
 };
 
-export default React.memo(AppBreadcrumb);
+export default AppBreadcrumb;
 
 
 

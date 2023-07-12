@@ -26,6 +26,8 @@ const Labreportprint = React.lazy(() => lazyRetry(() => import('./pages/laborato
 const Labmaster = React.lazy(() => lazyRetry(() => import('./pages/laboratory/LabMaster'), "labmaster"))
 const Home = React.lazy(() => lazyRetry(() => import('./pages/home/Home'), "home"))
 const Charges = React.lazy(() => lazyRetry(() => import('./pages/hospital charges master/Charges'), "charges"))
+const HospitalMaster = React.lazy(() => lazyRetry(() => import('./pages/Hospital master/HospitalProfile'), "HospitalMaster"))
+const Subscription = React.lazy(() => lazyRetry(() => import('./pages/subscription/subscription'), "Subscription"))
 
 const routes = [
   // { path: '/', exact: true, name: 'Home' },
@@ -58,6 +60,8 @@ const routes = [
   { path: '/tax', name: 'Tax', element: TaxMasters, exact: true },
   { path: '/drmaster', name: 'Doctors', element: Drsmasters, exact: true },
   { path: '/charges', name: 'Charges', element: Charges, exact: true },
+  { path: '/hospitalprofile', name: 'Hospital Profile', element: HospitalMaster, exact: true },
+  { path: '/subscription', name: 'Subscription', element: Subscription, exact: true },
 ]
 
 

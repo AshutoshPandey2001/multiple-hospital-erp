@@ -1,0 +1,32 @@
+.image-container {
+    position: relative;
+    display: inline-block;
+}
+
+.edit-icon {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.image-container:hover .edit-icon {
+    opacity: 1;
+}
+
+.image-container:hover img {
+    filter: grayscale(100%) blur(3px);
+    /* Apply background blur to the image */
+}
+
+/* If you are using Font Awesome icons */
+.edit-icon i {
+    font-size: 24px;
+}
+
+/* If you are using a custom edit icon */
+.edit-icon img {
+    width: 24px;
+}

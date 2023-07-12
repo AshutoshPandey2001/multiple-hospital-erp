@@ -9,14 +9,15 @@ import { drSchema } from 'src/schema';
 import { MdEdit } from 'react-icons/md'
 import { AiFillDelete } from 'react-icons/ai'
 import { useDispatch, useSelector } from 'react-redux';
-import { addDatainsubcollection, addSingltObject, deleteDatainSubcollection, deleteSingltObject, filDatainsubcollection, setData, updateDatainSubcollection, updateSingltObject } from 'src/services/firebasedb';
+import { addDatainsubcollection, addSingltObject, deleteDatainSubcollection, deleteSingltObject, filDatainsubcollection, getSubcollectionData, setData, updateDatainSubcollection, updateSingltObject } from 'src/services/firebasedb';
 import CommanTable from 'src/comman/table/CommanTable';
 import { confirmAlert } from 'react-confirm-alert';
 import { toast } from 'react-toastify';
 import Loaderspinner from 'src/comman/spinner/Loaderspinner';
-import { ADD_DR, DELETE_DR, EDIT_DR, selectAllDr } from 'src/redux/slice/doctorsSlice';
+import { ADD_DR, DELETE_DR, EDIT_DR, FILL_DR, selectAllDr } from 'src/redux/slice/doctorsSlice';
 import { ImCross } from 'react-icons/im'
 import { selectUserId } from 'src/redux/slice/authSlice';
+import { TfiReload } from 'react-icons/tfi'
 
 const initalValues = {
     druid: '',
@@ -60,11 +61,21 @@ const doctorMaster = () => {
         setUpdate(false)
     }
     const handleShow = () => setShow(true);
-
+    useEffect(() => {
+        getSubcollectionData('Doctors', 'd3ryEUfqA2FMa0fEyxde', 'doctors', hospitaluid, (data) => {
+            // Handle the updated data in the callback function
+            dispatch(FILL_DR(data))
+            setIsLoading(false)
+            console.log('Received real-time data:', data);
+        }).catch((error) => {
+            setIsLoading(false)
+            console.error('Error:', error);
+        })
+    }, [])
     useEffect(() => {
         setDrList(allDoctors)
         setDrFilter(allDoctors)
-        setIsLoading(false)
+
 
     }, [allDoctors])
 
@@ -84,7 +95,7 @@ const doctorMaster = () => {
                     // await setData('Doctors', 'd3ryEUfqA2FMa0fEyxde', 'doctors', doctor)
                     // await addSingltObject('Doctors', 'd3ryEUfqA2FMa0fEyxde', 'doctors', values)
                     await addDatainsubcollection('Doctors', 'd3ryEUfqA2FMa0fEyxde', 'doctors', values)
-                    // dispatch(ADD_DR(Values))
+                    dispatch(ADD_DR(Values))
                     action.resetForm();
                     clearForm()
                     setShow(false)
@@ -101,7 +112,7 @@ const doctorMaster = () => {
                     // await setData('Doctors', 'd3ryEUfqA2FMa0fEyxde', 'doctors', doctor1)
                     await updateDatainSubcollection('Doctors', 'd3ryEUfqA2FMa0fEyxde', 'doctors', Values, 'druid', 'hospitaluid')
                     // await updateSingltObject('Doctors', 'd3ryEUfqA2FMa0fEyxde', 'doctors', Values, 'druid', 'hospitaluid')
-                    // dispatch(EDIT_DR(Values))
+                    dispatch(EDIT_DR(Values))
                     action.resetForm()
                     clearForm()
                     setShow(false)
@@ -178,7 +189,20 @@ const doctorMaster = () => {
 
     }
 
+    const reloadData = () => {
+        setIsLoading(true)
+        getSubcollectionData('Doctors', 'd3ryEUfqA2FMa0fEyxde', 'doctors', hospitaluid, (data) => {
+            // Handle the updated data in the callback function
+            dispatch(FILL_DR(data))
+            setIsLoading(false)
 
+            console.log('Received real-time data:', data);
+        }).catch((error) => {
+            setIsLoading(false)
+
+            console.error('Error:', error);
+        })
+    }
     return <>
         {isLoading ? <Loaderspinner /> :
             <div>
@@ -186,7 +210,8 @@ const doctorMaster = () => {
                     title={"Doctors"}
                     columns={columns}
                     data={drList}
-                    action={<button className='btn btn-primary' onClick={handleShow}><span>  <BiPlus size={30} /></span></button>}
+                    action={<><button className='btn btn-dark' onClick={reloadData} style={{ marginRight: '20px' }}><span> <TfiReload size={18} />&nbsp;Reload</span></button> <button className='btn btn-primary' onClick={handleShow}><span>  <BiPlus size={25} /></span></button></>}
+
                 />
             </div>
         }

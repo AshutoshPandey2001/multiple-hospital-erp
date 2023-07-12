@@ -9,13 +9,14 @@ import { drSchema } from 'src/schema';
 import { MdEdit } from 'react-icons/md'
 import { AiFillDelete } from 'react-icons/ai'
 import { useDispatch, useSelector } from 'react-redux';
-import { addDatainsubcollection, addSingltObject, deleteDatainSubcollection, deleteSingltObject, filDatainsubcollection, setData, updateDatainSubcollection, updateSingltObject } from 'src/services/firebasedb';
+import { addDatainsubcollection, addSingltObject, deleteDatainSubcollection, deleteSingltObject, filDatainsubcollection, getSubcollectionData, setData, updateDatainSubcollection, updateSingltObject } from 'src/services/firebasedb';
 import CommanTable from 'src/comman/table/CommanTable';
 import { confirmAlert } from 'react-confirm-alert';
 import { toast } from 'react-toastify';
 import Loaderspinner from 'src/comman/spinner/Loaderspinner';
-import { ADD_CHARGE, DELETE_CHARGE, EDIT_CHARGE, selectAllCharges } from 'src/redux/slice/chargesSlice';
+import { ADD_CHARGE, DELETE_CHARGE, EDIT_CHARGE, FILL_CHARGES, selectAllCharges } from 'src/redux/slice/chargesSlice';
 import { selectUserId } from 'src/redux/slice/authSlice';
+import { TfiReload } from 'react-icons/tfi'
 
 const initalValues = {
     hospitaluid: '',
@@ -49,11 +50,21 @@ const Charges = () => {
         setUpdate(false)
     }
     const handleShow = () => setShow(true);
-
+    useEffect(() => {
+        getSubcollectionData('Charges', 'id6rOjHGDBEd63LQiGQe', 'charges', hospitaluid, (data) => {
+            // Handle the updated data in the callback function
+            dispatch(FILL_CHARGES(data))
+            setIsLoading(false)
+            console.log('Received real-time data:', data);
+        }).catch((error) => {
+            setIsLoading(false)
+            console.error('Error:', error);
+        })
+    }, [])
     useEffect(() => {
         setCharges(allCharges)
         setChargesFilter(allCharges)
-        setIsLoading(false)
+
 
     }, [allCharges])
 
@@ -73,7 +84,7 @@ const Charges = () => {
                     // await setData('Charges', 'id6rOjHGDBEd63LQiGQe', 'charges', charges1)
                     // await addSingltObject('Charges', 'id6rOjHGDBEd63LQiGQe', 'charges', values)
                     await addDatainsubcollection('Charges', 'id6rOjHGDBEd63LQiGQe', 'charges', values)
-                    // dispatch(ADD_CHARGE(Values))
+                    dispatch(ADD_CHARGE(Values))
                     action.resetForm();
                     clearForm()
                     setShow(false)
@@ -90,7 +101,7 @@ const Charges = () => {
                     // await setData('Charges', 'id6rOjHGDBEd63LQiGQe', 'charges', charge)
                     // await updateSingltObject('Charges', 'id6rOjHGDBEd63LQiGQe', 'charges', values, 'chargeuid', 'hospitaluid')
                     await updateDatainSubcollection('Charges', 'id6rOjHGDBEd63LQiGQe', 'charges', values, 'chargeuid', 'hospitaluid')
-                    // dispatch(EDIT_CHARGE(Values))
+                    dispatch(EDIT_CHARGE(Values))
                     action.resetForm()
                     clearForm()
                     setShow(false)
@@ -139,7 +150,7 @@ const Charges = () => {
                             // await deleteSingltObject('Charges', 'id6rOjHGDBEd63LQiGQe', 'charges', item1, 'chargeuid', 'hospitaluid')
                             await deleteDatainSubcollection('Charges', 'id6rOjHGDBEd63LQiGQe', 'charges', item1, 'chargeuid', 'hospitaluid')
                             // await setData('Charges', 'id6rOjHGDBEd63LQiGQe', 'charges', charges)
-                            // dispatch(DELETE_CHARGE(item1))
+                            dispatch(DELETE_CHARGE(item1))
                             toast.success("Deleted Successfully.......");
                         } catch (error) {
                             toast.error(error.message)
@@ -158,7 +169,20 @@ const Charges = () => {
 
     }
 
+    const reloadData = () => {
+        setIsLoading(true)
+        getSubcollectionData('Charges', 'id6rOjHGDBEd63LQiGQe', 'charges', hospitaluid, (data) => {
+            // Handle the updated data in the callback function
+            dispatch(FILL_CHARGES(data))
+            setIsLoading(false)
 
+            console.log('Received real-time data:', data);
+        }).catch((error) => {
+            setIsLoading(false)
+
+            console.error('Error:', error);
+        })
+    }
     return <>
         {isLoading ? <Loaderspinner /> :
             <div>
@@ -166,7 +190,8 @@ const Charges = () => {
                     title={"Charges"}
                     columns={columns}
                     data={charges}
-                    action={<button className='btn btn-primary' onClick={handleShow}><span>  <BiPlus size={30} /></span></button>}
+                    action={<><button className='btn btn-dark' onClick={reloadData} style={{ marginRight: '20px' }}><span> <TfiReload size={18} />&nbsp;Reload</span></button> <button className='btn btn-primary' onClick={handleShow}><span>  <BiPlus size={25} /></span></button></>}
+
                 />
             </div>
         }

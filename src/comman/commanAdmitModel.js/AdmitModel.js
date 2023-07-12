@@ -14,8 +14,9 @@ import { EDIT_ROOM, FILL_ROOMS, selectAllRooms } from 'src/redux/slice/roomMaste
 import { selectAllDr } from 'src/redux/slice/doctorsSlice';
 import { admitformSchema } from 'src/schema';
 import { toast } from 'react-toastify';
-import { ddMMyyyy, yyyyMMdd } from 'src/services/dateFormate';
+import { calculateTotalDaysDifference, ddMMyyyy, ddMMyyyyTHHmm, formatDateyyyymmddUtc, yyyyMMdd, yyyyMMddTHHmm } from 'src/services/dateFormate';
 import { addDatainsubcollection, addSingltObject, deleteDatainSubcollection, deleteSingltObject, filDatainsubcollection, setData, updateDatainSubcollection, updateSingltObject } from 'src/services/firebasedb';
+import moment from 'moment';
 
 const initalValues = {
     pid: '',
@@ -65,29 +66,40 @@ const AdmitModel = ({ show, update, handleClose, data, roomValues, todayDate }) 
         initialValues: initalValues,
         validationSchema: admitformSchema,
         onSubmit: async (Values, { resetForm }) => {
-            let time_differ = (new Date(values.dischargeDate) - new Date(values.admitDate));
-            if (time_differ === 0) {
-                values.totalDayes = 1;
-            } else {
-                values.totalDayes = time_differ / (1000 * 60 * 60 * 24) + 1;
-            }
+            // let time_differ = (new Date(values.dischargeDate) - new Date(values.admitDate));
+            // if (time_differ === 0) {
+            //     values.totalDayes = 1;
+            // } else {
+            //     values.totalDayes = time_differ / (1000 * 60 * 60 * 24) + 1;
+            // }
+            // const utcOffset = moment.utc().format('Z').replace(':', '');
 
-            values.admitDate = ddMMyyyy(values.admitDate)
-            values.dischargeDate = values.dischargeDate ? ddMMyyyy(values.dischargeDate) : values.dischargeDate
+            values.totalDayes = calculateTotalDaysDifference(values.admitDate, values.dischargeDate)
+            values.admitDate = formatDateyyyymmddUtc(values.admitDate)
+            values.dischargeDate = values.dischargeDate ? formatDateyyyymmddUtc(values.dischargeDate) : values.dischargeDate
+            // const formattedOffset = moment().utcOffset().format('Z').replace(':', '');
+            // values.admitDate = moment(values.admitDate).utcOffset(formattedOffset).format('YYYY-MM-DD[T]HH:mmZ');
+            // values.admitDate = moment.utc(values.admitDate).format(`YYYY-MM-DD[T]HH:mm${utcOffset}`);
+            // values.dischargeDate = values.dischargeDate ? moment.utc(values.dischargeDate).format(`YYYY-MM-DD[T]HH:mm${utcOffset}`) : values.dischargeDate;
+            console.log(' values.totalDayes', values.totalDayes);
+            // values.admitDate = ddMMyyyy(values.admitDate)
+            // values.admitDate = ddMMyyyyTHHmm(values.admitDate)
+            // values.dischargeDate = values.dischargeDate ? ddMMyyyy(values.dischargeDate) : values.dischargeDate
+            // values.dischargeDate = values.dischargeDate ? ddMMyyyyTHHmm(values.dischargeDate) : values.dischargeDate
             values.totalAmount = values.priceperNignt * values.totalDayes;
             let admit1 = [...admitPatientfilter]
             let roomArray = {}
             let findRoomindex = room.findIndex((item) => item.roomType === values.roomType)
-            let finRoomNoIndex = room[findRoomindex].rooms.findIndex((item3) => item3.roomNo === values.roomNo)
+            let finRoomNoIndex = room[findRoomindex].rooms.findIndex((item3) => Number(item3.roomNo) === Number(values.roomNo))
             if (values.dischargeDate) {
-                let newArray = room[findRoomindex].rooms[finRoomNoIndex].BEDS.map((item3) => (item3.bedNo === values.bedNo ? { ...item3, occupied: false } : item3))
-                let newArray1 = room[findRoomindex].rooms.map((item3) => (item3.roomNo === values.roomNo ? { ...item3, BEDS: newArray } : item3))
+                let newArray = room[findRoomindex].rooms[finRoomNoIndex].BEDS.map((item3) => (Number(item3.bedNo) === Number(values.bedNo) ? { ...item3, occupied: false } : item3))
+                let newArray1 = room[findRoomindex].rooms.map((item3) => (Number(item3.roomNo) === Number(values.roomNo) ? { ...item3, BEDS: newArray } : item3))
                 // roomArray = room.map((item) => (item.roomType === values.roomType ? { ...item, rooms: newArray1 } : item))
                 roomArray = { ...room[findRoomindex], rooms: newArray1 };
 
             } else {
-                let newArray = room[findRoomindex].rooms[finRoomNoIndex].BEDS.map((item3) => (item3.bedNo === values.bedNo ? { ...item3, occupied: true } : item3))
-                let newArray1 = room[findRoomindex].rooms.map((item3) => (item3.roomNo === values.roomNo ? { ...item3, BEDS: newArray } : item3))
+                let newArray = room[findRoomindex].rooms[finRoomNoIndex].BEDS.map((item3) => (Number(item3.bedNo) === Number(values.bedNo) ? { ...item3, occupied: true } : item3))
+                let newArray1 = room[findRoomindex].rooms.map((item3) => (Number(item3.roomNo) === Number(values.roomNo) ? { ...item3, BEDS: newArray } : item3))
                 // roomArray = room.map((item) => (item.roomType === values.roomType ? { ...item, rooms: newArray1 } : item))
                 roomArray = { ...room[findRoomindex], rooms: newArray1 };
             }
@@ -101,11 +113,11 @@ const AdmitModel = ({ show, update, handleClose, data, roomValues, todayDate }) 
                     // await setData("admitPatients", 'jSqDGnjO21bpPGhb6O2y', 'admitPatient', admit)
                     // await addSingltObject("admitPatients", 'jSqDGnjO21bpPGhb6O2y', 'admitPatient', Values)
                     await addDatainsubcollection("admitPatients", 'jSqDGnjO21bpPGhb6O2y', 'admitPatient', Values)
-                    // dispatch(ADD_ADMIT_PATIENTS(Values))
+                    dispatch(ADD_ADMIT_PATIENTS(Values))
                     // await updateSingltObject('Rooms', '3PvtQ2G1RbG3l5VtiCMI', 'rooms', roomArray, 'roomuid', 'hospitaluid')
                     await updateDatainSubcollection('Rooms', '3PvtQ2G1RbG3l5VtiCMI', 'rooms', roomArray, 'roomuid', 'hospitaluid')
                     // await setData('Rooms', '3PvtQ2G1RbG3l5VtiCMI', 'rooms', roomArray)
-                    // dispatch(EDIT_ROOM(roomArray))
+                    dispatch(EDIT_ROOM(roomArray))
                     await resetForm({ values: '' })
                     closeModel()
                     toast.success("Admit successful.....");
@@ -121,10 +133,10 @@ const AdmitModel = ({ show, update, handleClose, data, roomValues, todayDate }) 
                     await updateDatainSubcollection("admitPatients", 'jSqDGnjO21bpPGhb6O2y', 'admitPatient', Values, 'admituid', 'hospitaluid')
 
                     // await setData("admitPatients", 'jSqDGnjO21bpPGhb6O2y', 'admitPatient', admit1)
-                    // dispatch(EDIT_ADMIT_PATIENTS(Values))
+                    dispatch(EDIT_ADMIT_PATIENTS(Values))
                     await updateDatainSubcollection('Rooms', '3PvtQ2G1RbG3l5VtiCMI', 'rooms', roomArray, 'roomuid', 'hospitaluid')
                     // await setData('Rooms', '3PvtQ2G1RbG3l5VtiCMI', 'rooms', roomArray)
-                    // dispatch(EDIT_ROOM(roomArray))
+                    dispatch(EDIT_ROOM(roomArray))
                     resetForm({ values: '' })
                     closeModel();
                     toast.success("Updated successful.....");
@@ -147,8 +159,10 @@ const AdmitModel = ({ show, update, handleClose, data, roomValues, todayDate }) 
             formik.setFieldValue('page', data.page);
             formik.setFieldValue('pAddress', data.pAddress);
             formik.setFieldValue('drName', data.drName);
-            formik.setFieldValue('admitDate', yyyyMMdd(data.admitDate));
-            formik.setFieldValue('dischargeDate', data.dischargeDate ? yyyyMMdd(data.dischargeDate) : data.dischargeDate);
+            formik.setFieldValue('admitDate', moment(data.admitDate).utc().format('YYYY-MM-DDTHH:mm'));
+            // formik.setFieldValue('admitDate', yyyyMMdd(data.admitDate));
+            formik.setFieldValue('dischargeDate', data.dischargeDate ? moment(data.dischargeDate).utc().format('YYYY-MM-DDTHH:mm') : data.dischargeDate);
+            // formik.setFieldValue('dischargeDate', data.dischargeDate ? yyyyMMdd(data.dischargeDate) : data.dischargeDate);
             formik.setFieldValue('roomType', data.roomType);
             formik.setFieldValue('roomNo', data.roomNo);
             formik.setFieldValue('bedNo', data.bedNo);
@@ -161,7 +175,12 @@ const AdmitModel = ({ show, update, handleClose, data, roomValues, todayDate }) 
             formik.setFieldValue('deposit', data.deposit);
             formik.setFieldValue('indoorCaseNo', data.indoorCaseNo);
             formik.setFieldValue('hospitaluid', data.hospitaluid);
-
+            const selectedRoom = roomList.find((room) => room.roomType === data.roomType); // Find the corresponding room object
+            setRooms(selectedRoom.rooms)
+            const selectedRoomNo = selectedRoom.rooms.find((room) => room.roomNo === data.roomNo); // Find the corresponding doctor object
+            // formik.setFieldValue('roomNo', selectedRoomNo.roomNo);    
+            // let beds = selectedRoomNo.BEDS.filter((item) => item.occupied !== true)
+            setBedNo(selectedRoomNo.BEDS)
             return
         }
 
@@ -171,6 +190,13 @@ const AdmitModel = ({ show, update, handleClose, data, roomValues, todayDate }) 
             formik.setFieldValue('bedNo', roomValues.bedNo);
             formik.setFieldValue('priceperNignt', roomValues.priceperNignt);
             formik.setFieldValue('admitDate', roomValues.todayDate);
+            const selectedRoom = roomList.find((room) => room.roomType === roomValues.roomType); // Find the corresponding room object
+            setRooms(selectedRoom.rooms)
+            const selectedRoomNo = selectedRoom.rooms.find((room) => room.roomNo === roomValues.roomNo); // Find the corresponding doctor object
+            // formik.setFieldValue('roomNo', selectedRoomNo.roomNo);    
+            let beds = selectedRoomNo.BEDS.filter((item) => item.occupied !== true)
+            setBedNo(beds)
+            formik.setFieldValue('admitDate', new Date().toISOString().substr(0, 10) + 'T' + new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' }));
             return
         }
         if (todayDate) {
@@ -237,10 +263,11 @@ const AdmitModel = ({ show, update, handleClose, data, roomValues, todayDate }) 
         formik.setFieldValue('pAddress', item.pAddress);
         formik.setFieldValue('hospitaluid', item.hospitaluid);
     };
-    const selectRoomprice = (e) => {
-        values.roomType = e.roomType;
-        values.priceperNignt = e.priceperNight;
-        setRooms(e.rooms)
+    const selectRoomprice = async (e) => {
+        const selectedRoom = await roomList.find((room) => room.roomType === e); // Find the corresponding doctor object
+        formik.setFieldValue('roomType', selectedRoom.roomType);
+        formik.setFieldValue('priceperNignt', selectedRoom.priceperNight);
+        setRooms(selectedRoom.rooms)
         setAutofocus(!autofocus)
 
     }
@@ -256,9 +283,13 @@ const AdmitModel = ({ show, update, handleClose, data, roomValues, todayDate }) 
         clearForm()
         handleClose();
     }
-    const selectRoom = (e) => {
-        values.roomNo = e.roomNo;
-        let beds = e.BEDS.filter((item) => item.occupied !== true)
+    const selectRoom = async (e) => {
+        const selectedRoomNo = await rooms.find((room) => room.roomNo === e); // Find the corresponding doctor object
+        console.log('e', selectedRoomNo);
+        formik.setFieldValue('roomNo', selectedRoomNo.roomNo);
+
+        // values.roomNo = e.roomNo;
+        let beds = selectedRoomNo.BEDS.filter((item) => item.occupied !== true)
         setBedNo(beds)
         setAutofocus(!autofocus)
 
@@ -271,7 +302,6 @@ const AdmitModel = ({ show, update, handleClose, data, roomValues, todayDate }) 
     return (
         <>
             <Modal show={show} onHide={closeModel} size="lg" style={{ filter: model ? 'blur(5px)' : 'blur(0px)' }}>
-
                 <Modal.Header closeButton>
                     <Modal.Title>Admit Registration</Modal.Title>
                 </Modal.Header>
@@ -293,7 +323,6 @@ const AdmitModel = ({ show, update, handleClose, data, roomValues, todayDate }) 
                                 </div>
                             </div>
                         </div>
-
                         <div className='row'>
                             <div className='col-lg-6'>
                                 {
@@ -386,7 +415,6 @@ const AdmitModel = ({ show, update, handleClose, data, roomValues, todayDate }) 
                             </div>
 
                         </div>
-
                         <div className='row'>
                             <div className='col-lg-6'>
                                 {update || values.pName ?
@@ -448,14 +476,13 @@ const AdmitModel = ({ show, update, handleClose, data, roomValues, todayDate }) 
                                 </div>
                             </div>
                         </div>
-
                         <div className='row'>
                             <div className='col-lg-6'>
                                 <div className="form-group" style={{ marginTop: '20px' }}>
                                     <label >Admit Date<b style={{ color: 'red' }}>*</b>:</label>
                                     <input name='admitDate'
                                         placeholder="Enter Admit Date"
-                                        type="date" className="form-control" onChange={handleChange} value={values.admitDate} />
+                                        type="datetime-local" className="form-control" onChange={handleChange} value={values.admitDate} />
                                     {errors.admitDate && touched.admitDate ? (<p style={{ color: 'red' }}>*{errors.admitDate}</p>) : null}
 
                                 </div>
@@ -465,11 +492,10 @@ const AdmitModel = ({ show, update, handleClose, data, roomValues, todayDate }) 
                                     <label >Discharge Date:</label>
                                     <input name='dischargeDate'
                                         placeholder="Enter Discharge Date"
-                                        type="date" className="form-control" onChange={handleChange} defaultValue={values.dischargeDate} />
+                                        type="datetime-local" className="form-control" onChange={handleChange} defaultValue={values.dischargeDate} />
                                 </div>
                             </div>
                         </div>
-
                         <div className='row'>
                             <div className='col-lg-6'>
                                 <div className="form-group" style={{ marginTop: '20px' }}>
@@ -503,26 +529,36 @@ const AdmitModel = ({ show, update, handleClose, data, roomValues, todayDate }) 
                                     </div>} */}
                             </div>
                             <div className='col-lg-6'>
-                                {update || roomValues ? <div className="form-group" style={{ marginTop: '20px' }}>
+                                {/* {update || roomValues ? <div className="form-group" style={{ marginTop: '20px' }}>
                                     <label >Room Type<b style={{ color: 'red' }}>*</b>:</label>
                                     <input type='text' name="roomType" className='form-control' defaultValue={values.roomType} readOnly />
-                                </div> :
-                                    <div className="form-group" style={{ marginTop: '20px' }}>
-                                        <label >Room Type<b style={{ color: 'red' }}>*</b>:</label>
-                                        <Select options={roomList} getOptionValue={(option) => option.roomType}
+                                </div> : */}
+                                <div className="form-group" style={{ marginTop: '20px' }}>
+                                    <label >Room Type<b style={{ color: 'red' }}>*</b>:</label>
+
+                                    <select className="form-control" style={{ height: '40px', fontSize: '18px' }} name='drName' value={values.roomType} onChange={(e) => { selectRoomprice(e.target.value) }}>
+                                        <option >Select Room</option>
+                                        {roomList?.map((option) => (
+                                            <option key={option.roomuid} value={option.roomType}>
+                                                {option.roomType}
+                                            </option>
+                                        ))}
+
+                                    </select>
+                                    {/* <Select options={roomList} getOptionValue={(option) => option.roomType}
                                             getOptionLabel={(option) => option.roomType}
                                             // value={defaultvalue1}
                                             // defaultValue={defaultvalue1}
                                             isOptionSelected={(option) => option.roomType === values.roomType}
                                             // name='roomType'
                                             placeholder="Select Room"
-                                            onChange={(e) => { selectRoomprice(e) }} />
-                                        {errors.roomType && touched.roomType ? (<p style={{ color: 'red' }}>*{errors.roomType}</p>) : null}
+                                            onChange={(e) => { selectRoomprice(e) }} /> */}
+                                    {errors.roomType && touched.roomType ? (<p style={{ color: 'red' }}>*{errors.roomType}</p>) : null}
 
-                                    </div>}
+                                </div>
+                                {/* } */}
                             </div>
                         </div>
-
                         <div className='row'>
                             <div className='col-lg-6'>
                                 <div className="form-group" style={{ marginTop: '20px' }}>
@@ -537,35 +573,54 @@ const AdmitModel = ({ show, update, handleClose, data, roomValues, todayDate }) 
                             <div className='col-lg-6'>
                                 <div className="form-group" style={{ marginTop: '20px' }}>
                                     <label >Room No<b style={{ color: 'red' }}>*</b>:</label>
-                                    {update || roomValues ?
+                                    {/* {update || roomValues ?
                                         <input name='roomNo'
                                             placeholder="Enter room no."
                                             type="number" className="form-control" onChange={handleChange} defaultValue={values.roomNo} readOnly />
-                                        :
-                                        <Select options={rooms} getOptionValue={(option) => option.roomNo}
-                                            getOptionLabel={(option) => option.roomNo}
-                                            placeholder="Select Room No"
-                                            onChange={(e) => { selectRoom(e) }} />}
+                                        : */}
+                                    <select className="form-control" style={{ height: '40px', fontSize: '18px' }} name='drName' value={values.roomNo} onChange={(e) => { selectRoom(e.target.value) }}>
+                                        <option >Select Room</option>
+                                        {rooms?.map((option) => (
+                                            <option key={option.roomNo} value={option.roomNo}>
+                                                {option.roomNo}
+                                            </option>
+                                        ))}
+
+                                    </select>
+                                    {/* //     // <Select options={rooms} getOptionValue={(option) => option.roomNo}
+                                    //     //     getOptionLabel={(option) => option.roomNo}
+                                    //     //     placeholder="Select Room No"
+                                    //     //     onChange={(e) => { selectRoom(e) }} />
+                                    // } */}
 
                                     {errors.roomNo && touched.roomNo ? (<p style={{ color: 'red' }}>*{errors.roomNo}</p>) : null}
 
                                 </div>
                             </div>
                         </div>
-
                         <div className='row'>
                             <div className='col-lg-6'>
                                 <div className="form-group" style={{ marginTop: '20px' }}>
                                     <label >Select Bed<b style={{ color: 'red' }}>*</b>:</label>
-                                    {update || roomValues ?
+                                    {/* {update || roomValues ?
                                         <input name='bedNo'
                                             placeholder="Enter room no."
                                             type="number" className="form-control" onChange={handleChange} defaultValue={values.bedNo} readOnly />
-                                        :
-                                        <Select options={bedNo} getOptionValue={(option) => option.bedNo}
-                                            getOptionLabel={(option) => option.bedNo}
-                                            placeholder="Select Bed"
-                                            onChange={(e) => { selectBed(e) }} />}
+                                        : */}
+                                    <select className="form-control" style={{ height: '40px', fontSize: '18px' }} name='bedNo' value={values.bedNo} onChange={handleChange}>
+                                        <option >Select Bed</option>
+                                        {bedNo?.map((option) => (
+                                            <option key={option.bedNo} value={option.bedNo}>
+                                                {option.bedNo}
+                                            </option>
+                                        ))}
+
+                                    </select>
+                                    {/* // <Select options={bedNo} getOptionValue={(option) => option.bedNo}
+                                        //     getOptionLabel={(option) => option.bedNo}
+                                        //     placeholder="Select Bed"
+                                        //     onChange={(e) => { selectBed(e) }} />
+                                    // } */}
                                     {errors.bedNo && touched.bedNo ? (<p style={{ color: 'red' }}>*{errors.bedNo}</p>) : null}
 
                                 </div>
@@ -579,7 +634,6 @@ const AdmitModel = ({ show, update, handleClose, data, roomValues, todayDate }) 
                                 </div>
                             </div>
                         </div>
-
                         <div className='row'>
                             <div className='col-lg-6'>
                                 <div className="form-group" style={{ marginTop: '20px' }}>
@@ -601,7 +655,6 @@ const AdmitModel = ({ show, update, handleClose, data, roomValues, todayDate }) 
                             </div>
 
                         </div>
-
                     </form>
                 </Modal.Body>
                 <Modal.Footer>
@@ -613,252 +666,7 @@ const AdmitModel = ({ show, update, handleClose, data, roomValues, todayDate }) 
                     </Button>
                 </Modal.Footer>
             </Modal>
-            {/* <Modal show={show} onHide={handleClose} size="lg" style={{ filter: model ? 'blur(5px)' : 'blur(0px)' }}>
-                <Modal.Header closeButton>
-                    <Modal.Title>Admit Registration</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                    <div className='d-flex' style={{ justifyContent: 'flex-end' }}>
-                        <Button variant="success" onClick={() => { setModel(true) }} >
-                            Add Patients
-                        </Button>
-                    </div>
-                    <form onSubmit={handleSubmit}>
-                        <div className='row'>
-                            <div className='col-lg-6'>
-                                {
-                                    update ? <div className="form-group" style={{ marginTop: '20px' }}>
-                                        <label>Patient id:</label>
-                                        <input type="text" className="form-control" placeholder="Enter patient id" name='pid' readOnly value={values.pid} onChange={handleChange} onBlur={handleBlur} />
-                                        {errors.pid && touched.pid ? (<p style={{ color: 'red' }}>*{errors.pid}</p>) : null}
-                                    </div> :
-                                        <div className="form-group" style={{ marginTop: '20px' }}>
-                                            <label>Patient id:</label>
-                                            <SearchAutocomplete
-                                                allPatients={allPatients}
-                                                handleOnSelect={handleOnSelect}
-                                                inputsearch={values.pid}
-                                                placeholder={'Enter Patients id'}
-                                                handleClear={handleOnClear}
-                                                keyforSearch={"pid"}
-                                            />
 
-                                            {errors.pid && touched.pid ? (<p style={{ color: 'red' }}>*{errors.pid}</p>) : null}
-
-                                        </div>
-                                }
-                            </div>
-                            <div className='col-lg-6'>
-                                {update || values.pMobileNo ?
-                                    <div className="form-group" style={{ marginTop: '20px' }}>
-                                        <label>Mobile No:</label>
-                                        <input type="text" className="form-control" placeholder="Enter patient Mobile No" name='pMobileNo' readOnly value={values.pMobileNo} onChange={handleChange} onBlur={handleBlur} />
-                                        {errors.pMobileNo && touched.pMobileNo ? (<p style={{ color: 'red' }}>*{errors.pMobileNo}</p>) : null}
-                                    </div> :
-                                    <div className="form-group" style={{ marginTop: '20px' }}>
-                                        <label>Mobile No: </label>
-                                        <SearchAutocomplete
-                                            allPatients={allPatients}
-                                            handleOnSelect={handleOnSelect}
-                                            inputsearch={values.pMobileNo}
-                                            placeholder={'Enter Mobile No'}
-                                            handleClear={handleOnClear}
-                                            keyforSearch={"pMobileNo"}
-                                        />
-
-                                        {errors.pMobileNo && touched.pMobileNo ? (<p style={{ color: 'red' }}>*{errors.pMobileNo}</p>) : null}
-
-                                    </div>
-                                }
-                            </div>
-
-                        </div>
-
-                        <div className='row'>
-                            <div className='col-lg-6'>
-                                {update || values.pName ?
-                                    <div className="form-group" style={{ marginTop: '20px' }}>
-                                        <label >Patient Name:</label>
-                                        <input name='pName'
-                                            placeholder="Enter Patient Name"
-                                            type="text" className="form-control" onChange={handleChange} defaultValue={values.pName} />
-                                        {errors.pName && touched.pName ? (<p style={{ color: 'red' }}>*{errors.pName}</p>) : null}
-
-                                    </div>
-                                    :
-                                    <div className="form-group" style={{ marginTop: '20px' }}>
-                                        <label >Patient Name:</label>
-                                        <SearchAutocomplete
-                                            allPatients={allPatients}
-                                            handleOnSelect={handleOnSelect}
-                                            inputsearch={values.pName}
-                                            placeholder={'Enter Patient Name'}
-                                            handleClear={handleOnClear}
-                                            keyforSearch={"pName"}
-                                        />
-
-                                        {errors.pName && touched.pName ? (<p style={{ color: 'red' }}>*{errors.pName}</p>) : null}
-
-                                    </div>
-                                }
-                            </div>
-                            <div className='col-lg-6'>
-                                <div className="form-group" style={{ marginTop: '20px' }}>
-                                    <label >Patient Age:</label>
-                                    <input name='page'
-                                        placeholder="Enter Patient Age"
-                                        type="number" className="form-control" onChange={handleChange} defaultValue={values.page} />
-                                    {errors.page && touched.page ? (<p style={{ color: 'red' }}>*{errors.page}</p>) : null}
-
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className='row'>
-                            <div className='col-lg-6'>
-                                <div className="form-group" style={{ marginTop: '20px' }}>
-                                    <label >Admit Date:</label>
-                                    <input name='admitDate'
-                                        placeholder="Enter Admit Date"
-                                        type="date" className="form-control" onChange={handleChange} defaultValue={values.admitDate} />
-                                    {errors.admitDate && touched.admitDate ? (<p style={{ color: 'red' }}>*{errors.admitDate}</p>) : null}
-
-                                </div>
-                            </div>
-                            <div className='col-lg-6'>
-                                <div className="form-group" style={{ marginTop: '20px' }}>
-                                    <label >Discharge Date:</label>
-                                    <input name='dischargeDate'
-                                        placeholder="Enter Discharge Date"
-                                        type="date" className="form-control" onChange={handleChange} defaultValue={values.dischargeDate} />
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className='row'>
-                            <div className='col-lg-6'>
-                                {update ? <div className="form-group" style={{ marginTop: '20px' }}>
-                                    <label >Dr Name:</label>
-                                    <input name='drName'
-                                        placeholder="Enter Dr Name"
-                                        type="text" className="form-control" onChange={handleChange} defaultValue={values.drName} readOnly />
-                                </div> :
-                                    <div className="form-group" style={{ marginTop: '20px' }}>
-                                        <label >Dr Name:</label>
-                                        <Select options={allDoctors} getOptionValue={(option) => option.drName}
-                                            getOptionLabel={(option) => option.drName}
-                                            placeholder="Select Doctor"
-                                            onChange={(e) => { selectDoctor(e) }} />
-                                        {errors.drName && touched.drName ? (<p style={{ color: 'red' }}>*{errors.drName}</p>) : null}
-
-
-                                    </div>}
-                            </div>
-                            <div className='col-lg-6'>
-                                {update || values.roomType ? <div className="form-group" style={{ marginTop: '20px' }}>
-                                    <label >Room Type:</label>
-                                    <input type='text' name="roomType" className='form-control' defaultValue={values.roomType} readOnly />
-                                </div> :
-                                    <div className="form-group" style={{ marginTop: '20px' }}>
-                                        <label >Room Type:</label>
-                                        <Select options={roomList} getOptionValue={(option) => option.roomType}
-                                            getOptionLabel={(option) => option.roomType}
-                                            // value={defaultvalue1}
-                                            // defaultValue={defaultvalue1}
-                                            isOptionSelected={(option) => option.roomType === values.roomType}
-                                            // name='roomType'
-                                            placeholder="Select Room"
-                                            onChange={(e) => { selectRoomprice(e) }} />
-                                        {errors.roomType && touched.roomType ? (<p style={{ color: 'red' }}>*{errors.roomType}</p>) : null}
-
-                                    </div>}
-                            </div>
-                        </div>
-
-                        <div className='row'>
-                            <div className='col-lg-6'>
-                                <div className="form-group" style={{ marginTop: '20px' }}>
-                                    <label >Charges Per Night:</label>
-                                    <input name='priceperNignt'
-                                        placeholder="Enter Charges"
-                                        type="number" className="form-control" onChange={handleChange} defaultValue={values.priceperNignt} readOnly />
-                                    {errors.priceperNignt && touched.priceperNignt ? (<p style={{ color: 'red' }}>*{errors.priceperNignt}</p>) : null}
-
-                                </div>
-                            </div>
-                            <div className='col-lg-6'>
-                                <div className="form-group" style={{ marginTop: '20px' }}>
-                                    <label >Room No:</label>
-                                    {update || values.roomNo ?
-                                        <input name='roomNo'
-                                            placeholder="Enter room no."
-                                            type="number" className="form-control" onChange={handleChange} defaultValue={values.roomNo} readOnly />
-                                        :
-                                        <Select options={rooms} getOptionValue={(option) => option.roomNo}
-                                            getOptionLabel={(option) => option.roomNo}
-                                            placeholder="Select Room No"
-                                            onChange={(e) => { selectRoom(e) }} />}
-
-                                    {errors.roomNo && touched.roomNo ? (<p style={{ color: 'red' }}>*{errors.roomNo}</p>) : null}
-
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className='row'>
-                            <div className='col-lg-6'>
-                                <div className="form-group" style={{ marginTop: '20px' }}>
-                                    <label >Select Bed:</label>
-                                    {update || values.bedNo ?
-                                        <input name='bedNo'
-                                            placeholder="Enter room no."
-                                            type="number" className="form-control" onChange={handleChange} defaultValue={values.bedNo} readOnly />
-                                        :
-                                        <Select options={bedNo} getOptionValue={(option) => option.bedNo}
-                                            getOptionLabel={(option) => option.bedNo}
-                                            placeholder="Select Bed"
-                                            onChange={(e) => { selectBed(e) }} />}
-                                    {errors.bedNo && touched.bedNo ? (<p style={{ color: 'red' }}>*{errors.bedNo}</p>) : null}
-
-                                </div>
-                            </div>
-                            <div className='col-lg-6'>
-                                <div className="form-group" style={{ marginTop: '20px' }}>
-                                    <label >Deposit:</label>
-                                    <input name='deposit'
-                                        placeholder="Enter Deposit Amount."
-                                        type="number" className="form-control" onChange={handleChange} defaultValue={values.deposit} />
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className='row'>
-                            <div className='col-lg-12'>
-                                <div className="form-group" style={{ marginTop: '20px' }}>
-                                    <label >Payment Status:</label>
-                                    <select className="form-control" style={{ height: '40px', fontSize: '18px' }} name='paymentStatus' defaultValue={values.paymentStatus} onChange={handleChange}>
-                                        <option >Select Payment Status</option>
-                                        <option value='Complete'>Complete</option>
-                                        <option value='Panding' selected>Panding</option>
-                                    </select>
-                                    {errors.paymentStatus && touched.paymentStatus ? (<p style={{ color: 'red' }}>*{errors.paymentStatus}</p>) : null}
-
-                                </div>
-                            </div>
-
-                        </div>
-
-                    </form>
-                </Modal.Body>
-                <Modal.Footer>
-                    <Button variant="secondary" onClick={handleClose}>
-                        Close
-                    </Button>
-                    <Button variant="primary" onClick={handleSubmit} >
-                        {update ? 'Update' : 'Admit'}
-                    </Button>
-                </Modal.Footer>
-            </Modal> */}
             <Addpatientscommanmodel
                 show={model}
                 handleClose={() => setModel(false)}

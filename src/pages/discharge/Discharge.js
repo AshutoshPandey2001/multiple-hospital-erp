@@ -24,7 +24,7 @@ import { useNavigate } from 'react-router-dom';
 import { setTimeout } from 'core-js';
 import Loaderspinner from '../../comman/spinner/Loaderspinner';
 import CommanTable from 'src/comman/table/CommanTable';
-import { addDatainsubcollection, addSingltObject, deleteDatainSubcollection, deleteSingltObject, filDatainsubcollection, setData, updateDatainSubcollection, updateSingltObject } from 'src/services/firebasedb';
+import { addDatainsubcollection, addSingltObject, deleteDatainSubcollection, deleteSingltObject, filDatainsubcollection, getSubcollectionData, setData, updateDatainSubcollection, updateSingltObject } from 'src/services/firebasedb';
 import Dropdown from 'react-bootstrap/Dropdown';
 import { confirmAlert } from 'react-confirm-alert';
 import { toast } from 'react-toastify';
@@ -32,15 +32,16 @@ import Select from 'react-select';
 import { selectAllDr } from 'src/redux/slice/doctorsSlice';
 import { BsEye } from 'react-icons/bs'
 import { Scrollbars } from 'react-custom-scrollbars-2';
-import { ADD_DISCHARGE_PATIENTS, DELETE_DISCHARGE_PATIENTS, EDIT_DISCHARGE_PATIENTS, selectdischargePatients } from 'src/redux/slice/dischargePatientSlice';
+import { ADD_DISCHARGE_PATIENTS, DELETE_DISCHARGE_PATIENTS, EDIT_DISCHARGE_PATIENTS, FILL_DISCHARGE_PATIENTS, selectdischargePatients } from 'src/redux/slice/dischargePatientSlice';
 import ReactToPrint from 'react-to-print';
 import { ImCross } from 'react-icons/im'
 import PrintHeader from 'src/comman/printpageComponents/PrintHeader';
 import PrintFooter from 'src/comman/printpageComponents/PrintFooter';
 import SearchAutocomplete from 'src/comman/searchAutocomplete/SearchAutocomplete';
 import PrintButton from 'src/comman/printpageComponents/PrintButton';
-import { ddMMyyyy, yyyyMMdd } from 'src/services/dateFormate';
+import { calculateTotalDaysDifference, ddMMyyyy, ddMMyyyyTHHmm, yyyyMMdd, yyyyMMddTHHmm } from 'src/services/dateFormate';
 import { selectUserId } from 'src/redux/slice/authSlice';
+import { TfiReload } from 'react-icons/tfi'
 
 const PrintComponent = ({ data }) => {
     const state = data.data1
@@ -256,33 +257,48 @@ const Discharge = () => {
         setPrint(false);
 
     }
-
+    useEffect(() => {
+        getSubcollectionData('DischargePatients', 'cki4rIGKtNwyXr27cZBY', 'dischargePatients', hospitaluid, (data) => {
+            // Handle the updated data in the callback function
+            dispatch(FILL_DISCHARGE_PATIENTS(data))
+            setIsLoading(false)
+            console.log('Received real-time data:', data);
+        }).catch((error) => {
+            setIsLoading(false)
+            console.error('Error:', error);
+        })
+    }, [])
 
     useEffect(() => {
         setDischargePatient([...allDischargePatients].reverse())
         setDischargePatientfilter(allDischargePatients)
         setAdmitPatients(allAdmitPatients)
         setRoom([...roomList])
-        setIsLoading(false)
+
     }, [allAdmitPatients, roomList, allDischargePatients])
+
 
     const formik = useFormik({
         initialValues: initalValues,
         validationSchema: dischargeSchema,
         onSubmit: async (Values, { resetForm }) => {
-            let totalDayes = undefined
-            let time_differ = (new Date(values.dischargeDate) - new Date(values.admitDate));
-            if (time_differ === 0) {
-                totalDayes = 1;
-            } else {
-                totalDayes = time_differ / (1000 * 60 * 60 * 24) + 1;
-            }
+            //  let totalDayes = undefined
+            // let time_differ = (new Date(values.dischargeDate) - new Date(values.admitDate));
+            // if (time_differ === 0) {
+            //     totalDayes = 1;
+            // } else {
+            //     totalDayes = time_differ / (1000 * 60 * 60 * 24) + 1;
+            // }
+            const totalDayes = calculateTotalDaysDifference(values.admitDate, values.dischargeDate)
+
             // const date = new Date(values.admitDate); // Convert input value to Date object
             // const formattedDate = date.toLocaleDateString("en-GB").split('/').join('-');
-            values.admitDate = ddMMyyyy(values.admitDate)
+            // values.admitDate = ddMMyyyyTHHmm(values.admitDate)
+            // values.admitDate = ddMMyyyy(values.admitDate)
             // const date1 = new Date(values.dischargeDate); // Convert input value to Date object
             // const formattedDate1 = date1.toLocaleDateString("en-GB").split('/').join('-');
-            values.dischargeDate = values.dischargeDate ? ddMMyyyy(values.dischargeDate) : values.dischargeDate
+            // values.dischargeDate = values.dischargeDate ? ddMMyyyyTHHmm(values.dischargeDate) : values.dischargeDate
+            // values.dischargeDate = values.dischargeDate ? ddMMyyyy(values.dischargeDate) : values.dischargeDate
             // let totalDayes = time_differ / (1000 * 60 * 60 * 24);
             let discharge1 = [...dischargePtientfilter]
             let admit = [...admitPatients]
@@ -422,7 +438,7 @@ const Discharge = () => {
 
     const handleShow = () => {
         setShow(true);
-        formik.setFieldValue('dischargeDate', new Date().toISOString().substr(0, 10));
+        formik.setFieldValue('dischargeDate', new Date().toISOString().substr(0, 10) + 'T' + new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' }));
     };
 
     const handleOnClear = () => {
@@ -465,7 +481,7 @@ const Discharge = () => {
         // const dateParts1 = dateStr1.split("-"); // Split date string into day, month, year components
         // const yyyy_mm_dd_discharge = `${dateParts1[2]}-${dateParts1[1]}-${dateParts1[0]}`; // Join components in "yyyy-mm-dd" format
         formik.setValues({
-            pid, pName, page, pMobileNo, admitDate: yyyyMMdd(admitDate), dischargeDate: yyyyMMdd(dischargeDate), hospitaluid, drName, roomType, roomNo, bedNo, admituid, diagnosis, history, medicalRx, surgeryName, investigation, surgeryNote, histopathologyReport, radiologyInvstigation, adviceonDischarge, conditionOnDischarge, dischargeType, followUpDetails, advices
+            pid, pName, page, pMobileNo, admitDate: admitDate, dischargeDate: dischargeDate, hospitaluid, drName, roomType, roomNo, bedNo, admituid, diagnosis, history, medicalRx, surgeryName, investigation, surgeryNote, histopathologyReport, radiologyInvstigation, adviceonDischarge, conditionOnDischarge, dischargeType, followUpDetails, advices
         });
 
         setAdvices(advices);
@@ -539,10 +555,10 @@ const Discharge = () => {
         formik.setFieldValue('pName', item.pName);
         formik.setFieldValue('pMobileNo', item.pMobileNo);
         formik.setFieldValue('page', item.page);
-        const dateStr = item.admitDate; // Original date string in "dd-mm-yyyy" format
-        const dateParts = dateStr.split("-"); // Split date string into day, month, year components
-        const yyyy_mm_ddadmit = `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`; // Join components in "yyyy-mm-dd" forma
-        formik.setFieldValue('admitDate', item.admitDate ? yyyy_mm_ddadmit : item.admitDate);
+        // const dateStr = item.admitDate; // Original date string in "dd-mm-yyyy" format
+        // const dateParts = dateStr.split("-"); // Split date string into day, month, year components
+        // const yyyy_mm_ddadmit = `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`; // Join components in "yyyy-mm-dd" forma
+        formik.setFieldValue('admitDate', item.admitDate);
         formik.setFieldValue('drName', item.drName);
         formik.setFieldValue('roomType', item.roomType);
         formik.setFieldValue('roomNo', item.roomNo);
@@ -629,7 +645,20 @@ const Discharge = () => {
 
 
     }
+    const reloadData = () => {
+        setIsLoading(true)
+        getSubcollectionData('DischargePatients', 'cki4rIGKtNwyXr27cZBY', 'dischargePatients', hospitaluid, (data) => {
+            // Handle the updated data in the callback function
+            dispatch(FILL_DISCHARGE_PATIENTS(data))
+            setIsLoading(false)
 
+            console.log('Received real-time data:', data);
+        }).catch((error) => {
+            setIsLoading(false)
+
+            console.error('Error:', error);
+        })
+    }
     return <>
         {isLoading ? <Loaderspinner /> : <>
             <div style={{ display: 'none' }}>  {printContent && <PrintButton content={printContent} />}</div>
@@ -640,7 +669,7 @@ const Discharge = () => {
                     columns={columns}
                     data={dischargePatient}
                     action={<button className='btn btn-primary' onClick={handleShow}><span>  <BiPlus size={25} /></span></button>}
-                    subHeaderComponent={<>
+                    subHeaderComponent={<><button className='btn btn-dark' onClick={reloadData} style={{ marginRight: '20px' }}><span>  <TfiReload size={18} />&nbsp;Reload</span></button>
                         <input type='search' placeholder='search' className='w-25 form-control' onChange={(e) => requestSearch(e.target.value)} /></>}
                 />
             </div >
@@ -914,7 +943,7 @@ const Discharge = () => {
                                 <label >Admit Date<b style={{ color: 'red' }}>*</b>:</label>
                                 <input name='admitDate'
                                     placeholder="Enter Admit Date"
-                                    type="date" className="form-control" onChange={handleChange} defaultValue={values.admitDate} readOnly />
+                                    type="datetime-local" className="form-control" onChange={handleChange} defaultValue={values.admitDate} readOnly />
                                 {errors.admitDate && touched.admitDate ? (<p style={{ color: 'red' }}>*{errors.admitDate}</p>) : null}
 
                             </div>
@@ -924,7 +953,7 @@ const Discharge = () => {
                                 <label >Discharge Date<b style={{ color: 'red' }}>*</b>:</label>
                                 <input name='dischargeDate'
                                     placeholder="Enter Discharge Date"
-                                    type="date" className="form-control" onChange={handleChange} defaultValue={values.dischargeDate} />
+                                    type="datetime-local" className="form-control" onChange={handleChange} defaultValue={values.dischargeDate} />
                                 {errors.dischargeDate && touched.dischargeDate ? (<p style={{ color: 'red' }}>*{errors.dischargeDate}</p>) : null}
 
                             </div>

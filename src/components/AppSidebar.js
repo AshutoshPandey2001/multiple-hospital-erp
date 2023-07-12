@@ -20,12 +20,16 @@ import laboratoryNav from '../_laboratoryNav'
 import './appsidebar.css';
 import { NavLink } from 'react-router-dom'
 import adminnav from 'src/_adminNav'
+import { selectHospitalLogo } from 'src/redux/slice/hospitalProfileSlice'
+import ManagementNav from 'src/_managementNav'
 
 const AppSidebar = () => {
   const dispatch = useDispatch()
   const sidebarShow = useSelector(selectChangeState)
   const userType = useSelector(selectUsertype)
   const isLoggesIn = useSelector(selectIsLoggedIn)
+  const hospitslLogo = useSelector(selectHospitalLogo)
+
   return (
     <CSidebar
       position="fixed"
@@ -35,43 +39,47 @@ const AppSidebar = () => {
       }}
       className={sidebarShow ? 'sidebarW' : 'sidebarWn'}
     >
-      <CSidebarBrand className=" d-md-flex">
-        <NavLink to="/" ><img src={hospitalimg} className="sidebar-brand-full" width="70vw" height="70vh" /></NavLink>
+      <CSidebarBrand className='d-md-flex'>
+        <NavLink to="/" className={sidebarShow ? 'd-block' : 'd-none'}><img src={hospitslLogo ? hospitslLogo : hospitalimg} className="sidebar-brand-full" width="70vw" height="70vh" /></NavLink>
         <CIcon className="sidebar-brand-narrow" icon={sygnet} height={35} />
       </CSidebarBrand>
       <CSidebarNav>
-        <SimpleBar>
-          {
-            (() => {
-              switch (userType) {
+        {/* <SimpleBar> */}
+        {
+          (() => {
+            switch (userType) {
 
-                case 'Admin':
-                  return (
-                    <AppSidebarNav items={adminnav} />
-                  )
-                case 'Medical':
-                  return (
-                    <AppSidebarNav items={medNav} />
-                  )
-                case 'Reception':
-                  return (
-                    <AppSidebarNav items={receptionNav} />
-                  )
-                case 'Laboratory':
-                  return (
-                    <AppSidebarNav items={laboratoryNav} />
-                  )
+              case 'Admin':
+                return (
+                  <AppSidebarNav items={adminnav} />
+                )
+              case 'Medical':
+                return (
+                  <AppSidebarNav items={medNav} />
+                )
+              case 'Reception':
+                return (
+                  <AppSidebarNav items={receptionNav} />
+                )
+              case 'Laboratory':
+                return (
+                  <AppSidebarNav items={laboratoryNav} />
+                )
+              case 'Management':
+                return (
+                  <AppSidebarNav items={ManagementNav} />
+                )
 
-                default:
-                  return (
-                    <AppSidebarNav items={navigation} />
-                  )
-              }
-            })()
+              default:
+                return (
+                  <AppSidebarNav items={navigation} />
+                )
+            }
+          })()
 
-          }
+        }
 
-        </SimpleBar>
+        {/* </SimpleBar> */}
       </CSidebarNav>
       {/* <CSidebarToggler
         className="d-none d-lg-flex"

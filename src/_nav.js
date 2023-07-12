@@ -14,7 +14,8 @@ import {
   cilArrowThickToLeft,
   cilSave,
   cilHome,
-  cilTextSquare
+  cilTextSquare,
+  cilHeader
 } from '@coreui/icons'
 import { CNavGroup, CNavItem } from '@coreui/react'
 const _nav = [
@@ -150,7 +151,12 @@ const _nav = [
     to: '/tax',
     icon: <CIcon icon={cilTextSquare} customClassName="nav-icon" />,
   },
-
+  {
+    component: CNavItem,
+    name: 'Hospital Master',
+    to: '/hospitalprofile',
+    icon: <CIcon icon={cilHeader} customClassName="nav-icon" />,
+  },
 ]
 
 export default _nav

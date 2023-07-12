@@ -10,10 +10,10 @@ import { MdEdit } from 'react-icons/md'
 import { AiFillDelete } from 'react-icons/ai'
 import { selectAllPatients } from 'src/redux/slice/patientMasterslice';
 import { useDispatch, useSelector } from 'react-redux';
-import { ADD_OPD_PATIENTS, DELETE_OPD_PATIENTS, EDIT_OPD_PATIENTS, selectOpdPatients } from 'src/redux/slice/opdPatientsList';
+import { ADD_OPD_PATIENTS, DELETE_OPD_PATIENTS, EDIT_OPD_PATIENTS, FILL_OPD_PATIENTS, selectOpdPatients } from 'src/redux/slice/opdPatientsList';
 import Addpatientscommanmodel from '../../comman/comman model/Addpatientscommanmodel';
 import Table from 'react-bootstrap/Table';
-import { addDatainsubcollection, addSingltObject, deleteDatainSubcollection, deleteSingltObject, filDatainsubcollection, setData, updateDatainSubcollection, updateSingltObject } from 'src/services/firebasedb';
+import { addDatainsubcollection, addSingltObject, deleteDatainSubcollection, deleteSingltObject, filDatainsubcollection, getOnlyChangesLisitnor, getSubcollectionData, setData, updateDatainSubcollection, updateSingltObject } from 'src/services/firebasedb';
 import CommanTable from 'src/comman/table/CommanTable';
 import Loaderspinner from '../../comman/spinner/Loaderspinner';
 import { confirmAlert } from 'react-confirm-alert';
@@ -27,13 +27,18 @@ import { Scrollbars } from 'react-custom-scrollbars-2';
 import { BsEye } from 'react-icons/bs'
 import SearchAutocomplete from 'src/comman/searchAutocomplete/SearchAutocomplete';
 import PrintButton from 'src/comman/printpageComponents/PrintButton';
-import { ddMMyyyy, yyyyMMdd } from 'src/services/dateFormate';
+import { ddMMyyyy, formatDateDDMMYYY, formatDateyyyymmddUtcopd, yyyyMMdd } from 'src/services/dateFormate';
 import billingicon from 'src/assets/images/billing-icon.png'
 import { filterData } from 'src/services/dataFilter';
 import { OverlayTrigger, Tooltip } from 'react-bootstrap';
 import { FiFilter } from 'react-icons/fi'
+import { TfiReload } from 'react-icons/tfi'
+
 import '../admit/admit.css'
 import { selectUserId } from 'src/redux/slice/authSlice';
+import { ToWords } from 'to-words';
+import moment from 'moment';
+const toWords = new ToWords();
 
 const PrintComponent = ({ data }) => {
     const state = data.data1
@@ -54,7 +59,7 @@ const PrintComponent = ({ data }) => {
                         <div>
                             <span><b>Bill No: {state.invoiceuid}</b></span>
                             <span><div><b>OPD id: {state.opduid}</b></div></span>
-                            <span><div>Date: {state.consultingDate} </div></span>
+                            <span><div>Date: {formatDateDDMMYYY(state.consultingDate)} </div></span>
                             <span><div>Consulting Dr.: {state.drName}</div></span>
                         </div>
                     </div>
@@ -166,6 +171,8 @@ const PrintComponent = ({ data }) => {
                             <h6>Recived : {state.payAbleAmount.toFixed(2)}</h6>
                         </div>
                     </div>
+                    <div className='row text-center'> <b className='text-center'>{toWords.convert(state.payAbleAmount, { currency: true })}</b></div>
+
                     <b><hr></hr></b>
                     <div className='row'>
                         <div className='col-lg-6'>
@@ -296,18 +303,18 @@ const Opd = () => {
                     show={showtooltip}
 
                 >
-                    <span style={{ cursor: 'pointer' }} onClick={() => setShowtooltip(!showtooltip)}>Date <FiFilter /></span>
+                    <span style={{ cursor: 'pointer' }} ><FiFilter onClick={() => setShowtooltip(!showtooltip)} /> Date </span>
                 </OverlayTrigger>
             ),
-            selector: row => row.consultingDate,
-
-            // sortable: true
+            selector: row => formatDateDDMMYYY(row.consultingDate),
+            sortable: true,
+            sortFunction: (a, b) => { return moment(a.consultingDate).toDate().getTime() - moment(b.consultingDate).toDate().getTime() }
         },
         { name: 'Patient Name', selector: row => row.pName, sortable: true },
-        { name: 'Age', selector: row => row.page },
+        // { name: 'Age', selector: row => row.page },
         // { name: 'Gender', selector: row => row.pGender },
         { name: 'Address', selector: row => row.pAddress },
-        { name: 'Mobile No', selector: row => row.pMobileNo },
+        { name: 'Mobile No', selector: row => row.pMobileNo ? row.pMobileNo : '-' },
         { name: 'Total', selector: row => row.payAbleAmount ? '₹' + row.payAbleAmount.toFixed(2) : '-' },
         {
             name: 'Payment Status', cell: row => <div style={{ backgroundColor: row.paymentStatus === "Completed" ? 'green' : 'red', color: 'white', width: '80px', height: '20px', display: 'flex', borderRadius: '10px', alignContent: 'center', justifyContent: 'center' }}>{row.paymentStatus}</div>
@@ -450,11 +457,24 @@ const Opd = () => {
     }
 
     useEffect(() => {
+
+        // getOnlyChangesLisitnor()
+        getSubcollectionData('opdPatients', 'm5JHl3l4zhaBCa8Vihcb', 'opdPatient', hospitaluid, (data) => {
+            // Handle the updated data in the callback function
+            setIsLoading(false)
+            dispatch(FILL_OPD_PATIENTS(data))
+            console.log('Received real-time data:', data);
+        }).catch((error) => {
+            setIsLoading(false)
+            console.error('Error:', error);
+        })
+
+    }, [])
+
+    useEffect(() => {
         setOpdPatientList([...allopdPatientList].reverse())
         setOpdPatientfilter(allopdPatientList)
-        setIsLoading(false)
     }, [allopdPatientList])
-
 
 
     const formik = useFormik({
@@ -463,8 +483,9 @@ const Opd = () => {
         onSubmit: async (values, { resetForm }) => {
             const opd1 = [...opdPatientfilter];
 
-            values.consultingDate = ddMMyyyy(values.consultingDate)
+            // values.consultingDate = ddMMyyyy(values.consultingDate)
             values.consultingCharge = Number(values.consultingCharge)
+            values.consultingDate = moment(values.consultingDate).format('YYYY-MM-DD[Z]');
             const newValues = { ...values, opduid: Math.floor(2000 + Math.random() * 9000) };
             if (!update) {
                 // values.opduid=Math.floor(2000 + Math.random() * 9000);
@@ -474,7 +495,13 @@ const Opd = () => {
                     // await setData("opdPatients", 'm5JHl3l4zhaBCa8Vihcb', 'opdPatient', [...opdPatientfilter, newValues]);
                     // await addSingltObject("opdPatients", 'm5JHl3l4zhaBCa8Vihcb', 'opdPatient', newValues)
                     await addDatainsubcollection("opdPatients", 'm5JHl3l4zhaBCa8Vihcb', 'opdPatient', newValues)
-                    // dispatch(ADD_OPD_PATIENTS(newValues));
+                    // await getOnlyChangesLisitnor('opdPatients', 'm5JHl3l4zhaBCa8Vihcb', 'opdPatient', hospitaluid, (data) => {
+                    //     console.log('new Data added', data);
+                    //     dispatch(ADD_OPD_PATIENTS(data))
+                    // }).catch((error) => {
+                    //     console.error('Error:', error);
+                    // })
+                    dispatch(ADD_OPD_PATIENTS(newValues));
                     resetForm({ values: '' });
                     clearForm();
                     toast.success('Added Successfully.......')
@@ -489,7 +516,15 @@ const Opd = () => {
                     // await setData("opdPatients", 'm5JHl3l4zhaBCa8Vihcb', 'opdPatient', opd1);
                     // await updateSingltObject("opdPatients", 'm5JHl3l4zhaBCa8Vihcb', 'opdPatient', values, 'opduid', 'hospitaluid')
                     await updateDatainSubcollection("opdPatients", 'm5JHl3l4zhaBCa8Vihcb', 'opdPatient', values, 'opduid', 'hospitaluid')
-                    // dispatch(EDIT_OPD_PATIENTS(values));
+                    dispatch(EDIT_OPD_PATIENTS(values));
+
+                    // await getOnlyChangesLisitnor('opdPatients', 'm5JHl3l4zhaBCa8Vihcb', 'opdPatient', hospitaluid, (data) => {
+                    //     console.log('Updated data', data);
+
+                    //     dispatch(EDIT_OPD_PATIENTS(data))
+                    // }).catch((error) => {
+                    //     console.error('Error:', error);
+                    // })
                     resetForm({ values: '' });
                     clearForm();
                     setUpdate(false);
@@ -552,7 +587,7 @@ const Opd = () => {
     }
     const generateInvoice = (item) => {
         // filDatainsubcollection(allopdPatientList, 'opdPatients', 'm5JHl3l4zhaBCa8Vihcb', 'opdPatient', hospitaluid)
-
+        // changeDateFormate()
         if (item.paymentStatus === "Completed") {
             setPrintContent(<PrintComponent data={{
                 data1: {
@@ -595,7 +630,7 @@ const Opd = () => {
             pGender,
             pAddress,
             pMobileNo,
-            consultingDate: yyyyMMdd(consultingDate),
+            consultingDate: moment(consultingDate).format("YYYY-MM-DD"),
             drName,
             consultingCharge,
             advices,
@@ -624,7 +659,14 @@ const Opd = () => {
                             // await setData('opdPatients', 'm5JHl3l4zhaBCa8Vihcb', 'opdPatient', opd);
                             // await deleteSingltObject('opdPatients', 'm5JHl3l4zhaBCa8Vihcb', 'opdPatient', item1, 'opduid', 'hospitaluid')
                             await deleteDatainSubcollection('opdPatients', 'm5JHl3l4zhaBCa8Vihcb', 'opdPatient', item1, 'opduid', 'hospitaluid')
-                            // dispatch(DELETE_OPD_PATIENTS(item1));
+                            dispatch(DELETE_OPD_PATIENTS(item1));
+                            // await getOnlyChangesLisitnor('opdPatients', 'm5JHl3l4zhaBCa8Vihcb', 'opdPatient', hospitaluid, (data) => {
+                            //     console.log('Deleted data', data);
+
+                            //     dispatch(DELETE_OPD_PATIENTS(data))
+                            // }).catch((error) => {
+                            //     console.error('Error:', error);
+                            // })
                             toast.success('Deleted Successfully.......')
                         }
                     },
@@ -704,6 +746,51 @@ const Opd = () => {
         formik.setFieldValue('consultingCharge', parseInt(value, 10))
 
     }
+
+    const changeDateFormate = () => {
+        // const formDate = moment('08/07/2023').utc().format('YYYY-MM-DDTHH:mm[Z]');
+
+        allopdPatientList.map(async (item, i) => {
+            // setTimeout(() => {
+
+            // }, 2000);
+            // const desiredFormat = 'YYYY-MM-DDTHH:mm[Z]';
+
+            // Check if inputDate already matches the desired format
+            // if (moment(item.admitDate, desiredFormat, true).isValid() && moment(item.dischargeDate, desiredFormat, true).isValid()) {
+            //     console.log('i am done');
+            //     return;
+            // }
+            const desiredFormat = 'YYYY-MM-DD[Z]';
+
+            // Check if inputDate already matches the desired format
+            if (moment(item.consultingDate, desiredFormat, true).isValid()) {
+                console.log('i am done');
+                return;
+            }
+
+            // console.log('admit Date', i, formatDateyyyymmddUtc(item.admitDate));
+
+            // console.log('Discharge Date', i, formatDateyyyymmddUtc(item.dischargeDate));
+            await updateDatainSubcollection("opdPatients", 'm5JHl3l4zhaBCa8Vihcb', 'opdPatient', { ...item, consultingDate: formatDateyyyymmddUtcopd(item.consultingDate) }, 'opduid', 'hospitaluid')
+            // await updateDatainSubcollection("admitPatients", 'jSqDGnjO21bpPGhb6O2y', 'admitPatient', { ...item, admitDate: formatDateyyyymmddUtc(item.admitDate), dischargeDate: item.dischargeDate ? formatDateyyyymmddUtc(item.dischargeDate) : item.dischargeDate }, 'admituid', 'hospitaluid')
+
+        })
+    }
+    const reloadData = () => {
+        setIsLoading(true)
+        getSubcollectionData('opdPatients', 'm5JHl3l4zhaBCa8Vihcb', 'opdPatient', hospitaluid, (data) => {
+            // Handle the updated data in the callback function
+            dispatch(FILL_OPD_PATIENTS(data))
+            setIsLoading(false)
+
+            console.log('Received real-time data:', data);
+        }).catch((error) => {
+            setIsLoading(false)
+
+            console.error('Error:', error);
+        })
+    }
     return <>
 
         {isLoading ? <Loaderspinner /> : <>
@@ -714,7 +801,7 @@ const Opd = () => {
                     columns={columns}
                     data={opdPatientList}
                     action={<button className='btn btn-primary' onClick={handleShow}><span>  <BiPlus size={25} /></span></button>}
-                    subHeaderComponent={<>
+                    subHeaderComponent={<> <button className='btn btn-dark' onClick={reloadData} style={{ marginRight: '20px' }}><span>  <TfiReload size={18} />&nbsp;Reload</span></button>
                         <input type='search' placeholder='search' className='w-25 form-control' onChange={(e) => requestSearch(e.target.value)} /></>}
                 />
             </div>

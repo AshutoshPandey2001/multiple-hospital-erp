@@ -29,6 +29,7 @@ import SearchAutocomplete from 'src/comman/searchAutocomplete/SearchAutocomplete
 import PrintButton from 'src/comman/printpageComponents/PrintButton';
 import { ddMMyyyy, yyyyMMdd } from 'src/services/dateFormate';
 import { selectUserId } from 'src/redux/slice/authSlice';
+import { TfiReload } from 'react-icons/tfi'
 
 const PrintComponent = ({ data }) => {
     const state = data.data1
@@ -154,9 +155,9 @@ const MedicineReturn = () => {
         { name: 'Address', selector: row => row.pAddress },
         { name: 'Mobile No', selector: row => row.pMobileNo },
         { name: 'Total Amount Return', selector: row => row.allMedTotalprice },
-        // { name: 'Payment Status', selector: row => row.paymentStatus },
         {
             name: 'Action', cell: row => <span>
+                {/* <button onClick={() => editPatientDetails(row)} style={{ color: 'orange', border: 'none' }}><MdEdit size={25} /></button> */}
                 <button onClick={() => generateInvoice(row)} style={{ color: 'skyblue', border: 'none' }}  ><AiFillPrinter size={22} /></button>
                 <button onClick={() => deletePatientsDetails(row)} style={{ color: 'red', border: 'none' }} ><AiFillDelete size={25} /></button>
             </span>
@@ -175,13 +176,10 @@ const MedicineReturn = () => {
     };
 
     useEffect(() => {
-
         setPatientsReturnMedicineList([...allreturnPatientsMedicines].reverse())
         setPatientsReturnMedicineFilter(allreturnPatientsMedicines)
         setMedList([...medicineList])
-        // medList = [...medicineList]
         setIsLoading(false)
-
     }, [allreturnPatientsMedicines, medicineList])
 
 
@@ -208,7 +206,7 @@ const MedicineReturn = () => {
                     // await setData('ReturnMedicine', 'lGxMW7T2f7Dsb93A19qa', 'returnMedicine', med)
                     // dispatch(ADD_RETURN_PATIENTS_MEDICINES(Values))
                     // await setData("Medicines", 'dHFKEhdhbOM4v6WRMb6z', 'medicines', medList)
-                    await uploadArray("Medicines", 'dHFKEhdhbOM4v6WRMb6z', 'medicines', medList, 'medicineuid', 'hospitaluid')
+                    // await uploadArray("Medicines", 'dHFKEhdhbOM4v6WRMb6z', 'medicines', medList, 'medicineuid', 'hospitaluid')
                     // dispatch(UPDATE_MEDICINES(medList))
                     action.resetForm()
                     clearForm()
@@ -221,6 +219,7 @@ const MedicineReturn = () => {
 
             } else {
                 let findindex = medd.findIndex((item) => item.returnuid === Values.returnuid);
+                await medd[findindex].medicines.map((item) => updateStockonUpdate(item))
                 medd[findindex] = Values;
 
                 try {
@@ -284,7 +283,13 @@ const MedicineReturn = () => {
         const findIndex = medList.findIndex((item1) => item1.medicineuid === item.meduid)
         let newObj = { ...medList[findIndex], availableStock: medList[findIndex].availableStock + Number(item.medQty) }
         medList[findIndex] = newObj;
-
+        await updateDatainSubcollection("Medicines", 'dHFKEhdhbOM4v6WRMb6z', 'medicines', newObj, 'medicineuid', 'hospitaluid')
+    }
+    const updateStockonUpdate = async (item) => {
+        const findIndex = medList.findIndex((item1) => item1.medicineuid === item.meduid)
+        let newObj = { ...medList[findIndex], availableStock: medList[findIndex].availableStock - parseInt(item.medQty) }
+        await updateDatainSubcollection("Medicines", 'dHFKEhdhbOM4v6WRMb6z', 'medicines', newObj, 'medicineuid', 'hospitaluid')
+        // medList[findIndex] = newObj;
     }
     const generateInvoice = (item) => {
         filDatainsubcollection(allreturnPatientsMedicines, 'ReturnMedicine', 'lGxMW7T2f7Dsb93A19qa', 'returnMedicine')
@@ -324,9 +329,9 @@ const MedicineReturn = () => {
                         try {
                             // await deleteSingltObject('ReturnMedicine', 'lGxMW7T2f7Dsb93A19qa', 'returnMedicine', item1, 'returnuid', 'hospitaluid')
                             await deleteDatainSubcollection('ReturnMedicine', 'lGxMW7T2f7Dsb93A19qa', 'returnMedicine', item1, 'returnuid', 'hospitaluid')
-
+                            await item1.medicines.map((item) => updateStockonUpdate(item))
                             // await setData('ReturnMedicine', 'lGxMW7T2f7Dsb93A19qa', 'returnMedicine', med)
-                            dispatch(DELETE_RETURN_PATIENTS_MEDICINES(item1))
+                            // dispatch(DELETE_RETURN_PATIENTS_MEDICINES(item1))
                             toast.success("Deleted Successfully.......");
                         } catch (error) {
                             toast.error(error.message)
@@ -342,8 +347,6 @@ const MedicineReturn = () => {
 
 
     }
-
-
     const requestSearch = (searchvalue) => {
         const filteredRows = patientsReturnMedicineFilter.filter((row) => {
             return row.pid.toString().includes(searchvalue.toLowerCase()) || row.pName.toLowerCase().includes(searchvalue.toLowerCase()) || row.pMobileNo.includes(searchvalue);
@@ -357,8 +360,6 @@ const MedicineReturn = () => {
             setPatientsReturnMedicineList(filteredRows)
         }
     }
-
-
     const totalmedprice = (e, medicine) => {
         medicine.medQty = e;
         medicine.totalmedPrice = medicine.medPrice * e;
@@ -366,7 +367,6 @@ const MedicineReturn = () => {
         setAutofocus(!autofocus)
 
     }
-
     const handleOnSelect = (item) => {
         // values.pid = item.pid;
         // values.pName = item.pName;
@@ -384,7 +384,6 @@ const MedicineReturn = () => {
         formik.setFieldValue('hospitaluid', item.hospitaluid);
 
     };
-
     const handleOnSelectmobile = (item) => {
         values.pid = item.pid;
         values.pName = item.pName;
@@ -405,7 +404,6 @@ const MedicineReturn = () => {
         setAutofocus(!autofocus)
 
     };
-
     const selectMedicine = (item, med) => {
         med.medname = item.medicineName;
         med.medPrice = item.medicinePrice;
@@ -749,8 +747,6 @@ const MedicineReturn = () => {
             </Modal.Footer>
         </Modal>
     </>
-
-
 }
 
 export default MedicineReturn;

@@ -15,7 +15,7 @@ import { FILL_OPD_PATIENTS } from 'src/redux/slice/opdPatientsList'
 import { FILL_PATIENTS } from 'src/redux/slice/patientMasterslice'
 import { FILL_PATIENTS_MEDICINES } from 'src/redux/slice/patientsMedicinesSlice'
 import { FILL_ROOMS } from 'src/redux/slice/roomMasterSlice'
-import { addDatainsubcollection, getData, getDatawithhospitaluid, getSubcollectionData, getTaxDatainsubCollection, getTaxDatawithhospitaluid } from 'src/services/firebasedb'
+import { addDatainsubcollection, getData, getDatawithhospitaluid, getHospitalProfile, getSubcollectionData, getTaxDatainsubCollection, getTaxDatawithhospitaluid } from 'src/services/firebasedb'
 import { AppContent, AppSidebar, AppFooter, AppHeader } from '../components/index'
 import { FILL_PARAMETERS } from 'src/redux/slice/laborataryMaster'
 import { FILL_LABORATORY_REPORTS } from 'src/redux/slice/patientsLaboratoryReportsSlice'
@@ -27,6 +27,8 @@ import { selectmenuStyle } from 'src/redux/slice/changeMenustyleSlice'
 import { FILL_RETURN_PATIENTS_MEDICINES } from 'src/redux/slice/returnMedicineslice'
 import { FILL_TAXS } from 'src/redux/slice/taxSlice'
 import { FILL_CHARGES } from 'src/redux/slice/chargesSlice'
+import { SET_HOSPITAL_PROFILE } from 'src/redux/slice/hospitalProfileSlice'
+import { SET_INDOORPREVBILL_NO, SET_OPDPREVBILL_NO } from 'src/redux/slice/prevBillNoSlice'
 
 const DefaultLayout = () => {
   // const { hospitaluid } = props
@@ -332,15 +334,42 @@ const DefaultLayout = () => {
       }).catch((error) => {
         console.error('Error:', error);
       })
-        .then((temp_data) => {
-          dispatch(FILL_CHARGES(temp_data))
-          console.log('Retrieved subcollection data Opd:', temp_data);
-          // Use temp_data for further processing
-        })
-        .catch((error) => {
-          console.error('Error retrieving subcollection data:', error);
-        });
+      // .then((temp_data) => {
+      //   dispatch(FILL_CHARGES(temp_data))
+      //   console.log('Retrieved subcollection data Opd:', temp_data);
+      //   // Use temp_data for further processing
+      // })
+      // .catch((error) => {
+      //   console.error('Error retrieving subcollection data:', error);
+      // });
 
+
+      await getHospitalProfile('HospitalMaster', 'S4fRJIO5ZxE5isoBIbEU', 'hospitalMaster', hospitaluid, (data) => {
+        // Handle the updated data in the callback function
+        dispatch(SET_HOSPITAL_PROFILE(data))
+        console.log('Received real-time data :', data);
+      }).catch((error) => {
+        console.error('Error:', error);
+      })
+
+
+      // get prev bill No
+
+      await getHospitalProfile('lastIndoorBillNo', '2VgHSc4tPq9NqU9HrI0N', 'lastIndoorbillNo', hospitaluid, (data) => {
+        // Handle the updated data in the callback function
+        dispatch(SET_INDOORPREVBILL_NO(data))
+        console.log('Received real-time data :', data);
+      }).catch((error) => {
+        console.error('Error:', error);
+      })
+
+      await getHospitalProfile('lastOpdbillNo', 'zyojcRPH1zTQLiT1Gepz', 'lastopdbillNo', hospitaluid, (data) => {
+        // Handle the updated data in the callback function
+        dispatch(SET_OPDPREVBILL_NO(data))
+        console.log('Received real-time data :', data);
+      }).catch((error) => {
+        console.error('Error:', error);
+      })
       // For Fill Data in Prod
       // await getData('Patients', 'fBoxFLrzXexT8WNBzGGh').then((res) => {
       //   dispatch(FILL_PATIENTS(res.data().patients))
@@ -446,7 +475,7 @@ const DefaultLayout = () => {
               <AppHeader />
               {/* <ChangeMenustyle /> */}
 
-              <div className="body flex-grow-1 " style={{ margin: '10px 20px 20px 20px' }}>
+              <div className="body flex-grow-1 " style={{ margin: '10px 0px 20px 0px' }}>
                 <AppContent />
               </div>
               <AppFooter />

@@ -12,10 +12,11 @@ import { AiFillDelete } from 'react-icons/ai'
 import { AiFillPrinter } from 'react-icons/ai'
 import { BsPencilSquare } from 'react-icons/bs'
 import { FiFilter } from 'react-icons/fi'
+import { TfiReload } from 'react-icons/tfi'
 // import Select from "react-dropdown-select";
 import { selectAllPatients } from 'src/redux/slice/patientMasterslice';
 import { useDispatch, useSelector } from 'react-redux';
-import { ADD_ADMIT_PATIENTS, DELETE_ADMIT_PATIENTS, EDIT_ADMIT_PATIENTS, selectAdmitPatients } from 'src/redux/slice/admitPatientsSlice';
+import { ADD_ADMIT_PATIENTS, DELETE_ADMIT_PATIENTS, EDIT_ADMIT_PATIENTS, FILL_ADMIT_PATIENTS, selectAdmitPatients } from 'src/redux/slice/admitPatientsSlice';
 import { EDIT_ROOM, FILL_ROOMS, selectAllRooms } from 'src/redux/slice/roomMasterSlice';
 import Addpatientscommanmodel from '../../comman/comman model/Addpatientscommanmodel';
 import { useNavigate } from 'react-router-dom';
@@ -23,7 +24,7 @@ import { setTimeout } from 'core-js';
 import Table from 'react-bootstrap/Table';
 import Loaderspinner from '../../comman/spinner/Loaderspinner';
 import CommanTable from 'src/comman/table/CommanTable';
-import { addDatainsubcollection, deleteDatainSubcollection, deleteSingltObject, filDatainsubcollection, setData, updateDatainSubcollection, updateSingltObject } from 'src/services/firebasedb';
+import { addDatainsubcollection, deleteDatainSubcollection, deleteSingltObject, filDatainsubcollection, getSubcollectionData, setData, updateDatainSubcollection, updateSingltObject } from 'src/services/firebasedb';
 import Dropdown from 'react-bootstrap/Dropdown';
 import { confirmAlert } from 'react-confirm-alert';
 import { toast } from 'react-toastify';
@@ -36,9 +37,12 @@ import AdmitModel from 'src/comman/commanAdmitModel.js/AdmitModel';
 import PrintButton from 'src/comman/printpageComponents/PrintButton';
 import billingicon from 'src/assets/images/billing-icon.png'
 import { OverlayTrigger, Tooltip, Overlay } from 'react-bootstrap';
-import { ddMMyyyy } from 'src/services/dateFormate';
-import { filterData } from 'src/services/dataFilter';
+import { ddMMyyyy, dd_mm_YYYY, formatDateDDMMYYY, formatDateYYYYMMDD, formatDateyyyymmddUtc, yyyyMMddTHHmm } from 'src/services/dateFormate';
+import { filterData, filterDatainIndoor } from 'src/services/dataFilter';
 import { selectUserId } from 'src/redux/slice/authSlice';
+import { ToWords } from 'to-words';
+import moment from 'moment';
+const toWords = new ToWords();
 
 const PrintComponent = ({ data }) => {
     const state = data.data1
@@ -58,8 +62,8 @@ const PrintComponent = ({ data }) => {
                     <div>
                         <span><b>Bill No: {state.invoiceuid}</b></span>
                         <span><div>Admission UID: {state.admituid}</div></span>
-                        <span><div>Admit Date: {state.admitDate} </div></span>
-                        <span><div>Discharge Date: {state.dischargeDate}</div></span>
+                        <span><div>Admit Date: {formatDateDDMMYYY(state.admitDate)} </div></span>
+                        <span><div>Discharge Date: {formatDateDDMMYYY(state.dischargeDate)}</div></span>
                         <span><div>Consulting Dr.: {state.drName}</div></span>
                     </div>
                 </div>
@@ -204,7 +208,6 @@ const PrintComponent = ({ data }) => {
                     </tbody>
                 </Table>
             </div>
-
             <div className='row'>
                 <b><hr></hr></b>
                 <div className='col-lg-6 col-md-6 col-sm-6 d-flex justify-content-start'>
@@ -224,6 +227,8 @@ const PrintComponent = ({ data }) => {
                         <div> <b>Payable Amount:{state.payableAmount.toFixed(2)}</b></div>
                     </div>
                 </div>
+                <div className='row text-center'> <b className='text-center'>{toWords.convert(state.payableAmount, { currency: true })}</b></div>
+
                 {/* <div className="form-check" style={{ marginTop: '20px' }}>
                                         <label className="form-check-label">
                                             <input type="checkbox" className="form-check-input" name='paid' checked={paid} onChange={(e) => setPaid(e.target.checked)} />If You Want to Paid the bill Please check the check box and cilck on Paid
@@ -231,8 +236,6 @@ const PrintComponent = ({ data }) => {
                                     </div> */}
                 <b><hr></hr></b>
             </div>
-
-
         </div>
     )
 };
@@ -283,7 +286,7 @@ const Admit = () => {
 
     const filtertheData = (date) => {
         if (startDate && endDate) {
-            setAdmitPatientList(filterData(admitPatientList, startDate, endDate, date))
+            setAdmitPatientList(filterDatainIndoor(admitPatientList, startDate, endDate, date))
             setShowtooltipadmit(false)
             setShowtooltipDischarge(false)
         }
@@ -297,129 +300,139 @@ const Admit = () => {
         setShowtooltipDischarge(false)
 
     }
+
     const columns = [
         {
-
-
             name: (
-
                 <OverlayTrigger
                     placement="top"
                     overlay={
-                        <Tooltip ><div >
-                            <div className='row'>
-                                <div className='col-lg-12'>
-                                    <div className="form-group" >
-                                        <label >Form<b style={{ color: 'red' }}>*</b>:</label>
-                                        <input name='startDate'
-                                            type="date" className="form-control" defaultValue={startDate} onChange={(e) => setStartDate(e.target.value)} />
-
+                        <Tooltip style={{ textAlign: 'left', color: 'white' }}>
+                            <div>
+                                <div className='row'>
+                                    <div className='col-lg-12'>
+                                        <div className="form-group">
+                                            <label>Form<b style={{ color: 'red' }}>*</b>:</label>
+                                            <input name='startDate' type="date" className="form-control" defaultValue={startDate} onChange={(e) => setStartDate(e.target.value)} />
+                                        </div>
+                                    </div>
+                                    <div className='col-lg-12'>
+                                        <div className="form-group">
+                                            <label>To<b style={{ color: 'red' }}>*</b>:</label>
+                                            <input name='endDate' type="date" className="form-control" defaultValue={endDate} onChange={(e) => setEndDate(e.target.value)} min={startDate} />
+                                        </div>
                                     </div>
                                 </div>
-                                <div className='col-lg-12'>
-                                    <div className="form-group" >
-                                        <label >To<b style={{ color: 'red' }}>*</b>:</label>
-                                        <input name='endDate'
-                                            type="date" className="form-control" defaultValue={endDate} onChange={(e) => setEndDate(e.target.value)} min={startDate} />
-                                    </div>
+                                <div className='d-flex mt-2 mb-1 justify-content-end'>
+                                    <Button variant="secondary" onClick={clearfilterData}>
+                                        Clear
+                                    </Button>
+                                    <Button variant="primary" style={{ marginLeft: '10px' }} onClick={() => filtertheData('admitDate')}>
+                                        Filter
+                                    </Button>
                                 </div>
                             </div>
-                            <div className='d-flex mt-2 mb-1 justify-content-end'>
-                                <Button variant="secondary" onClick={clearfilterData}>
-                                    Clear
-                                </Button>
-                                <Button variant="primary" style={{ marginLeft: '10px' }} onClick={() => filtertheData('admitDate')}>
-                                    Filter
-                                </Button>
-                            </div>
-
-
-                        </div></Tooltip>}
+                        </Tooltip>}
                     trigger='click'
                     show={showtooltipadmit}
-
                 >
-                    <span style={{ cursor: 'pointer' }} onClick={() => setShowtooltipadmit(!showtooltipadmit)}>Admit Date <FiFilter /></span>
+                    <span className='d-flex justify-content-center w-100' style={{ cursor: 'pointer', display: 'flex' }} ><FiFilter onClick={() => setShowtooltipadmit(!showtooltipadmit)} /> Admit Date </span>
                 </OverlayTrigger>
             ),
             selector: row => row.admitDate,
-            // sortable: true,
-            cell: row => <div style={{ textAlign: 'center' }}>{row.admitDate}</div>,
+            sortable: true,
+            sortFunction: (a, b) => { return moment(a.admitDate).toDate().getTime() - moment(b.admitDate).toDate().getTime() },
+            cell: row => <div style={{ textAlign: 'center' }}>{formatDateDDMMYYY(row.admitDate)}</div>,
+            width: '12%',
+            // className: 'col-lg-4 col-md-4',
+            padding: 0
         },
         {
             name: (
                 <OverlayTrigger
                     placement="top"
-                    overlay={<Tooltip ><div >
-                        <div className='row'>
-                            <div className='col-lg-12'>
-                                <div className="form-group" >
-                                    <label >Form<b style={{ color: 'red' }}>*</b>:</label>
-                                    <input name='startDate'
-                                        type="date" className="form-control" defaultValue={startDate} onChange={(e) => setStartDate(e.target.value)} />
-
+                    overlay={
+                        <Tooltip>
+                            <div>
+                                <div className='row'>
+                                    <div className='col-lg-12'>
+                                        <div className="form-group">
+                                            <label>Form<b style={{ color: 'red' }}>*</b>:</label>
+                                            <input name='startDate' type="date" className="form-control" defaultValue={startDate} onChange={(e) => setStartDate(e.target.value)} />
+                                        </div>
+                                    </div>
+                                    <div className='col-lg-12'>
+                                        <div className="form-group">
+                                            <label>To<b style={{ color: 'red' }}>*</b>:</label>
+                                            <input name='endDate' type="date" className="form-control" defaultValue={endDate} onChange={(e) => setEndDate(e.target.value)} min={startDate} />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className='d-flex mt-2 mb-1 justify-content-end'>
+                                    <Button variant="secondary" onClick={clearfilterData}>
+                                        Clear
+                                    </Button>
+                                    <Button variant="primary" style={{ paddingLeft: '10px' }} onClick={() => filtertheData('dischargeDate')}>
+                                        Filter
+                                    </Button>
                                 </div>
                             </div>
-                            <div className='col-lg-12'>
-                                <div className="form-group" >
-                                    <label >To<b style={{ color: 'red' }}>*</b>:</label>
-                                    <input name='endDate'
-                                        type="date" className="form-control" defaultValue={endDate} onChange={(e) => setEndDate(e.target.value)} min={startDate} />
-                                </div>
-                            </div>
-                        </div>
-                        <div className='d-flex mt-2 mb-1 justify-content-end'>
-                            <Button variant="secondary" onClick={clearfilterData}>
-                                Clear
-                            </Button>
-                            <Button variant="primary" style={{ marginLeft: '10px' }} onClick={() => filtertheData('dischargeDate')}>
-                                Filter
-                            </Button>
-                        </div>
-
-
-                    </div></Tooltip>}
+                        </Tooltip>}
                     trigger='click'
                     show={showtooltipDischarge}
                 >
-                    <span style={{ cursor: 'pointer' }} onClick={() => setShowtooltipDischarge(!showtooltipDischarge)}>Discharge Date <FiFilter /></span>
+                    <span className='d-flex justify-content-center w-100' style={{ cursor: 'pointer', display: 'flex' }} > <FiFilter onClick={() => setShowtooltipDischarge(!showtooltipDischarge)} /> Discharge Date </span>
                 </OverlayTrigger>
             ),
-
             selector: row => row.dischargeDate ? row.dischargeDate : '-',
-            cell: row => <div style={{ textAlign: 'center' }}>{row.dischargeDate ? row.dischargeDate : '-'}</div>,
-            width: '200px'
+            sortable: true,
+            cell: row => <div style={{ textAlign: 'center', justifyContent: 'center', width: '100%' }}>{row.dischargeDate ? formatDateDDMMYYY(row.dischargeDate) : '-'}</div>,
+            width: '12%',
+            // className: 'col-lg-4 col-md-4',
+            padding: 0
         },
         {
-            name: 'Patient Name',
+            name: (<span className='d-flex justify-content-center w-100'>Patient Name</span>),
             selector: row => row.pName,
             sortable: true,
-            cell: row => <div style={{ textAlign: 'center' }}>{row.pName}</div>
+            cell: row => <div style={{ textAlign: 'center', justifyContent: 'center', width: '100%' }}>{row.pName}</div>,
+            width: '16%',
+            // className: 'col-lg-2 col-md-2',
+            padding: 0
         },
         {
-            name: 'Address',
+            name: (<span className='d-flex justify-content-center w-100'>Address</span>),
             selector: row => row.pAddress,
-            cell: row => <div style={{ textAlign: 'center' }}>{row.pAddress}</div>
+            cell: row => <div style={{ textAlign: 'center', justifyContent: 'center', width: '100%' }}>{row.pAddress}</div>,
+            width: '12%',
+            // className: 'col-lg-1 col-md-1',
+            padding: 0
         },
         {
-            name: 'Mobile No',
-            selector: row => row.pMobileNo,
-            cell: row => <div style={{ textAlign: 'center' }}>{row.pMobileNo}</div>
+            name: (<span className='d-flex justify-content-center w-100'>Mobile No</span>),
+            selector: row => row.pMobileNo ? row.pMobileNo : '-',
+            cell: row => <div style={{ textAlign: 'center', justifyContent: 'center', width: '100%' }}>{row.pMobileNo ? row.pMobileNo : '-'}</div>,
+            width: '13%',
+            // className: 'col-lg-1 col-md-1',
+            padding: 0
         },
         {
-            name: 'Total',
+            name: (<span className='d-flex justify-content-center w-100'>Total</span>),
             selector: row => row.payableAmount ? '₹' + row.payableAmount : '-',
-            cell: row => <div className='d-flex justifycontent-center' style={{ textAlign: 'center' }}>{row.payableAmount ? '₹' + (row.payableAmount + (row.deposit ? Number(row.deposit) : 0)).toFixed(2) : '-'}</div>
+            cell: row => <div style={{ textAlign: 'center', justifyContent: 'center', width: '100%' }}>{row.payableAmount ? '₹' + (row.payableAmount + (row.deposit ? Number(row.deposit) : 0)).toFixed(2) : '-'}</div>,
+            width: '10%',
+            // className: 'col-lg-1 col-md-1',
+            padding: 0
         },
         {
-            name: 'Payment Status',
+            name: (<span className='d-flex justify-content-center w-100'>Status</span>),
             cell: row => (
                 <div
                     style={{
+                        width: '100%',
                         backgroundColor: row.paymentStatus === 'Completed' ? 'green' : 'red',
                         color: 'white',
-                        width: '80px',
-                        height: '20px',
+                        height: '1.25rem',
                         display: 'flex',
                         borderRadius: '10px',
                         alignContent: 'center',
@@ -429,14 +442,17 @@ const Admit = () => {
                 >
                     {row.paymentStatus}
                 </div>
-            )
+            ),
+            width: '10%',
+            // className: 'col-lg-1 col-md-1',
+            padding: 0
         },
         {
-            name: 'Action',
+            name: (<span className='d-flex justify-content-center w-100'>Action</span>),
             cell: row => (
-                <span style={{ display: 'flex', justifyContent: 'center' }}>
+                <span style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%' }}>
                     {row.paymentStatus === 'Completed' ? (
-                        <span style={{ display: 'flex', justifyContent: 'center' }}>
+                        <span style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                             <button onClick={() => viewInvoice(row)} style={{ color: 'skyblue', border: 'none' }}>
                                 <BsEye size={22} />
                             </button>
@@ -457,9 +473,13 @@ const Admit = () => {
                         <AiFillDelete size={22} />
                     </button>
                 </span>
-            )
+            ),
+
+            width: '15%',
+            padding: 0
         }
     ];
+
 
     const handleClose = () => {
 
@@ -469,16 +489,30 @@ const Admit = () => {
     }
     const handleShow = () => {
         setShow(true)
-        setTodayDate(new Date().toISOString().substr(0, 10))
+        setTodayDate(new Date().toISOString().substr(0, 10) + 'T' + new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' }))
     };
+
+    useEffect(() => {
+        getSubcollectionData('admitPatients', 'jSqDGnjO21bpPGhb6O2y', 'admitPatient', hospitaluid, (data) => {
+            // Handle the updated data in the callback function
+            dispatch(FILL_ADMIT_PATIENTS(data))
+            setIsLoading(false);
+            console.log('Received real-time data:', data);
+        }).catch((error) => {
+            setIsLoading(false);
+            console.error('Error:', error);
+        })
+    }, [])
 
     useEffect(() => {
         // addDatainsubcollection()
         setAdmitPatientList([...allAdmitPatients].reverse());
         setAdmitPatientfilter(allAdmitPatients);
         setRoom([...roomList]);
-        setIsLoading(false);
+
+
     }, [allAdmitPatients, roomList])
+
 
 
     // const formik = useFormik({
@@ -589,11 +623,6 @@ const Admit = () => {
     //     });
     // }
     const editPatientDetails = (item) => {
-        // filDatainsubcollection(allAdmitPatients, "admitPatients", 'jSqDGnjO21bpPGhb6O2y', 'admitPatient')
-        // const { pid, pName, page, pGender, pAddress, pMobileNo, admitDate, dischargeDate, drName, roomType, priceperNignt, roomNo, bedNo, paymentStatus, admituid, deposit } = item;
-        // formik.setValues({
-        //     pid, pName, page, pGender, pAddress, pMobileNo, admitDate, dischargeDate, drName, roomType, priceperNignt, roomNo, bedNo, paymentStatus, admituid, deposit
-        // }); 
         setitems(item)
         setShow(true);
         setUpdate(true);
@@ -611,9 +640,9 @@ const Admit = () => {
                         let roomArray = {}
                         if (!item1.dischargeDate) {
                             let findRoomindex = await room.findIndex((item) => item.roomType === item1.roomType)
-                            let finRoomNoIndex = await room[findRoomindex].rooms.findIndex((item3) => item3.roomNo === item1.roomNo)
-                            let newArray = await room[findRoomindex].rooms[finRoomNoIndex].BEDS.map((item3) => (item3.bedNo === item1.bedNo ? { ...item3, occupied: false } : item3))
-                            let newArray1 = await room[findRoomindex].rooms.map((item3) => (item3.roomNo === item1.roomNo ? { ...item3, BEDS: newArray } : item3))
+                            let finRoomNoIndex = await room[findRoomindex].rooms.findIndex((item3) => Number(item3.roomNo) === Number(item1.roomNo))
+                            let newArray = await room[findRoomindex].rooms[finRoomNoIndex].BEDS.map((item3) => (Number(item3.bedNo) === Number(item1.bedNo) ? { ...item3, occupied: false } : item3))
+                            let newArray1 = await room[findRoomindex].rooms.map((item3) => (Number(item3.roomNo) === Number(item1.roomNo) ? { ...item3, BEDS: newArray } : item3))
                             // roomArray = await room.map((item) => (item.roomType === item1.roomType ? { ...item, rooms: newArray1 } : item))
                             roomArray = { ...room[findRoomindex], rooms: newArray1 };
                         }
@@ -623,11 +652,11 @@ const Admit = () => {
                             // await deleteSingltObject("admitPatients", 'jSqDGnjO21bpPGhb6O2y', 'admitPatient', item1, 'admituid', 'hospitaluid')
                             await deleteDatainSubcollection("admitPatients", 'jSqDGnjO21bpPGhb6O2y', 'admitPatient', item1, 'admituid', 'hospitaluid')
                             // setAdmitPatientList(admitPatientList.filter((item) => item.admituid !== item1.admituid))
-                            // dispatch(DELETE_ADMIT_PATIENTS(item1))
+                            dispatch(DELETE_ADMIT_PATIENTS(item1))
                             if (!item1.dischargeDate) {
                                 // await updateSingltObject('Rooms', '3PvtQ2G1RbG3l5VtiCMI', 'rooms', roomArray, 'roomuid', 'hospitaluid')
                                 await updateDatainSubcollection('Rooms', '3PvtQ2G1RbG3l5VtiCMI', 'rooms', roomArray, 'roomuid', 'hospitaluid')
-                                // dispatch(EDIT_ROOM(roomArray))
+                                dispatch(EDIT_ROOM(roomArray))
                             }
                             toast.success("Deleted successful.....");
 
@@ -661,6 +690,7 @@ const Admit = () => {
 
     const generateInvoice = (item) => {
         // filDatainsubcollection(allAdmitPatients, "admitPatients", 'jSqDGnjO21bpPGhb6O2y', 'admitPatient', hospitaluid)
+        // changeDateFormate()
         if (item.paymentStatus === "Completed") {
             setPrintContent(<PrintComponent data={{
                 data1: {
@@ -697,7 +727,42 @@ const Admit = () => {
     const clearFilter = () => {
         setAdmitPatientList(admitPatientfilter)
     }
+    const reloadData = () => {
+        setIsLoading(true)
+        getSubcollectionData('admitPatients', 'jSqDGnjO21bpPGhb6O2y', 'admitPatient', hospitaluid, (data) => {
+            // Handle the updated data in the callback function
+            dispatch(FILL_ADMIT_PATIENTS(data))
+            setIsLoading(false)
 
+            console.log('Received real-time data:', data);
+        }).catch((error) => {
+            setIsLoading(false)
+
+            console.error('Error:', error);
+        })
+    }
+    const changeDateFormate = () => {
+        // const formDate = moment('08/07/2023').utc().format('YYYY-MM-DDTHH:mm[Z]');
+
+        allAdmitPatients.map(async (item, i) => {
+            // setTimeout(() => {
+
+            // }, 2000);
+            const desiredFormat = 'YYYY-MM-DDTHH:mm[Z]';
+
+            // Check if inputDate already matches the desired format
+            if (moment(item.admitDate, desiredFormat, true).isValid() && moment(item.dischargeDate, desiredFormat, true).isValid()) {
+                console.log('i am done');
+                return;
+            }
+
+            // console.log('admit Date', i, formatDateyyyymmddUtc(item.admitDate));
+
+            // console.log('Discharge Date', i, formatDateyyyymmddUtc(item.dischargeDate));
+            await updateDatainSubcollection("admitPatients", 'jSqDGnjO21bpPGhb6O2y', 'admitPatient', { ...item, admitDate: formatDateyyyymmddUtc(item.admitDate), dischargeDate: item.dischargeDate ? formatDateyyyymmddUtc(item.dischargeDate) : item.dischargeDate }, 'admituid', 'hospitaluid')
+
+        })
+    }
     return <>
         {isLoading ? <Loaderspinner /> : <>
             <div>
@@ -707,7 +772,7 @@ const Admit = () => {
                     columns={columns}
                     data={admitPatientList}
                     action={<button className='btn btn-primary ' onClick={handleShow}><span>  <BiPlus size={25} /></span></button>}
-                    subHeaderComponent={<><Dropdown style={{ marginRight: '20px' }}>
+                    subHeaderComponent={<><button className='btn btn-dark' onClick={reloadData}><span>  <TfiReload size={18} />&nbsp;Reload</span></button> <Dropdown style={{ marginRight: '20px', marginLeft: '20px' }}>
                         <Dropdown.Toggle variant="primary" >
                             <FiFilter size={22} />
                         </Dropdown.Toggle>

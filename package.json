@@ -46,12 +46,14 @@
     "chartjs-adapter-date-fns": "^3.0.0",
     "classnames": "^2.3.1",
     "core-js": "^3.24.1",
+    "currency-in-words": "^2.3.4",
     "date-fns": "^2.29.3",
     "firebase": "^9.15.0",
     "formik": "^2.2.9",
     "html2pdf.js": "^0.9.0",
     "lodash": "^4.17.21",
     "moment": "^2.29.4",
+    "moment-timezone": "^0.5.43",
     "papaparse": "^5.3.2",
     "prop-types": "^15.8.1",
     "react": "^18.2.0",
@@ -78,6 +80,7 @@
     "recharts": "^2.5.0",
     "redux": "^4.2.0",
     "simplebar-react": "^2.4.1",
+    "to-words": "^3.6.1",
     "yup": "^0.32.11"
   },
   "devDependencies": {

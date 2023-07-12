@@ -18,6 +18,7 @@ import LaboratoryModule from './Module/Laboratory Module/LaboratoryModule'
 import { getDeviceToken } from './services/deviceToken'
 import AdminModule from './Module/Admin Module/AdminModule'
 import { startTransition } from 'react';
+import ManagementModule from './Module/Management Module/ManagementModule'
 
 const loading = (
   <div className="pt-3 text-center">
@@ -69,7 +70,7 @@ const App = () => {
             mobileno = !res.exists ? null : res.data().userMobileNo;
             userName = !res.exists ? null : res.data().userName;
             hospitaluid = !res.exists ? null : res.data().hospitaluid;
-            console.log('hospitaluid', hospitaluid);
+            // console.log('hospitaluid', hospitaluid);
             // setHospitaluid(hospitaluid)
             dispatch(SET_ACTIVE_USER({
               email: user.email,
@@ -192,6 +193,10 @@ const App = () => {
                 case 'Patient':
                   return (
                     <PatientsReportmodel />
+                  )
+                case 'Management':
+                  return (
+                    <ManagementModule />
                   )
                 default:
                   return (

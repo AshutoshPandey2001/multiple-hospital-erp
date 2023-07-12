@@ -19,8 +19,10 @@ import { FILL_ROOMS } from 'src/redux/slice/roomMasterSlice'
 import Loaderspinner from 'src/comman/spinner/Loaderspinner'
 import AdminComponent from './Admin Component/AdminComponent'
 import { FILL_CHARGES } from 'src/redux/slice/chargesSlice'
-import { addDatainsubcollection, getData, getDatawithhospitaluid, getSubcollectionData, getTaxDatainsubCollection, getTaxDatawithhospitaluid } from 'src/services/firebasedb'
+import { addDatainsubcollection, getData, getDatawithhospitaluid, getHospitalProfile, getSubcollectionData, getTaxDatainsubCollection, getTaxDatawithhospitaluid } from 'src/services/firebasedb'
 import { selectUserId } from 'src/redux/slice/authSlice'
+import { SET_INDOORPREVBILL_NO, SET_OPDPREVBILL_NO } from 'src/redux/slice/prevBillNoSlice'
+import { SET_HOSPITAL_PROFILE } from 'src/redux/slice/hospitalProfileSlice'
 
 const AdminModule = () => {
     const dispatch = useDispatch()
@@ -239,6 +241,30 @@ const AdminModule = () => {
             await getSubcollectionData('Charges', 'id6rOjHGDBEd63LQiGQe', 'charges', hospitaluid, (data) => {
                 // Handle the updated data in the callback function
                 dispatch(FILL_CHARGES(data))
+                console.log('Received real-time data :', data);
+            }).catch((error) => {
+                console.error('Error:', error);
+            })
+
+            await getHospitalProfile('HospitalMaster', 'S4fRJIO5ZxE5isoBIbEU', 'hospitalMaster', hospitaluid, (data) => {
+                // Handle the updated data in the callback function
+                dispatch(SET_HOSPITAL_PROFILE(data))
+                console.log('Received real-time data :', data);
+            }).catch((error) => {
+                console.error('Error:', error);
+            })
+            // for getting prev bill No
+            await getHospitalProfile('lastIndoorBillNo', '2VgHSc4tPq9NqU9HrI0N', 'lastIndoorbillNo', hospitaluid, (data) => {
+                // Handle the updated data in the callback function
+                dispatch(SET_INDOORPREVBILL_NO(data))
+                console.log('Received real-time data :', data);
+            }).catch((error) => {
+                console.error('Error:', error);
+            })
+
+            await getHospitalProfile('lastOpdbillNo', 'zyojcRPH1zTQLiT1Gepz', 'lastopdbillNo', hospitaluid, (data) => {
+                // Handle the updated data in the callback function
+                dispatch(SET_OPDPREVBILL_NO(data))
                 console.log('Received real-time data :', data);
             }).catch((error) => {
                 console.error('Error:', error);
