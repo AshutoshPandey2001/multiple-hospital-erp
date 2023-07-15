@@ -669,7 +669,7 @@ const Discharge = () => {
                     columns={columns}
                     data={dischargePatient}
                     action={<button className='btn btn-primary' onClick={handleShow}><span>  <BiPlus size={25} /></span></button>}
-                    subHeaderComponent={<><button className='btn btn-dark' onClick={reloadData} style={{ marginRight: '20px' }}><span>  <TfiReload size={18} />&nbsp;Reload</span></button>
+                    subHeaderComponent={<>
                         <input type='search' placeholder='search' className='w-25 form-control' onChange={(e) => requestSearch(e.target.value)} /></>}
                 />
             </div >

@@ -60,23 +60,24 @@ const AddRooms = () => {
         setUpdate(false)
     }
     const handleShow = () => setShow(true);
-    useEffect(() => {
-        getSubcollectionData('Rooms', '3PvtQ2G1RbG3l5VtiCMI', 'rooms', hospitaluid, (data) => {
-            // Handle the updated data in the callback function
-            dispatch(FILL_ROOMS(data))
-            setIsLoading(false)
-            console.log('Received real-time data:', data);
-        }).catch((error) => {
-            setIsLoading(false)
-            console.error('Error:', error);
-        })
-    }, [])
+    // useEffect(() => {
+    //     getSubcollectionData('Rooms', '3PvtQ2G1RbG3l5VtiCMI', 'rooms', hospitaluid, (data) => {
+    //         // Handle the updated data in the callback function
+    //         dispatch(FILL_ROOMS(data))
+    //         setIsLoading(false)
+    //         console.log('Received real-time data:', data);
+    //     }).catch((error) => {
+    //         setIsLoading(false)
+    //         console.error('Error:', error);
+    //     })
+    // }, [])
     useEffect(() => {
         const roomNumbers = allRooms?.map((item) => item.rooms?.map((room) => Number(room.roomNo))).flat();
         setAllRoomNo(roomNumbers)
         console.log('roomNumbers', roomNumbers);
         setRoomList(allRooms)
         setRoomsFilter(allRooms)
+        setIsLoading(false)
 
     }, [allRooms])
 
@@ -217,7 +218,7 @@ const AddRooms = () => {
                     title={"Rooms"}
                     columns={columns}
                     data={roomList}
-                    action={<><button className='btn btn-dark' onClick={reloadData} style={{ marginRight: '20px' }}><span> <TfiReload size={18} />&nbsp;Reload</span></button> <button className='btn btn-primary' onClick={handleShow}><span>  <BiPlus size={25} /></span></button></>}
+                    action={<> <button className='btn btn-primary' onClick={handleShow}><span>  <BiPlus size={25} /></span></button></>}
 
                 />
             </div>

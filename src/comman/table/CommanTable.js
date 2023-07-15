@@ -3,7 +3,7 @@
 import React from 'react'
 import DataTable from 'react-data-table-component';
 import './table.css'
-const CommanTable = ({ title, columns, data, action, subHeaderComponent }) => {
+const CommanTable = ({ title, columns, data, action, subHeaderComponent, retrieveData, handlePerPageRowsChange, paginationTotalRows }) => {
     const customStyles = {
         tableWrapper: {
             display: 'flex',
@@ -27,6 +27,9 @@ const CommanTable = ({ title, columns, data, action, subHeaderComponent }) => {
             subHeader={<div className='d-flex' style={{ justifyContent: 'space-between' }}></div>}
             subHeaderComponent={subHeaderComponent}
             customStyles={customStyles}
+            onChangeRowsPerPage={handlePerPageRowsChange}
+        // paginationTotalRows={paginationTotalRows}
+        // onChangePage={() => retrieveData()}
         />
     </>
     )

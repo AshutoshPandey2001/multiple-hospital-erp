@@ -15,7 +15,7 @@ import { FILL_OPD_PATIENTS } from 'src/redux/slice/opdPatientsList'
 import { FILL_PATIENTS } from 'src/redux/slice/patientMasterslice'
 import { FILL_PATIENTS_MEDICINES } from 'src/redux/slice/patientsMedicinesSlice'
 import { FILL_ROOMS } from 'src/redux/slice/roomMasterSlice'
-import { addDatainsubcollection, getData, getDatawithhospitaluid, getHospitalProfile, getSubcollectionData, getTaxDatainsubCollection, getTaxDatawithhospitaluid } from 'src/services/firebasedb'
+import { addDatainsubcollection, getData, getDatawithhospitaluid, getHospitalProfile, getSubcollectionData, getSubcollectionDataopd, getTaxDatainsubCollection, getTaxDatawithhospitaluid } from 'src/services/firebasedb'
 import { AppContent, AppSidebar, AppFooter, AppHeader } from '../components/index'
 import { FILL_PARAMETERS } from 'src/redux/slice/laborataryMaster'
 import { FILL_LABORATORY_REPORTS } from 'src/redux/slice/patientsLaboratoryReportsSlice'
@@ -81,7 +81,7 @@ const DefaultLayout = () => {
       //   .catch((error) => {
       //     console.error(error);
       //   });
-      await getSubcollectionData('opdPatients', 'm5JHl3l4zhaBCa8Vihcb', 'opdPatient', hospitaluid, (data) => {
+      await getSubcollectionDataopd('opdPatients', 'm5JHl3l4zhaBCa8Vihcb', 'opdPatient', hospitaluid, (data) => {
         // Handle the updated data in the callback function
         dispatch(FILL_OPD_PATIENTS(data))
         console.log('Received real-time data:', data);

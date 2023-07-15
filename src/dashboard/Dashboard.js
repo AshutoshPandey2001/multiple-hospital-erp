@@ -72,7 +72,6 @@ const Dashboard = () => {
   }
   const filteredOPDDataUnique = Array.from(invoiceuidMap.values());
 
-  // console.log('filteredOPDDataUnique', filteredOPDDataUnique);
 
   const filteredOpdData = filteredOPDDataUnique
     .filter(entry => entry.paymentStatus === "Completed")
@@ -86,7 +85,6 @@ const Dashboard = () => {
       }
       return result;
     }, []);
-  console.log('filteredOpdData', filteredOpdData);
 
   const invoiceuidMapIndoor = new Map();
   for (const entry of admitPatientsdata) {
@@ -97,7 +95,6 @@ const Dashboard = () => {
   }
   const filteredIndoorDataUnique = Array.from(invoiceuidMapIndoor.values());
 
-  console.log('filteredIndoorDataUnique', filteredIndoorDataUnique);
 
   const filteredIndoorData = filteredIndoorDataUnique
     .filter(entry => entry.paymentStatus === "Completed")
@@ -112,7 +109,6 @@ const Dashboard = () => {
       }
       return result;
     }, []);
-  console.log('filteredIndoorData', filteredIndoorData);
   const data = admitPatientsdata?.map((patient) => ({
     // date: yyyyMMdd(patient.admitDate),
     date: formatDateYYYYMMDD(patient.admitDate),
@@ -416,7 +412,6 @@ const Dashboard = () => {
 
     return () => {
       setChartData([])
-      console.log('I am Unmounting');
     }
   }, [admitPatientsdata, allRooms])
 
@@ -425,8 +420,6 @@ const Dashboard = () => {
   const pieChartFiltertoday = () => {
     const indoortoday = groupedData.find((item) => item.date === formattedDate)
     const opdtoday = groupedDataopd.find((item) => item.date === formattedDate)
-    console.log('indoortoday', groupedData);
-    console.log('opdtoday', groupedDataopd);
     setChartDatapie(prevState => ({
       ...prevState,
       series: [

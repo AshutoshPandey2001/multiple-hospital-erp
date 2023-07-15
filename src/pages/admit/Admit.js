@@ -492,23 +492,24 @@ const Admit = () => {
         setTodayDate(new Date().toISOString().substr(0, 10) + 'T' + new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' }))
     };
 
-    useEffect(() => {
-        getSubcollectionData('admitPatients', 'jSqDGnjO21bpPGhb6O2y', 'admitPatient', hospitaluid, (data) => {
-            // Handle the updated data in the callback function
-            dispatch(FILL_ADMIT_PATIENTS(data))
-            setIsLoading(false);
-            console.log('Received real-time data:', data);
-        }).catch((error) => {
-            setIsLoading(false);
-            console.error('Error:', error);
-        })
-    }, [])
+    // useEffect(() => {
+    //     getSubcollectionData('admitPatients', 'jSqDGnjO21bpPGhb6O2y', 'admitPatient', hospitaluid, (data) => {
+    //         // Handle the updated data in the callback function
+    //         dispatch(FILL_ADMIT_PATIENTS(data))
+    //         setIsLoading(false);
+    //         console.log('Received real-time data:', data);
+    //     }).catch((error) => {
+    //         setIsLoading(false);
+    //         console.error('Error:', error);
+    //     })
+    // }, [])
 
     useEffect(() => {
         // addDatainsubcollection()
         setAdmitPatientList([...allAdmitPatients].reverse());
         setAdmitPatientfilter(allAdmitPatients);
         setRoom([...roomList]);
+        setIsLoading(false);
 
 
     }, [allAdmitPatients, roomList])
@@ -772,7 +773,7 @@ const Admit = () => {
                     columns={columns}
                     data={admitPatientList}
                     action={<button className='btn btn-primary ' onClick={handleShow}><span>  <BiPlus size={25} /></span></button>}
-                    subHeaderComponent={<><button className='btn btn-dark' onClick={reloadData}><span>  <TfiReload size={18} />&nbsp;Reload</span></button> <Dropdown style={{ marginRight: '20px', marginLeft: '20px' }}>
+                    subHeaderComponent={<><Dropdown style={{ marginRight: '20px', marginLeft: '20px' }}>
                         <Dropdown.Toggle variant="primary" >
                             <FiFilter size={22} />
                         </Dropdown.Toggle>

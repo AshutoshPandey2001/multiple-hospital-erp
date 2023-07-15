@@ -393,32 +393,32 @@ export const addDatainsubcollection = (collectionName, collectionuid, subcollect
 //     // });
 
 // }
-// export const getSubcollectionData = (collectionName, collectionuid, subcollectionName, hospitaluid, callback) => {
-//     return new Promise((resolve, reject) => {
-//         // Get a reference to the parent document
-//         const parentDocRef = db.collection(collectionName).doc(collectionuid);
+export const getSubcollectionData = (collectionName, collectionuid, subcollectionName, hospitaluid, callback) => {
+    return new Promise((resolve, reject) => {
+        // Get a reference to the parent document
+        const parentDocRef = db.collection(collectionName).doc(collectionuid);
 
-//         // Access the specific subcollection
-//         const subcollectionRef = parentDocRef.collection(subcollectionName);
-//         const query = subcollectionRef.where('hospitaluid', '==', hospitaluid).orderBy('timestamp', 'asc');;
+        // Access the specific subcollection
+        const subcollectionRef = parentDocRef.collection(subcollectionName);
+        const query = subcollectionRef.where('hospitaluid', '==', hospitaluid).orderBy('timestamp', 'asc');;
 
-//         const unsubscribe = query.onSnapshot((querySnapshot) => {
-//             let temp_data = [];
-//             querySnapshot.forEach((doc) => {
-//                 temp_data.push(doc.data());
-//             });
-//             callback(temp_data)
-//             // Resolve the promise with temp_data
-//             resolve(temp_data);
-//         }, (error) => {
-//             // Reject the promise with the error
-//             reject(error);
-//         });
-//         // Return the unsubscribe function so that the caller can unsubscribe from the snapshot listener if needed
-//         return unsubscribe;
-//     });
-// };
-export const getSubcollectionData = async (collectionName, collectionuid, subcollectionName, hospitaluid, callback) => {
+        const unsubscribe = query.onSnapshot((querySnapshot) => {
+            let temp_data = [];
+            querySnapshot.forEach((doc) => {
+                temp_data.push(doc.data());
+            });
+            callback(temp_data)
+            // Resolve the promise with temp_data
+            resolve(temp_data);
+        }, (error) => {
+            // Reject the promise with the error
+            reject(error);
+        });
+        // Return the unsubscribe function so that the caller can unsubscribe from the snapshot listener if needed
+        return unsubscribe;
+    });
+};
+export const getSubcollectionDataopd = async (collectionName, collectionuid, subcollectionName, hospitaluid, callback) => {
     try {
         // Get a reference to the parent document
         const parentDocRef = db.collection(collectionName).doc(collectionuid);

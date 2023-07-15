@@ -50,22 +50,21 @@ const Charges = () => {
         setUpdate(false)
     }
     const handleShow = () => setShow(true);
-    useEffect(() => {
-        getSubcollectionData('Charges', 'id6rOjHGDBEd63LQiGQe', 'charges', hospitaluid, (data) => {
-            // Handle the updated data in the callback function
-            dispatch(FILL_CHARGES(data))
-            setIsLoading(false)
-            console.log('Received real-time data:', data);
-        }).catch((error) => {
-            setIsLoading(false)
-            console.error('Error:', error);
-        })
-    }, [])
+    // useEffect(() => {
+    //     getSubcollectionData('Charges', 'id6rOjHGDBEd63LQiGQe', 'charges', hospitaluid, (data) => {
+    //         // Handle the updated data in the callback function
+    //         dispatch(FILL_CHARGES(data))
+    //         setIsLoading(false)
+    //         console.log('Received real-time data:', data);
+    //     }).catch((error) => {
+    //         setIsLoading(false)
+    //         console.error('Error:', error);
+    //     })
+    // }, [])
     useEffect(() => {
         setCharges(allCharges)
         setChargesFilter(allCharges)
-
-
+        setIsLoading(false)
     }, [allCharges])
 
 
@@ -190,7 +189,7 @@ const Charges = () => {
                     title={"Charges"}
                     columns={columns}
                     data={charges}
-                    action={<><button className='btn btn-dark' onClick={reloadData} style={{ marginRight: '20px' }}><span> <TfiReload size={18} />&nbsp;Reload</span></button> <button className='btn btn-primary' onClick={handleShow}><span>  <BiPlus size={25} /></span></button></>}
+                    action={<> <button className='btn btn-primary' onClick={handleShow}><span>  <BiPlus size={25} /></span></button></>}
 
                 />
             </div>

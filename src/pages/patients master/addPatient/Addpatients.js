@@ -79,20 +79,21 @@ const Addpatients = () => {
     useEffect(() => {
         setPatientsList([...allPatientsList].reverse())
         setPatientsFilter(allPatientsList)
+        setIsLoading(false)
 
     }, [allPatientsList])
 
-    useEffect(() => {
-        getSubcollectionData('Patients', 'fBoxFLrzXexT8WNBzGGh', 'patients', hospitaluid, (data) => {
-            // Handle the updated data in the callback function
-            dispatch(FILL_PATIENTS(data))
-            setIsLoading(false)
-            console.log('Received real-time data patients:', data);
-        }).catch((error) => {
-            setIsLoading(false)
-            console.error('Error:', error);
-        });
-    }, [])
+    // useEffect(() => {
+    //     getSubcollectionData('Patients', 'fBoxFLrzXexT8WNBzGGh', 'patients', hospitaluid, (data) => {
+    //         // Handle the updated data in the callback function
+    //         dispatch(FILL_PATIENTS(data))
+    //         setIsLoading(false)
+    //         console.log('Received real-time data patients:', data);
+    //     }).catch((error) => {
+    //         setIsLoading(false)
+    //         console.error('Error:', error);
+    //     });
+    // }, [])
 
     const handleClose = () => {
         setShow(false);
@@ -222,7 +223,7 @@ const Addpatients = () => {
                         columns={columns}
                         data={patientsList}
                         action={<button className='btn btn-primary' onClick={handleShow}><span>  <BiPlus size={30} /></span></button>}
-                        subHeaderComponent={<> <button className='btn btn-dark' onClick={reloadData} style={{ marginRight: '20px' }}><span>  <TfiReload size={18} />&nbsp;Reload</span></button>
+                        subHeaderComponent={<>
                             <input type='search' placeholder='Search...' className='w-25 form-control' onChange={(e) => requestSearch(e.target.value)} /></>}
                     />
                 </div>

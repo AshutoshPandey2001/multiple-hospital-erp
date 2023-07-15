@@ -61,20 +61,21 @@ const doctorMaster = () => {
         setUpdate(false)
     }
     const handleShow = () => setShow(true);
-    useEffect(() => {
-        getSubcollectionData('Doctors', 'd3ryEUfqA2FMa0fEyxde', 'doctors', hospitaluid, (data) => {
-            // Handle the updated data in the callback function
-            dispatch(FILL_DR(data))
-            setIsLoading(false)
-            console.log('Received real-time data:', data);
-        }).catch((error) => {
-            setIsLoading(false)
-            console.error('Error:', error);
-        })
-    }, [])
+    // useEffect(() => {
+    //     getSubcollectionData('Doctors', 'd3ryEUfqA2FMa0fEyxde', 'doctors', hospitaluid, (data) => {
+    //         // Handle the updated data in the callback function
+    //         dispatch(FILL_DR(data))
+    //         setIsLoading(false)
+    //         console.log('Received real-time data:', data);
+    //     }).catch((error) => {
+    //         setIsLoading(false)
+    //         console.error('Error:', error);
+    //     })
+    // }, [])
     useEffect(() => {
         setDrList(allDoctors)
         setDrFilter(allDoctors)
+        setIsLoading(false)
 
 
     }, [allDoctors])
@@ -210,7 +211,7 @@ const doctorMaster = () => {
                     title={"Doctors"}
                     columns={columns}
                     data={drList}
-                    action={<><button className='btn btn-dark' onClick={reloadData} style={{ marginRight: '20px' }}><span> <TfiReload size={18} />&nbsp;Reload</span></button> <button className='btn btn-primary' onClick={handleShow}><span>  <BiPlus size={25} /></span></button></>}
+                    action={<> <button className='btn btn-primary' onClick={handleShow}><span>  <BiPlus size={25} /></span></button></>}
 
                 />
             </div>

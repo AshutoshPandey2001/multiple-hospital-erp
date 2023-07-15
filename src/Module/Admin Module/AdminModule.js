@@ -19,7 +19,7 @@ import { FILL_ROOMS } from 'src/redux/slice/roomMasterSlice'
 import Loaderspinner from 'src/comman/spinner/Loaderspinner'
 import AdminComponent from './Admin Component/AdminComponent'
 import { FILL_CHARGES } from 'src/redux/slice/chargesSlice'
-import { addDatainsubcollection, getData, getDatawithhospitaluid, getHospitalProfile, getSubcollectionData, getTaxDatainsubCollection, getTaxDatawithhospitaluid } from 'src/services/firebasedb'
+import { addDatainsubcollection, getData, getDatawithhospitaluid, getHospitalProfile, getSubcollectionData, getSubcollectionDataopd, getTaxDatainsubCollection, getTaxDatawithhospitaluid } from 'src/services/firebasedb'
 import { selectUserId } from 'src/redux/slice/authSlice'
 import { SET_INDOORPREVBILL_NO, SET_OPDPREVBILL_NO } from 'src/redux/slice/prevBillNoSlice'
 import { SET_HOSPITAL_PROFILE } from 'src/redux/slice/hospitalProfileSlice'
@@ -148,7 +148,7 @@ const AdminModule = () => {
                 console.error('Error:', error);
             });
 
-            await getSubcollectionData('opdPatients', 'm5JHl3l4zhaBCa8Vihcb', 'opdPatient', hospitaluid, (data) => {
+            await getSubcollectionDataopd('opdPatients', 'm5JHl3l4zhaBCa8Vihcb', 'opdPatient', hospitaluid, (data) => {
                 // Handle the updated data in the callback function
                 dispatch(FILL_OPD_PATIENTS(data))
                 console.log('Received real-time data:', data);

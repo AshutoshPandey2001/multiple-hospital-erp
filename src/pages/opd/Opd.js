@@ -38,6 +38,9 @@ import '../admit/admit.css'
 import { selectUserId } from 'src/redux/slice/authSlice';
 import { ToWords } from 'to-words';
 import moment from 'moment';
+import { db } from 'src/firebaseconfig';
+import DataTable from 'react-data-table-component';
+
 const toWords = new ToWords();
 
 const PrintComponent = ({ data }) => {
@@ -248,15 +251,31 @@ const Opd = () => {
     const [endDate, setEndDate] = useState()
     const [showtooltip, setShowtooltip] = useState(false);
     const hospitaluid = useSelector(selectUserId)
-
+    const [lastVisible, setLastVisible] = useState(null);
+    const [perPageRows, setPerPageRows] = useState(10); // Initial value for rows per page
+    const [totalnumData, setsetTotalNumData] = useState(0); // Initial value for rows per page
+    const [currentPage, setCurrentPage] = useState(1);
+    const [firstVisible, setFirstVisible] = useState(null);
+    const [prev, setPrev] = useState(false);
+    const [searchBy, setSearchBy] = useState('');
+    const [searchString, setSearchString] = useState('');
+    const parentDocRef = db.collection('opdPatients').doc('m5JHl3l4zhaBCa8Vihcb');
+    const subcollectionRef = parentDocRef.collection('opdPatient');
     const navigate = useNavigate()
 
-    const filtertheData = (date) => {
-        if (startDate && endDate) {
-            setOpdPatientList(filterData(allopdPatientList, startDate, endDate, date))
-            setShowtooltip(false)
-        }
-    }
+    // const filtertheData = (date) => {
+    //     if (startDate && endDate) {
+    //         let query = subcollectionRef
+    //             .where('hospitaluid', '==', hospitaluid)
+    //             .where('consultingDate', '>=', moment(startDate).format('YYYY-MM-DD[Z]')) // Add "from date" filter
+    //             .where('consultingDate', '<=', moment(endDate).format('YYYY-MM-DD[Z]')) // Add "to date" filter
+    //             .orderBy('timestamp', 'desc')
+    //             .limit(perPageRows);
+    //         retrieveData(query)
+    //         // setOpdPatientList(filterData(allopdPatientList, startDate, endDate, date))
+    //         setShowtooltip(false)
+    //     }
+    // }
     const clearfilterData = () => {
         setStartDate('')
         setEndDate('')
@@ -266,46 +285,46 @@ const Opd = () => {
     const columns = [
         // { name: 'ID', selector: row => row.pid, sortable: true },
         {
-            // name: 'Date',
-            name: (
-                <OverlayTrigger
-                    placement="top"
-                    overlay={<Tooltip ><div >
-                        <div className='row'>
-                            <div className='col-lg-12'>
-                                <div className="form-group" >
-                                    <label >Form<b style={{ color: 'red' }}>*</b>:</label>
-                                    <input name='startDate'
-                                        type="date" className="form-control" defaultValue={startDate} onChange={(e) => setStartDate(e.target.value)} />
+            name: 'Date',
+            // name: (
+            //     <OverlayTrigger
+            //         placement="top"
+            //         overlay={<Tooltip ><div >
+            //             <div className='row'>
+            //                 <div className='col-lg-12'>
+            //                     <div className="form-group" >
+            //                         <label >Form<b style={{ color: 'red' }}>*</b>:</label>
+            //                         <input name='startDate'
+            //                             type="date" className="form-control" defaultValue={startDate} onChange={(e) => setStartDate(e.target.value)} />
 
-                                </div>
-                            </div>
-                            <div className='col-lg-12'>
-                                <div className="form-group" >
-                                    <label >To<b style={{ color: 'red' }}>*</b>:</label>
-                                    <input name='endDate'
-                                        type="date" className="form-control" defaultValue={endDate} onChange={(e) => setEndDate(e.target.value)} min={startDate} />
-                                </div>
-                            </div>
-                        </div>
-                        <div className='d-flex mt-2 mb-1 justify-content-end'>
-                            <Button variant="secondary" onClick={clearfilterData}>
-                                Clear
-                            </Button>
-                            <Button variant="primary" style={{ marginLeft: '10px' }} onClick={() => filtertheData('consultingDate')}>
-                                Filter
-                            </Button>
-                        </div>
+            //                     </div>
+            //                 </div>
+            //                 <div className='col-lg-12'>
+            //                     <div className="form-group" >
+            //                         <label >To<b style={{ color: 'red' }}>*</b>:</label>
+            //                         <input name='endDate'
+            //                             type="date" className="form-control" defaultValue={endDate} onChange={(e) => setEndDate(e.target.value)} min={startDate} />
+            //                     </div>
+            //                 </div>
+            //             </div>
+            //             <div className='d-flex mt-2 mb-1 justify-content-end'>
+            //                 <Button variant="secondary" onClick={clearfilterData}>
+            //                     Clear
+            //                 </Button>
+            //                 <Button variant="primary" style={{ marginLeft: '10px' }} onClick={() => filtertheData('consultingDate')}>
+            //                     Filter
+            //                 </Button>
+            //             </div>
 
 
-                    </div></Tooltip>}
-                    trigger='click'
-                    show={showtooltip}
+            //         </div></Tooltip>}
+            //         trigger='click'
+            //         show={showtooltip}
 
-                >
-                    <span style={{ cursor: 'pointer' }} ><FiFilter onClick={() => setShowtooltip(!showtooltip)} /> Date </span>
-                </OverlayTrigger>
-            ),
+            //     >
+            //         <span style={{ cursor: 'pointer' }} > <FiFilter onClick={() => setShowtooltip(!showtooltip)} />  Date </span>
+            //     </OverlayTrigger>
+            // ),
             selector: row => formatDateDDMMYYY(row.consultingDate),
             sortable: true,
             sortFunction: (a, b) => { return moment(a.consultingDate).toDate().getTime() - moment(b.consultingDate).toDate().getTime() }
@@ -456,26 +475,162 @@ const Opd = () => {
         setUpdate(false)
     }
 
+    // useEffect(() => {
+    //     totalNumberofData()
+    //     // getOnlyChangesLisitnor()
+    //     // getSubcollectionData('opdPatients', 'm5JHl3l4zhaBCa8Vihcb', 'opdPatient', hospitaluid, (data) => {
+    //     //     // Handle the updated data in the callback function
+    //     //     setIsLoading(false)
+    //     //     dispatch(FILL_OPD_PATIENTS(data))
+    //     //     console.log('Received real-time data:', data);
+    //     // }).catch((error) => {
+    //     //     setIsLoading(false)
+    //     //     console.error('Error:', error);
+    //     // })
+
+    // }, [])
+
     useEffect(() => {
+        setIsLoading(true)
+        let query = subcollectionRef
+            .where('hospitaluid', '==', hospitaluid)
+            .orderBy('timestamp', 'desc')
+            .limit(perPageRows)
+        retrieveData(query)
+        setIsLoading(false)
+        totalNumberofData()
 
-        // getOnlyChangesLisitnor()
-        getSubcollectionData('opdPatients', 'm5JHl3l4zhaBCa8Vihcb', 'opdPatient', hospitaluid, (data) => {
-            // Handle the updated data in the callback function
-            setIsLoading(false)
-            dispatch(FILL_OPD_PATIENTS(data))
-            console.log('Received real-time data:', data);
-        }).catch((error) => {
-            setIsLoading(false)
-            console.error('Error:', error);
-        })
-
-    }, [])
-
-    useEffect(() => {
-        setOpdPatientList([...allopdPatientList].reverse())
-        setOpdPatientfilter(allopdPatientList)
+        // setOpdPatientList([...allopdPatientList].reverse())
+        // setOpdPatientfilter(allopdPatientList)
     }, [allopdPatientList])
+    const totalNumberofData = () => {
+        const parentDocRef = db.collection('opdPatients').doc('m5JHl3l4zhaBCa8Vihcb');
+        const subcollectionRef = parentDocRef.collection('opdPatient');
 
+        let query = subcollectionRef.where('hospitaluid', '==', hospitaluid).orderBy('timestamp', 'desc');
+
+        query.get().then(snapshot => {
+            console.log(snapshot);
+            const totalDataCount = snapshot.size;
+            setsetTotalNumData(totalDataCount)
+            console.log('Total data count:', totalDataCount);
+        }).catch(error => {
+            console.error('Error retrieving data:', error);
+        });
+    }
+
+    // const retrieveData = async (item) => {
+    //     try {
+    //         const parentDocRef = db.collection('opdPatients').doc('m5JHl3l4zhaBCa8Vihcb');
+    //         const subcollectionRef = parentDocRef.collection('opdPatient');
+    //         let query = subcollectionRef
+    //             .where('hospitaluid', '==', hospitaluid)
+    //             .orderBy('timestamp', 'desc')
+    //             .limit(perPageRows);
+    //         // console.log('prev', item);
+    //         if (lastVisible && !item) {
+    //             query = query.startAfter(lastVisible);
+    //             // console.log('lastVisible', lastVisible);
+    //         }
+    //         if (item) {
+    //             query = query.endBefore(firstVisible).limitToLast(perPageRows); // Retrieve previous page data
+    //             // console.log('firstVisible', firstVisible.data());
+    //         }
+
+    //         const querySnapshot = await query.get();
+    //         const newData = [];
+    //         querySnapshot.forEach((doc) => {
+    //             newData.push(doc.data());
+    //         });
+    //         setOpdPatientList(newData);
+
+    //         if (querySnapshot.size > 0) {
+    //             const lastVisibleDoc = querySnapshot.docs[querySnapshot.docs.length - 1];
+    //             console.log('lastVisibleDoc', lastVisibleDoc.data());
+    //             setLastVisible(lastVisibleDoc);
+    //             setFirstVisible(querySnapshot.docs[0]);
+    //             console.log('setFirstVisible', querySnapshot.docs[0].data());
+    //             // Set the firstVisible document for previous page data retrieval
+    //         } else {
+    //             setLastVisible(null);
+    //             setFirstVisible(null); // Reset firstVisible when no more previous pages are available
+    //         }
+    //     } catch (error) {
+    //         console.error('Error retrieving data:', error);
+    //     }
+    // };
+    // const retrieveData = (item) => {
+    //     try {
+    //         const parentDocRef = db.collection('opdPatients').doc('m5JHl3l4zhaBCa8Vihcb');
+    //         const subcollectionRef = parentDocRef.collection('opdPatient');
+    //         let query = subcollectionRef
+    //             .where('hospitaluid', '==', hospitaluid)
+    //             .orderBy('timestamp', 'desc')
+    //             .limit(perPageRows);
+
+    //         if (lastVisible && !item) {
+    //             query = query.startAfter(lastVisible);
+    //         }
+
+    //         if (item) {
+    //             query = query.endBefore(firstVisible).limitToLast(perPageRows);
+    //         }
+
+    //         const unsubscribe = query.onSnapshot((snapshot) => {
+    //             const newData = [];
+    //             snapshot.forEach((doc) => {
+    //                 newData.push(doc.data());
+    //             });
+    //             setOpdPatientList(newData);
+
+    //             if (snapshot.size > 0) {
+    //                 const lastVisibleDoc = snapshot.docs[snapshot.docs.length - 1];
+    //                 console.log('lastVisibleDoc', lastVisibleDoc.data());
+    //                 setLastVisible(lastVisibleDoc);
+    //                 setFirstVisible(snapshot.docs[0]);
+    //                 console.log('setFirstVisible', snapshot.docs[0].data());
+    //             } else {
+    //                 setLastVisible(null);
+    //                 setFirstVisible(null);
+    //             }
+    //         });
+
+    //         return () => {
+    //             unsubscribe();
+    //         };
+    //     } catch (error) {
+    //         console.error('Error retrieving data:', error);
+    //     }
+    // };
+    const retrieveData = (query) => {
+        try {
+            const unsubscribe = query.onSnapshot((snapshot) => {
+                const newData = [];
+                snapshot.forEach((doc) => {
+                    newData.push(doc.data());
+                });
+                setOpdPatientList(newData);
+
+                if (snapshot.size > 0) {
+                    const lastVisibleDoc = snapshot.docs[snapshot.docs.length - 1];
+                    console.log('lastVisibleDoc', lastVisibleDoc.data());
+                    setLastVisible(lastVisibleDoc);
+                    setFirstVisible(snapshot.docs[0]);
+                    // setsetTotalNumData(snapshot.size)
+                    console.log('setFirstVisible', snapshot.docs[0].data());
+                } else {
+                    setLastVisible(null);
+                    setFirstVisible(null);
+                }
+            });
+
+            return () => {
+                unsubscribe();
+            };
+        } catch (error) {
+            console.error('Error retrieving data:', error);
+        }
+    };
 
     const formik = useFormik({
         initialValues: initalValues,
@@ -681,20 +836,67 @@ const Opd = () => {
         }
     };
 
-    const requestSearch = (searchvalue) => {
-        if (searchvalue.length < 1) {
-            setOpdPatientList([...allopdPatientList].reverse())
-            return
+    const requestSearch = () => {
+        // const searchString = searchvalue.toLowerCase();
+        // console.log(searchString, 'searchString');
+        if (searchString.length) {
+            var query = subcollectionRef
+
+            // query = query
+            //     .where('hospitaluid', '==', hospitaluid)
+            if (searchBy === 'Name') {
+                query = query
+                    .where('pName', '>=', searchString).
+                    where('pName', '<=', searchString + "\uf8ff")
+            } else if (searchBy === 'MobileNo') {
+                query = query
+                    .where('pMobileNo', '==', searchString)
+            }
+
+            // query = query
+            //     .where('pid', '<=', searchString)
+            // query = query
+            //     .where('pMobileNo', '>=', searchString)
+            query = query.limit(perPageRows);
+            retrieveData(query)
+            query.get().then(snapshot => {
+                console.log(snapshot);
+                const totalDataCount = snapshot.size;
+                setsetTotalNumData(totalDataCount)
+                console.log('Total data count:', totalDataCount);
+            }).catch(error => {
+                console.error('Error retrieving data:', error);
+            });
         }
 
-        const filteredRows = opdPatientfilter.filter((row) => {
-            const searchString = searchvalue.toLowerCase()
-            return row.pid.toString().includes(searchString) ||
-                row.pName.toLowerCase().includes(searchString) ||
-                row.pMobileNo.includes(searchString);
-        });
 
-        setOpdPatientList(filteredRows)
+
+        // if (searchvalue.length < 1) {
+        //     setOpdPatientList([...allopdPatientList].reverse())
+        //     return
+        // }
+
+        // const filteredRows = opdPatientfilter.filter((row) => {
+        //     const searchString = searchvalue.toLowerCase()
+        //     return row.pid.toString().includes(searchString) ||
+        //         row.pName.toLowerCase().includes(searchString) ||
+        //         row.pMobileNo.includes(searchString);
+        // });
+
+        // setOpdPatientList(filteredRows)
+    }
+
+    const onSearchInput = (value) => {
+        if (!value.length) {
+            setIsLoading(true)
+            let query = subcollectionRef
+                .where('hospitaluid', '==', hospitaluid)
+                .orderBy('timestamp', 'desc')
+                .limit(perPageRows)
+            retrieveData(query)
+            setIsLoading(false)
+            totalNumberofData()
+        }
     }
     const handleOnSelect = (item) => {
         formik.setFieldValue('pid', item.pid);
@@ -791,22 +993,101 @@ const Opd = () => {
             console.error('Error:', error);
         })
     }
+    // const handlePerPageRowsChange = (event) => {
+    //     setPerPageRows(event)
+    // };
+    const handlePageChange = async (page) => {
+        if (page < currentPage) {
+            setPrev(true)
+            prevPage()
+            // const one = true
+            // console.log('i am here');
+            // retrieveData(one)
+            setCurrentPage(page);
+        } else {
+            setPrev(false)
+            nextPage()
+            // const one = false
+            // retrieveData(one)
+            setCurrentPage(page);
+        }
+        console.log('page', page);
+
+        // Perform any additional logic or actions based on the page change
+    };
+
+    const nextPage = async () => {
+        setIsLoading(true)
+        let query = subcollectionRef
+            .where('hospitaluid', '==', hospitaluid)
+            .orderBy('timestamp', 'desc')
+            .limit(perPageRows).startAfter(lastVisible);
+        retrieveData(query)
+        setIsLoading(false)
+
+    };
+
+
+    const prevPage = async () => {
+        setIsLoading(true)
+
+        let query = subcollectionRef
+            .where('hospitaluid', '==', hospitaluid)
+            .orderBy('timestamp', 'desc')
+            .limit(perPageRows)
+            .endBefore(firstVisible).limitToLast(perPageRows);
+        retrieveData(query)
+        setIsLoading(false)
+
+    }
     return <>
 
         {isLoading ? <Loaderspinner /> : <>
             <div>
                 <div style={{ display: 'none' }}>  {printContent && <PrintButton content={printContent} />}</div>
-                <CommanTable
+                {/* <CommanTable
                     title={"OPD Patients"}
                     columns={columns}
                     data={opdPatientList}
                     action={<button className='btn btn-primary' onClick={handleShow}><span>  <BiPlus size={25} /></span></button>}
-                    subHeaderComponent={<> <button className='btn btn-dark' onClick={reloadData} style={{ marginRight: '20px' }}><span>  <TfiReload size={18} />&nbsp;Reload</span></button>
+                    subHeaderComponent={<>
                         <input type='search' placeholder='search' className='w-25 form-control' onChange={(e) => requestSearch(e.target.value)} /></>}
+                    retrieveData={retrieveData}
+                    handlePerPageRowsChange={handlePerPageRowsChange}
+                    paginationTotalRows={totalnumData}
+                /> */}
+
+                <DataTable
+                    title={"OPD Patients"}
+                    columns={columns}
+                    data={opdPatientList}
+                    pagination={true}
+                    fixedHeader={true}
+                    noHeader={false}
+                    persistTableHead
+                    actions={<button className='btn btn-primary' onClick={handleShow}><span>  <BiPlus size={25} /></span></button>}
+                    highlightOnHover
+                    paginationServer={true}
+                    subHeader={<div className='d-flex' style={{ justifyContent: 'space-between' }}></div>}
+                    subHeaderComponent={<span className='d-flex w-100 justify-content-end'>
+                        <select className="form-control mr-2" style={{ height: '40px', fontSize: '18px', width: '15%', marginRight: 10 }} name='searchBy' value={searchBy} onChange={(e) => setSearchBy(e.target.value)}>
+                            <option selected >Search by</option>
+                            {/* <option value='Completed'>Completed</option> */}
+                            <option value='Name' selected>Patient Name</option>
+                            <option value='MobileNo' selected>Mobile No</option>
+                        </select>
+                        <input type='search' placeholder='search' className='w-25 form-control' onChange={(e) => { setSearchString(e.target.value); onSearchInput(e.target.value) }} />
+                        <button className='btn btn-primary' style={{ width: '10%', marginLeft: 10 }} disabled={!searchBy || !searchString} onClick={requestSearch}>Search</button>
+                    </span>}
+                    // paginationTotalRows={totalnumData}
+                    paginationTotalRows={totalnumData}
+
+                    // onChangeRowsPerPage={handlePerPageRowsChange}
+                    onChangePage={(e) => handlePageChange(e)}
                 />
             </div>
         </>}
-
+        {/* <button className='btn btn-dark' onClick={reloadData} style={{ marginRight: '20px' }}><span>  <TfiReload size={18} />&nbsp;Reload</span></button> */}
 
         <Modal show={show} onHide={handleClose} size="lg" style={{ filter: model ? 'blur(5px)' : 'blur(0px)' }}>
             <Modal.Header closeButton>
