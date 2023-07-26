@@ -42,6 +42,10 @@ import { filterData, filterDatainIndoor } from 'src/services/dataFilter';
 import { selectUserId } from 'src/redux/slice/authSlice';
 import { ToWords } from 'to-words';
 import moment from 'moment';
+import { debounce } from 'lodash';
+import { db } from 'src/firebaseconfig';
+import DataTable from 'react-data-table-component';
+
 const toWords = new ToWords();
 
 const PrintComponent = ({ data }) => {
@@ -282,7 +286,20 @@ const Admit = () => {
     const [printContent, setPrintContent] = useState(null);
     const [startDate, setStartDate] = useState()
     const [endDate, setEndDate] = useState()
+    const [lastVisible, setLastVisible] = useState(null);
+    const [perPageRows, setPerPageRows] = useState(10); // Initial value for rows per page
+    const [totalnumData, setsetTotalNumData] = useState(0); // Initial value for rows per page
+    const [currentPage, setCurrentPage] = useState(1);
+    const [firstVisible, setFirstVisible] = useState(null);
+    const [prev, setPrev] = useState(false);
+    const [searchBy, setSearchBy] = useState('');
+    const [searchString, setSearchString] = useState('');
+    const parentDocRef = db.collection('admitPatients').doc('jSqDGnjO21bpPGhb6O2y');
 
+    // const subcollectionRef = parentDocRef.collection('opdPatient').where('hospitaluid', '==', hospitaluid);
+    const subcollectionRef = parentDocRef.collection('admitPatient').where('hospitaluid', '==', hospitaluid).where('deleted', '==', 0);
+
+    let unsubscribe = undefined
 
     const filtertheData = (date) => {
         if (startDate && endDate) {
@@ -504,17 +521,102 @@ const Admit = () => {
     //     })
     // }, [])
 
+    // useEffect(() => {
+    //     // addDatainsubcollection()
+    //     setAdmitPatientList([...allAdmitPatients].reverse());
+    //     setAdmitPatientfilter(allAdmitPatients);
+    //     setRoom([...roomList]);
+    //     setIsLoading(false);
+
+
+    // }, [allAdmitPatients, roomList])
+
     useEffect(() => {
         // addDatainsubcollection()
-        setAdmitPatientList([...allAdmitPatients].reverse());
-        setAdmitPatientfilter(allAdmitPatients);
+        // setAdmitPatientList([...allAdmitPatients].reverse());
+        // setAdmitPatientfilter(allAdmitPatients);
         setRoom([...roomList]);
         setIsLoading(false);
 
 
-    }, [allAdmitPatients, roomList])
+    }, [roomList])
 
+    useEffect(() => {
+        setIsLoading(true)
+        let query = subcollectionRef
+            .orderBy('timestamp', 'desc')
+            .limit(perPageRows)
+        debouncedRetrieveData(query)
+        setIsLoading(false)
+        totalNumberofData()
+        // onlyChangeDetector()
+        // chnageDetectore()
+        return () => {
+            // unsub()
+            unsubscribe();
+            console.log('unmounting');
+        };
+        // setOpdPatientList([...allopdPatientList].reverse())
+        // setOpdPatientfilter(allopdPatientList)
+    }, [])
+    const totalNumberofData = () => {
+        // const parentDocRef = db.collection('opdPatients').doc('m5JHl3l4zhaBCa8Vihcb');
+        // const subcollectionRef = parentDocRef.collection('opdPatient');
 
+        let query = subcollectionRef;
+
+        query.onSnapshot((snapshot) => {
+            console.log(snapshot);
+            const totalDataCount = snapshot.size;
+            setsetTotalNumData(totalDataCount)
+            console.log('Total data count:', totalDataCount);
+        })
+    }
+
+    const retrieveData = (query) => {
+        try {
+            // let initialSnapshot = true;
+            console.log('i am a lisitnor who alwas call');
+            setIsLoading(true)
+            unsubscribe = query.onSnapshot((snapshot) => {
+                const newData = [];
+                snapshot.forEach((doc) => {
+                    newData.push(doc.data());
+                });
+                // if (initialSnapshot && snapshot.metadata.hasPendingWrites) {
+                //     // Skip the initial snapshot with local, unsaved changes
+                //     initialSnapshot = false;
+                //     return;
+                // }
+                setAdmitPatientList(newData);
+                console.log('newData-------------------------------------', newData);
+                if (snapshot.size > 0) {
+                    const lastVisibleDoc = snapshot.docs[snapshot.docs.length - 1];
+                    // console.log('lastVisibleDoc', lastVisibleDoc.data());
+                    setLastVisible(lastVisibleDoc);
+                    setFirstVisible(snapshot.docs[0]);
+                    // setsetTotalNumData(snapshot.size)
+                    setIsLoading(false)
+
+                    // console.log('setFirstVisible', snapshot.docs[0].data());
+                } else {
+                    setIsLoading(false)
+
+                    setLastVisible(null);
+                    setFirstVisible(null);
+                }
+            });
+
+            return () => {
+                unsubscribe();
+            };
+        } catch (error) {
+            setIsLoading(false)
+
+            console.error('Error retrieving data:', error);
+        }
+    };
+    const debouncedRetrieveData = debounce(retrieveData, 500);
 
     // const formik = useFormik({
     //     initialValues: initalValues,
@@ -674,20 +776,20 @@ const Admit = () => {
 
     }
 
-    const requestSearch = (searchvalue) => {
+    // const requestSearch = (searchvalue) => {
 
-        const filteredRows = admitPatientfilter.filter((row) => {
-            return row.pid.toString().includes(searchvalue.toLowerCase()) || row.pName.toLowerCase().includes(searchvalue.toLowerCase()) || row.pMobileNo.includes(searchvalue);
-        });
-        if (searchvalue.length < 1) {
+    //     const filteredRows = admitPatientfilter.filter((row) => {
+    //         return row.pid.toString().includes(searchvalue.toLowerCase()) || row.pName.toLowerCase().includes(searchvalue.toLowerCase()) || row.pMobileNo.includes(searchvalue);
+    //     });
+    //     if (searchvalue.length < 1) {
 
-            setAdmitPatientList([...allAdmitPatients].reverse())
-        }
-        else {
+    //         setAdmitPatientList([...allAdmitPatients].reverse())
+    //     }
+    //     else {
 
-            setAdmitPatientList(filteredRows)
-        }
-    }
+    //         setAdmitPatientList(filteredRows)
+    //     }
+    // }
 
     const generateInvoice = (item) => {
         // filDatainsubcollection(allAdmitPatients, "admitPatients", 'jSqDGnjO21bpPGhb6O2y', 'admitPatient', hospitaluid)
@@ -764,11 +866,114 @@ const Admit = () => {
 
         })
     }
+
+
+
+    const handlePageChange = async (page) => {
+        if (page < currentPage) {
+            setPrev(true)
+            prevPage()
+            // const one = true
+            // console.log('i am here');
+            // retrieveData(one)
+            setCurrentPage(page);
+        } else {
+            setPrev(false)
+            nextPage()
+            // const one = false
+            // retrieveData(one)
+            setCurrentPage(page);
+        }
+        console.log('page', page);
+
+        // Perform any additional logic or actions based on the page change
+    };
+    const requestSearch = () => {
+        // const searchString = searchvalue.toLowerCase();
+        // console.log(searchString, 'searchString');
+        if (searchString.length) {
+            var query = subcollectionRef
+
+            // query = query
+            //     .where('hospitaluid', '==', hospitaluid)
+            if (searchBy === 'Name') {
+                query = query
+                    .where('pName', '>=', searchString).
+                    where('pName', '<=', searchString + "\uf8ff")
+            } else if (searchBy === 'MobileNo') {
+                query = query
+                    .where('pMobileNo', '>=', searchString)
+                    .where('pMobileNo', '<=', searchString + "\uf8ff");
+            }
+
+
+            query = query.limit(perPageRows);
+            retrieveData(query)
+            query.get().then(snapshot => {
+                // console.log(snapshot);
+                const totalDataCount = snapshot.size;
+                setsetTotalNumData(totalDataCount)
+                console.log('Total data count:', totalDataCount);
+            }).catch(error => {
+                console.error('Error retrieving data:', error);
+            });
+        }
+
+
+
+        // if (searchvalue.length < 1) {
+        //     setOpdPatientList([...allopdPatientList].reverse())
+        //     return
+        // }
+
+        // const filteredRows = opdPatientfilter.filter((row) => {
+        //     const searchString = searchvalue.toLowerCase()
+        //     return row.pid.toString().includes(searchString) ||
+        //         row.pName.toLowerCase().includes(searchString) ||
+        //         row.pMobileNo.includes(searchString);
+        // });
+
+        // setOpdPatientList(filteredRows)
+    }
+
+    const onSearchInput = (value) => {
+        setSearchString(value)
+        if (!value.length) {
+            setIsLoading(true)
+            setSearchString('')
+
+            let query = subcollectionRef
+                .orderBy('timestamp', 'desc')
+                .limit(perPageRows)
+            retrieveData(query)
+            setIsLoading(false)
+            totalNumberofData()
+        }
+    }
+    const nextPage = async () => {
+        setIsLoading(true)
+        let query = subcollectionRef
+            .orderBy('timestamp', 'desc')
+            .limit(perPageRows).startAfter(lastVisible);
+        retrieveData(query)
+        setIsLoading(false)
+
+    };
+    const prevPage = async () => {
+        setIsLoading(true)
+        let query = subcollectionRef
+            .orderBy('timestamp', 'desc')
+            .limit(perPageRows)
+            .endBefore(firstVisible).limitToLast(perPageRows);
+        retrieveData(query)
+        setIsLoading(false)
+
+    }
     return <>
         {isLoading ? <Loaderspinner /> : <>
             <div>
                 <div style={{ display: 'none' }}>  {printContent && <PrintButton content={printContent} />}</div>
-                <CommanTable
+                {/* <CommanTable
                     title={"Indoor Patients"}
                     columns={columns}
                     data={admitPatientList}
@@ -784,260 +989,38 @@ const Admit = () => {
                         </Dropdown.Menu>
                     </Dropdown>
                         <input type='search' placeholder='search' className='w-25 form-control' onChange={(e) => requestSearch(e.target.value)} /></>}
+                /> */}
+
+
+                <DataTable
+                    title={"Indoor Patients"}
+                    columns={columns}
+                    data={admitPatientList}
+                    pagination={true}
+                    fixedHeader={true}
+                    noHeader={false}
+                    persistTableHead
+                    actions={<button className='btn btn-primary' onClick={handleShow}><span>  <BiPlus size={25} /></span></button>}
+                    highlightOnHover
+                    paginationServer={true}
+                    subHeader={<div className='d-flex' style={{ justifyContent: 'space-between' }}></div>}
+                    subHeaderComponent={<span className='d-flex w-100 justify-content-end'>
+                        <select className="form-control mr-2" style={{ height: '40px', fontSize: '18px', width: '15%', marginRight: 10 }} name='searchBy' value={searchBy} onChange={(e) => setSearchBy(e.target.value)}>
+                            <option selected >Search by</option>
+                            <option value='Name' selected>Patient Name</option>
+                            <option value='MobileNo' selected>Mobile No</option>
+                        </select>
+                        <input type='search' placeholder='search' className='w-25 form-control' value={searchString} onChange={(e) => { onSearchInput(e.target.value) }} />
+                        <button className='btn btn-primary' style={{ width: '10%', marginLeft: 10 }} disabled={!searchBy || !searchString} onClick={requestSearch}>Search</button>
+                    </span>}
+                    paginationTotalRows={totalnumData}
+                    onChangePage={(e) => handlePageChange(e)}
                 />
             </div >
         </>
         }
         <AdmitModel show={show} handleClose={handleClose} data={item} update={update} todayDate={todayDate} />
-        {/* <Modal show={show} onHide={handleClose} size="lg" style={{ filter: model ? 'blur(5px)' : 'blur(0px)' }}>
 
-            <Modal.Header closeButton>
-                <Modal.Title>Admit Registration</Modal.Title>
-            </Modal.Header>
-            <Modal.Body>
-                <div className='d-flex' style={{ justifyContent: 'flex-end' }}>
-                    <Button variant="success" onClick={() => { setModel(true) }} >
-                        Add Patients
-                    </Button>
-                </div>
-                <form onSubmit={handleSubmit}>
-                    <div className='row'>
-                        <div className='col-lg-6'>
-                            {
-                                update ? <div className="form-group" style={{ marginTop: '20px' }}>
-                                    <label>Patient id:</label>
-                                    <input type="text" className="form-control" placeholder="Enter patient id" name='pid' readOnly value={values.pid} onChange={handleChange} onBlur={handleBlur} />
-                                    {errors.pid && touched.pid ? (<p style={{ color: 'red' }}>*{errors.pid}</p>) : null}
-                                </div> :
-                                    <div className="form-group" style={{ marginTop: '20px' }}>
-                                        <label>Patient id:</label>
-                                        <SearchAutocomplete
-                                            allPatients={allPatients}
-                                            handleOnSelect={handleOnSelect}
-                                            inputsearch={values.pid}
-                                            placeholder={'Enter Patients id'}
-                                            handleClear={handleOnClear}
-                                            keyforSearch={"pid"} />
-
-                                        {errors.pid && touched.pid ? (<p style={{ color: 'red' }}>*{errors.pid}</p>) : null}
-
-                                    </div>
-                            }
-                        </div>
-                        <div className='col-lg-6'>
-                            {update || values.pMobileNo ?
-                                <div className="form-group" style={{ marginTop: '20px' }}>
-                                    <label>Mobile No:</label>
-                                    <input type="text" className="form-control" placeholder="Enter patient Mobile No" name='pMobileNo' readOnly value={values.pMobileNo} onChange={handleChange} onBlur={handleBlur} />
-                                    {errors.pMobileNo && touched.pMobileNo ? (<p style={{ color: 'red' }}>*{errors.pMobileNo}</p>) : null}
-                                </div> :
-                                <div className="form-group" style={{ marginTop: '20px' }}>
-                                    <label>Mobile No: </label>
-                                    <SearchAutocomplete
-                                        allPatients={allPatients}
-                                        handleOnSelect={handleOnSelect}
-                                        inputsearch={values.pMobileNo}
-                                        placeholder={'Enter Mobile No'}
-                                        handleClear={handleOnClear}
-                                        keyforSearch={"pMobileNo"} />
-
-                                    {errors.pMobileNo && touched.pMobileNo ? (<p style={{ color: 'red' }}>*{errors.pMobileNo}</p>) : null}
-
-                                </div>
-                            }
-                        </div>
-
-                    </div>
-
-                    <div className='row'>
-                        <div className='col-lg-6'>
-                            {update || values.pName ?
-                                <div className="form-group" style={{ marginTop: '20px' }}>
-                                    <label >Patient Name:</label>
-                                    <input name='pName'
-                                        placeholder="Enter Patient Name"
-                                        type="text" className="form-control" onChange={handleChange} defaultValue={values.pName} />
-                                    {errors.pName && touched.pName ? (<p style={{ color: 'red' }}>*{errors.pName}</p>) : null}
-
-                                </div>
-                                :
-                                <div className="form-group" style={{ marginTop: '20px' }}>
-                                    <label >Patient Name:</label>
-                                    <SearchAutocomplete
-                                        allPatients={allPatients}
-                                        handleOnSelect={handleOnSelect}
-                                        inputsearch={values.pName}
-                                        placeholder={'Enter Patient Name'}
-                                        handleClear={handleOnClear}
-                                        keyforSearch={"pName"} />
-
-                                    {errors.pName && touched.pName ? (<p style={{ color: 'red' }}>*{errors.pName}</p>) : null}
-
-                                </div>
-                            }
-                        </div>
-                        <div className='col-lg-6'>
-                            <div className="form-group" style={{ marginTop: '20px' }}>
-                                <label >Patient Age:</label>
-                                <input name='page'
-                                    placeholder="Enter Patient Age"
-                                    type="number" className="form-control" onChange={handleChange} defaultValue={values.page} />
-                                {errors.page && touched.page ? (<p style={{ color: 'red' }}>*{errors.page}</p>) : null}
-
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className='row'>
-                        <div className='col-lg-6'>
-                            <div className="form-group" style={{ marginTop: '20px' }}>
-                                <label >Admit Date:</label>
-                                <input name='admitDate'
-                                    placeholder="Enter Admit Date"
-                                    type="date" className="form-control" onChange={handleChange} defaultValue={values.admitDate} />
-                                {errors.admitDate && touched.admitDate ? (<p style={{ color: 'red' }}>*{errors.admitDate}</p>) : null}
-
-                            </div>
-                        </div>
-                        <div className='col-lg-6'>
-                            <div className="form-group" style={{ marginTop: '20px' }}>
-                                <label >Discharge Date:</label>
-                                <input name='dischargeDate'
-                                    placeholder="Enter Discharge Date"
-                                    type="date" className="form-control" onChange={handleChange} defaultValue={values.dischargeDate} />
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className='row'>
-                        <div className='col-lg-6'>
-                            {update ? <div className="form-group" style={{ marginTop: '20px' }}>
-                                <label >Dr Name:</label>
-                                <input name='drName'
-                                    placeholder="Enter Dr Name"
-                                    type="text" className="form-control" onChange={handleChange} defaultValue={values.drName} readOnly />
-                            </div> :
-                                <div className="form-group" style={{ marginTop: '20px' }}>
-                                    <label >Dr Name:</label>
-                                    <Select options={allDoctors} getOptionValue={(option) => option.drName}
-                                        getOptionLabel={(option) => option.drName}
-                                        placeholder="Select Doctor"
-                                        onChange={(e) => { selectDoctor(e) }} />
-                                    {errors.drName && touched.drName ? (<p style={{ color: 'red' }}>*{errors.drName}</p>) : null}
-
-
-                                </div>}
-                        </div>
-                        <div className='col-lg-6'>
-                            {update ? <div className="form-group" style={{ marginTop: '20px' }}>
-                                <label >Room Type:</label>
-                                <input type='text' name="roomType" className='form-control' defaultValue={values.roomType} readOnly />
-                            </div> :
-                                <div className="form-group" style={{ marginTop: '20px' }}>
-                                    <label >Room Type:</label>
-                                    <Select options={roomList} getOptionValue={(option) => option.roomType}
-                                        getOptionLabel={(option) => option.roomType}
-                                        // value={defaultvalue1}
-                                        // defaultValue={defaultvalue1}
-                                        isOptionSelected={(option) => option.roomType === values.roomType}
-                                        // name='roomType'
-                                        placeholder="Select Room"
-                                        onChange={(e) => { selectRoomprice(e) }} />
-                                    {errors.roomType && touched.roomType ? (<p style={{ color: 'red' }}>*{errors.roomType}</p>) : null}
-
-                                </div>}
-                        </div>
-                    </div>
-
-                    <div className='row'>
-                        <div className='col-lg-6'>
-                            <div className="form-group" style={{ marginTop: '20px' }}>
-                                <label >Charges Per Night:</label>
-                                <input name='priceperNignt'
-                                    placeholder="Enter Charges"
-                                    type="number" className="form-control" onChange={handleChange} defaultValue={values.priceperNignt} readOnly />
-                                {errors.priceperNignt && touched.priceperNignt ? (<p style={{ color: 'red' }}>*{errors.priceperNignt}</p>) : null}
-
-                            </div>
-                        </div>
-                        <div className='col-lg-6'>
-                            <div className="form-group" style={{ marginTop: '20px' }}>
-                                <label >Room No:</label>
-                                {update ?
-                                    <input name='roomNo'
-                                        placeholder="Enter room no."
-                                        type="number" className="form-control" onChange={handleChange} defaultValue={values.roomNo} readOnly />
-                                    :
-                                    <Select options={rooms} getOptionValue={(option) => option.roomNo}
-                                        getOptionLabel={(option) => option.roomNo}
-                                        placeholder="Select Room No"
-                                        onChange={(e) => { selectRoom(e) }} />}
-
-                                {errors.roomNo && touched.roomNo ? (<p style={{ color: 'red' }}>*{errors.roomNo}</p>) : null}
-
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className='row'>
-                        <div className='col-lg-6'>
-                            <div className="form-group" style={{ marginTop: '20px' }}>
-                                <label >Select Bed:</label>
-                                {update ?
-                                    <input name='bedNo'
-                                        placeholder="Enter room no."
-                                        type="number" className="form-control" onChange={handleChange} defaultValue={values.bedNo} readOnly />
-                                    :
-                                    <Select options={bedNo} getOptionValue={(option) => option.bedNo}
-                                        getOptionLabel={(option) => option.bedNo}
-                                        placeholder="Select Bed"
-                                        onChange={(e) => { selectBed(e) }} />}
-                                {errors.bedNo && touched.bedNo ? (<p style={{ color: 'red' }}>*{errors.bedNo}</p>) : null}
-
-                            </div>
-                        </div>
-                        <div className='col-lg-6'>
-                            <div className="form-group" style={{ marginTop: '20px' }}>
-                                <label >Deposit:</label>
-                                <input name='deposit'
-                                    placeholder="Enter Deposit Amount."
-                                    type="number" className="form-control" onChange={handleChange} defaultValue={values.deposit} />
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className='row'>
-                        <div className='col-lg-12'>
-                            <div className="form-group" style={{ marginTop: '20px' }}>
-                                <label >Payment Status:</label>
-                                <select className="form-control" style={{ height: '40px', fontSize: '18px' }} name='paymentStatus' defaultValue={values.paymentStatus} onChange={handleChange}>
-                                    <option >Select Payment Status</option>
-                                    <option value='Complete'>Complete</option>
-                                    <option value='Panding' selected>Panding</option>
-                                </select>
-                                {errors.paymentStatus && touched.paymentStatus ? (<p style={{ color: 'red' }}>*{errors.paymentStatus}</p>) : null}
-
-                            </div>
-                        </div>
-
-                    </div>
-
-                </form>
-            </Modal.Body>
-            <Modal.Footer>
-                <Button variant="secondary" onClick={handleClose}>
-                    Close
-                </Button>
-                <Button variant="primary" onClick={handleSubmit} >
-                    {update ? 'Update' : 'Admit'}
-                </Button>
-            </Modal.Footer>
-        </Modal>
-        <Addpatientscommanmodel
-            show={model}
-            handleClose={() => setModel(false)}
-            handleShow={() => setModel(true)}
-        /> */}
     </>
 
 

@@ -6,6 +6,8 @@ import { selectUserId } from './authSlice';
 
 const initialState = {
     patientsList: [],
+    lastPatientsData: undefined
+
 }
 const patientSlice = createSlice({
     name: "allPatiets",
@@ -36,16 +38,67 @@ const patientSlice = createSlice({
             state.patientsList = state.patientsList.filter((item) => item.pid !== actions.payload.pid)
 
         },
+        // FILL_PATIENTS: (state, actions) => {
+        //     actions.payload.forEach((newPatient) => {
+        //         const existingPatientIndex = state.patientsList.findIndex(
+        //             (patient) => patient.pid === newPatient.pid
+        //         );
+
+        //         if (existingPatientIndex !== -1) {
+        //             // If a patient with the same pid already exists, replace it with the new patient
+        //             state.patientsList.splice(existingPatientIndex, 1, newPatient);
+        //         } else {
+        //             // If the patient with the same pid doesn't exist, add the new patient to the list
+        //             state.patientsList.push(newPatient);
+        //         }
+        //     });
+
+        //     // state.patientsList = [...state.patientsList, ...actions.payload];
+
+        // },
         FILL_PATIENTS: (state, actions) => {
+            actions.payload.forEach((newPatient) => {
+                const existingPatientIndex = state.patientsList.findIndex(
+                    (patient) => patient.pid === newPatient.pid
+                );
 
-            state.patientsList = actions.payload;
+                if (existingPatientIndex !== -1) {
+                    // If a patient with the same pid already exists
+                    const existingPatient = state.patientsList[existingPatientIndex];
 
+                    // Check if the newPatient has a 'deleted' field and it is truthy (e.g., true)
+                    if (newPatient.hasOwnProperty('deleted') && newPatient.deleted) {
+                        // If the newPatient has a 'deleted' field with a truthy value,
+                        // we will remove the existing patient from the list
+                        state.patientsList.splice(existingPatientIndex, 1);
+                    } else {
+                        // If the newPatient does not have a 'deleted' field or the 'deleted' field is falsy,
+                        // we will update the existing patient with the newPatient data
+                        state.patientsList.splice(existingPatientIndex, 1, newPatient);
+                    }
+                } else {
+                    // If the patient with the same pid doesn't exist, add the new patient to the list
+                    if (newPatient.hasOwnProperty('deleted') && newPatient.deleted) {
+                        // If the newPatient has a 'deleted' field with a truthy value, skip pushing it to the list
+                        return;
+                    }
+                    state.patientsList.push(newPatient);
+                }
+            });
         },
 
+        ADD_LAST_PATIENT_DATA: (state, actions) => {
+            state.lastPatientsData = actions.payload
+        },
+        RESET_PATIENTS: (state, actions) => {
+            state.patientsList = [];
+            state.lastPatientsData = undefined
+
+        },
     }
 });
 
-export const { ADD_PATIENTS, EDIT_PATIENTS, DELETE_PATIENTS, FILL_PATIENTS } = patientSlice.actions;
+export const { ADD_PATIENTS, EDIT_PATIENTS, RESET_PATIENTS, DELETE_PATIENTS, FILL_PATIENTS, ADD_LAST_PATIENT_DATA } = patientSlice.actions;
 export const selectAllPatients = (state) => state.allPatiets.patientsList;
-
+export const selectlastPatientData = (state) => state.allPatiets.lastPatientsData;
 export default patientSlice.reducer

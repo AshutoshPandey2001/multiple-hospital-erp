@@ -39,6 +39,9 @@ import adminnav from 'src/_adminNav'
 import '../pages/admit/admit.css'
 import { selectHospitalLogo } from 'src/redux/slice/hospitalProfileSlice'
 import ManagementNav from 'src/_managementNav'
+import { persistor } from 'src/redux/store'
+import { RESET_PATIENTS } from 'src/redux/slice/patientMasterslice'
+import { RESET_OPD } from 'src/redux/slice/opdPatientsList'
 
 const AppHeader = () => {
   const dispatch = useDispatch()
@@ -122,8 +125,19 @@ const AppHeader = () => {
               signOut(auth)
                 .then(() => {
                   startTransition(async () => {
-                    await dispatch(REMOVE_ACTIVE_USER());
-                    await dispatch(SET_STATE(false));
+                    await persistor.purge(
+                      () => {
+                        localStorage.removeItem('persist:Hospital_Data');
+                        dispatch(REMOVE_ACTIVE_USER());
+                        dispatch(SET_STATE(false));
+                        dispatch(RESET_PATIENTS());
+                        dispatch(RESET_OPD());
+                        // navigate('/login')
+                      }
+                    );
+                    // await persistor.purge();
+                    // await dispatch(REMOVE_ACTIVE_USER());
+                    // await dispatch(SET_STATE(false));
                     // navigate('/login')
                   });
                 })

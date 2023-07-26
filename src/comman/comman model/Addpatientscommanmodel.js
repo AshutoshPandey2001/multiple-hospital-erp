@@ -6,7 +6,7 @@ import Modal from 'react-bootstrap/Modal';
 import { useFormik } from 'formik';
 import { addpatientsSchema } from 'src/schema';
 import { useDispatch, useSelector } from 'react-redux';
-import { ADD_PATIENTS, EDIT_PATIENTS, selectAllPatients } from 'src/redux/slice/patientMasterslice';
+import { ADD_LAST_PATIENT_DATA, ADD_PATIENTS, EDIT_PATIENTS, selectAllPatients } from 'src/redux/slice/patientMasterslice';
 import { addDatainsubcollection, addSingltObject, getDatawithhospitaluid, setData, updateDatainSubcollection, updateSingltObject } from 'src/services/firebasedb';
 import { toast } from 'react-toastify';
 import { selectAllDr } from 'src/redux/slice/doctorsSlice';
@@ -45,24 +45,35 @@ const Addpatientscommanmodel = ({ show, handleClose, update, data }) => {
             if (!update) {
                 values.pid = Math.floor(Math.random() + timestamp)
                 values.hospitaluid = hospitaluid
-                const index = patientsFilter.findIndex(obj => obj.pMobileNo === Values.pMobileNo);
+                // const index = patientsFilter.findIndex(obj => obj.pMobileNo === Values.pMobileNo);
                 console.log('patient', hospitaluid);
-                if (index === -1) {
-                    let patient = [...patientsFilter, Values]
-                    try {
-                        // await setData('Patients', 'fBoxFLrzXexT8WNBzGGh', 'patients', patient)
-                        await addDatainsubcollection('Patients', 'fBoxFLrzXexT8WNBzGGh', 'patients', Values)
-                        dispatch(ADD_PATIENTS(Values))
-                        action.resetForm()
-                        handelClear()
-                        toast.success("Added Successfully.......");
-                    } catch (error) {
-                        toast.error(error.message)
-                        console.error(error.message)
-                    }
-                } else {
-                    toast.error("This Mobile No already Exist")
+                // if (index === -1) {
+                let patient = [...patientsFilter, Values]
+                try {
+                    // await setData('Patients', 'fBoxFLrzXexT8WNBzGGh', 'patients', patient)
+                    await addDatainsubcollection('Patients', 'fBoxFLrzXexT8WNBzGGh', 'patients', Values)
+                        .then((newDocData) => {
+                            // Handle the new added data here
+                            // console.log('newDocData', newDocData);
+                            // dispatch(ADD_PATIENTS(newDocData.data()))
+                            // dispatch(dispatch(ADD_LAST_PATIENT_DATA(newDocData.id)))
+                        })
+                        .catch((error) => {
+                            // Handle any errors that occurred during the addition
+                            console.error(error);
+                        });
+                    // await addDatainsubcollection('Patients', 'fBoxFLrzXexT8WNBzGGh', 'patients', Values)
+                    // dispatch(ADD_PATIENTS(Values))
+                    action.resetForm()
+                    handelClear()
+                    toast.success("Added Successfully.......");
+                } catch (error) {
+                    toast.error(error.message)
+                    console.error(error.message)
                 }
+                // } else {
+                //     toast.error("This Mobile No already Exist")
+                // }
             } else {
                 let findindex = patient1.findIndex((item) => item.pid === Values.pid);
                 patient1[findindex] = Values;
@@ -70,7 +81,7 @@ const Addpatientscommanmodel = ({ show, handleClose, update, data }) => {
                     // await setData('Patients', 'fBoxFLrzXexT8WNBzGGh', 'patients', patient1)
 
                     await updateDatainSubcollection('Patients', 'fBoxFLrzXexT8WNBzGGh', 'patients', Values, 'pid', 'hospitaluid')
-                    dispatch(EDIT_PATIENTS(Values))
+                    // dispatch(EDIT_PATIENTS(Values))
                     action.resetForm()
                     handelClear()
                     toast.success("Updated Successfully.......");

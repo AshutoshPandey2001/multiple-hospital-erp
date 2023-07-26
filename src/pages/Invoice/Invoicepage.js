@@ -7,7 +7,7 @@ import Table from 'react-bootstrap/Table';
 import { CHANGE_STATUS_PATIENTS_MEDICINES, selectAllPatientsMedicines } from 'src/redux/slice/patientsMedicinesSlice';
 import { useDispatch, useSelector } from 'react-redux';
 import Loaderspinner from '../../comman/spinner/Loaderspinner';
-import { getData, setData, updateHospitalProfile, updateMultiDatainSubcollection, updatemultitObject, uploadArray } from 'src/services/firebasedb';
+import { getData, getOnePatientsData, setData, updateHospitalProfile, updateMultiDatainSubcollection, updatemultitObject, uploadArray } from 'src/services/firebasedb';
 import { EDIT_ADMIT_PATIENTS, FILL_ADMIT_PATIENTS, UPDATE_MULTI_ADMIT_PATIENTS, selectAdmitPatients } from 'src/redux/slice/admitPatientsSlice';
 import { CLEAR_FIELD, selectAdvance, selectcgstamount, selectcgstValue, selectdiscount, selecthospitalcharges, selecticuCharge, selecticuUnit, selectnursingCharge, selectnursingUnit, selectotCharge, selectotUnit, selectsgstamount, selectsgstValue, selectsubTotalamount, selectTotalBillingAmount, selectTotalicuCharges, selecttotalMedicine, selectTotalNursingCharges, selectTotalotCharges, selectTotalpyableAmount, SET_ADVANCE, SET_DISCOUNT, SET_EXTRACHARGES_CHARGES, SET_HOSPITAL_CHARGES, SET_ICUCHARGE, SET_ICUUNIT, SET_INVOICE, SET_NURSINGCHARGE, SET_NURSINGUNIT, SET_OTCHARGE, SET_OTUNIT, SET_SAVE_PENDING_INVOICE } from 'src/redux/slice/invoiceSlice';
 import { toast } from 'react-toastify';
@@ -278,7 +278,7 @@ const Invoicepage = () => {
 
     const patientMedicine = useSelector(selectAllPatientsMedicines);
     const allPatientsLaboratoryReports = useSelector(selectAlllaboratoryReports)
-    const allopdPatients = useSelector(selectOpdPatients)
+    // const allopdPatients = useSelector(selectOpdPatients)
     const cgstValue = useSelector(selectcgstValue)
     const sgstValue = useSelector(selectsgstValue)
     const cgstAmount = useSelector(selectcgstamount)
@@ -305,7 +305,7 @@ const Invoicepage = () => {
     const payable = useSelector(selectTotalpyableAmount)
     const componentRef = useRef();
     const dispatch = useDispatch();
-    const admtPatients = useSelector(selectAdmitPatients)
+    // const admtPatients = useSelector(selectAdmitPatients)
     const [mediciness, setMedicines] = useState([])
     const [isLoading, setIsLoading] = useState(true)
     const [paid, setPaid] = useState(false)
@@ -337,6 +337,9 @@ const Invoicepage = () => {
     const fetchData = async () => {
         let temp_data = [];
         setTimeout(async () => {
+            const allopdPatients = await getOnePatientsData('opdPatients', 'm5JHl3l4zhaBCa8Vihcb', 'opdPatient', state.hospitaluid, state.pid, 'Pending')
+            // console.log('opd',);
+            const admtPatients = await getOnePatientsData('admitPatients', 'jSqDGnjO21bpPGhb6O2y', 'admitPatient', state.hospitaluid, state.pid, 'Pending')
             // const medicineDetails = {};
             if (state.invoiceuid) {
                 setInvoiceuid(state.invoiceuid)
@@ -616,13 +619,13 @@ const Invoicepage = () => {
      */
     const saveInvoice = async () => {
         setIsLoading(true)
-        const [patients, medicines, patientsLabReports, opdPatients] = await Promise.all([
-            [...admtPatients],
-            [...patientMedicine],
-            [...allPatientsLaboratoryReports],
-            [...allopdPatients]
+        // const [patients, medicines, patientsLabReports, opdPatients] = await Promise.all([
+        //     [...admtPatients],
+        //     [...patientMedicine],
+        //     [...allPatientsLaboratoryReports],
+        //     [...allopdPatients]
 
-        ]);
+        // ]);
 
         const newObj = {
             paymentStatus: 'Completed',
@@ -644,10 +647,10 @@ const Invoicepage = () => {
         };
 
         const newLabobj = { paymentStatus: 'Completed' }
-        const newLabReportsarray = patientsLabReports.map((item) =>
-            item.pid === state.pid ? { ...item, paymentStatus: 'Completed' } : item
-        );
-        const newArray = await patients.map((item) => (item.pid === state.pid && item.paymentStatus === "Pending" && item.dischargeDate ? { ...item, ...newObj } : item))
+        // const newLabReportsarray = patientsLabReports.map((item) =>
+        //     item.pid === state.pid ? { ...item, paymentStatus: 'Completed' } : item
+        // );
+        // const newArray = await patients.map((item) => (item.pid === state.pid && item.paymentStatus === "Pending" && item.dischargeDate ? { ...item, ...newObj } : item))
         try {
             await Promise.all([
                 updateMultiDatainSubcollection('admitPatients', 'jSqDGnjO21bpPGhb6O2y', 'admitPatient', newObj, 'pid', 'hospitaluid', 'paymentStatus', state),
@@ -668,12 +671,12 @@ const Invoicepage = () => {
 
     const saveInvoicePending = async () => {
         setIsLoading(true)
-        const [patients, patientsLabReports] = await Promise.all([
-            [...admtPatients],
-            [...allPatientsLaboratoryReports],
+        // const [patients, patientsLabReports] = await Promise.all([
+        //     [...admtPatients],
+        //     [...allPatientsLaboratoryReports],
 
 
-        ]);
+        // ]);
 
         const newObj = {
             deposit: advance,
@@ -694,10 +697,10 @@ const Invoicepage = () => {
         };
 
         const newLabobj = { paymentStatus: 'Completed' }
-        const newLabReportsarray = patientsLabReports.map((item) =>
-            item.pid === state.pid ? { ...item, paymentStatus: 'Completed' } : item
-        );
-        const newArray = await patients.map((item) => (item.pid === state.pid && item.paymentStatus === "Pending" && item.dischargeDate ? { ...item, ...newObj } : item))
+        // const newLabReportsarray = patientsLabReports.map((item) =>
+        //     item.pid === state.pid ? { ...item, paymentStatus: 'Completed' } : item
+        // );
+        // const newArray = await patients.map((item) => (item.pid === state.pid && item.paymentStatus === "Pending" && item.dischargeDate ? { ...item, ...newObj } : item))
         try {
             await Promise.all([
                 updateMultiDatainSubcollection('admitPatients', 'jSqDGnjO21bpPGhb6O2y', 'admitPatient', newObj, 'pid', 'hospitaluid', 'paymentStatus', state),

@@ -7,16 +7,21 @@ import App from './App'
 import reportWebVitals from './reportWebVitals'
 import { Provider } from 'react-redux'
 import 'bootstrap/dist/css/bootstrap.min.css'
-import store from './redux/store'
+// import store from './redux/store'
 import { BrowserRouter } from 'react-router-dom'
 import 'react-confirm-alert/src/react-confirm-alert.css'; // Import css
 import * as serviceWorkerRegistration from './serviceWorkerRegistration';
+import { persistor, store } from './redux/store'
+import { PersistGate } from 'redux-persist/integration/react';
 
 createRoot(document.getElementById('root')).render(
   <BrowserRouter>
 
     <Provider store={store}>
-      <App />
+      <PersistGate loading={null} persistor={persistor}>
+        <App />
+      </PersistGate>
+
     </Provider>
   </BrowserRouter>
 

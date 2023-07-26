@@ -10,10 +10,10 @@ import { MdEdit } from 'react-icons/md'
 import { AiFillDelete } from 'react-icons/ai'
 import { selectAllPatients } from 'src/redux/slice/patientMasterslice';
 import { useDispatch, useSelector } from 'react-redux';
-import { ADD_OPD_PATIENTS, DELETE_OPD_PATIENTS, EDIT_OPD_PATIENTS, FILL_OPD_PATIENTS, selectOpdPatients } from 'src/redux/slice/opdPatientsList';
+import { ADD_LAST_OPD_DATA, ADD_OPD_PATIENTS, DELETE_OPD_PATIENTS, EDIT_OPD_PATIENTS, FILL_OPD_PATIENTS, selectOpdPatients, selectlastOpdData } from 'src/redux/slice/opdPatientsList';
 import Addpatientscommanmodel from '../../comman/comman model/Addpatientscommanmodel';
 import Table from 'react-bootstrap/Table';
-import { addDatainsubcollection, addSingltObject, deleteDatainSubcollection, deleteSingltObject, filDatainsubcollection, getOnlyChangesLisitnor, getSubcollectionData, setData, updateDatainSubcollection, updateSingltObject } from 'src/services/firebasedb';
+import { addDatainsubcollection, addSingltObject, deleteDatainSubcollection, deleteSingltObject, filDatainsubcollection, fillDeleteObject, getOnlyChangesLisitnor, getSubcollectionData, getSubcollectionDataWithoutsnapshot, setData, updateDatainSubcollection, updateSingltObject } from 'src/services/firebasedb';
 import CommanTable from 'src/comman/table/CommanTable';
 import Loaderspinner from '../../comman/spinner/Loaderspinner';
 import { confirmAlert } from 'react-confirm-alert';
@@ -40,6 +40,8 @@ import { ToWords } from 'to-words';
 import moment from 'moment';
 import { db } from 'src/firebaseconfig';
 import DataTable from 'react-data-table-component';
+import firebase from 'firebase/compat/app'
+import { debounce } from 'lodash';
 
 const toWords = new ToWords();
 
@@ -260,26 +262,46 @@ const Opd = () => {
     const [searchBy, setSearchBy] = useState('');
     const [searchString, setSearchString] = useState('');
     const parentDocRef = db.collection('opdPatients').doc('m5JHl3l4zhaBCa8Vihcb');
-    const subcollectionRef = parentDocRef.collection('opdPatient');
-    const navigate = useNavigate()
+    const lastOpdData = useSelector(selectlastOpdData)
 
-    // const filtertheData = (date) => {
-    //     if (startDate && endDate) {
-    //         let query = subcollectionRef
-    //             .where('hospitaluid', '==', hospitaluid)
-    //             .where('consultingDate', '>=', moment(startDate).format('YYYY-MM-DD[Z]')) // Add "from date" filter
-    //             .where('consultingDate', '<=', moment(endDate).format('YYYY-MM-DD[Z]')) // Add "to date" filter
-    //             .orderBy('timestamp', 'desc')
-    //             .limit(perPageRows);
-    //         retrieveData(query)
-    //         // setOpdPatientList(filterData(allopdPatientList, startDate, endDate, date))
-    //         setShowtooltip(false)
-    //     }
-    // }
+    // const subcollectionRef = parentDocRef.collection('opdPatient').where('hospitaluid', '==', hospitaluid);
+    const subcollectionRef = parentDocRef.collection('opdPatient').where('hospitaluid', '==', hospitaluid).where('deleted', '==', 0);
+
+    const navigate = useNavigate()
+    let unsubscribe = undefined
+    let unsub = undefined
+    const filtertheData = (date) => {
+        if (startDate && endDate) {
+            let query = subcollectionRef
+                .where('hospitaluid', '==', hospitaluid)
+                .where('consultingDate', '>=', moment(startDate).format('YYYY-MM-DD[Z]')) // Add "from date" filter
+                .where('consultingDate', '<=', moment(endDate).format('YYYY-MM-DD[Z]')) // Add "to date" filter
+            // .orderBy('timestamp', 'desc')
+            // .limit(perPageRows);
+            retrieveData(query)
+            query.get().then(snapshot => {
+                console.log(snapshot);
+                const totalDataCount = snapshot.size;
+                setsetTotalNumData(totalDataCount)
+                console.log('Total data count:', totalDataCount);
+            }).catch(error => {
+                console.error('Error retrieving data:', error);
+            });
+            // setOpdPatientList(filterData(allopdPatientList, startDate, endDate, date))
+            setShowtooltip(false)
+        }
+    }
     const clearfilterData = () => {
         setStartDate('')
         setEndDate('')
-        setOpdPatientList([...allopdPatientList].reverse());
+        let query = subcollectionRef
+            .where('hospitaluid', '==', hospitaluid)
+            .orderBy('timestamp', 'desc')
+            .limit(perPageRows)
+        retrieveData(query)
+        // setIsLoading(false)
+        totalNumberofData()
+        // setOpdPatientList([...allopdPatientList].reverse());
         setShowtooltip(false)
     }
     const columns = [
@@ -476,149 +498,71 @@ const Opd = () => {
     }
 
     // useEffect(() => {
-    //     totalNumberofData()
-    //     // getOnlyChangesLisitnor()
-    //     // getSubcollectionData('opdPatients', 'm5JHl3l4zhaBCa8Vihcb', 'opdPatient', hospitaluid, (data) => {
-    //     //     // Handle the updated data in the callback function
-    //     //     setIsLoading(false)
-    //     //     dispatch(FILL_OPD_PATIENTS(data))
-    //     //     console.log('Received real-time data:', data);
-    //     // }).catch((error) => {
-    //     //     setIsLoading(false)
-    //     //     console.error('Error:', error);
-    //     // })
-
-    // }, [])
+    //     setOpdPatientList([...allopdPatientList].reverse())
+    //     setIsLoading(false)
+    // }, [allopdPatientList])
 
     useEffect(() => {
         setIsLoading(true)
         let query = subcollectionRef
-            .where('hospitaluid', '==', hospitaluid)
             .orderBy('timestamp', 'desc')
             .limit(perPageRows)
-        retrieveData(query)
+        debouncedRetrieveData(query)
         setIsLoading(false)
         totalNumberofData()
-
+        // onlyChangeDetector()
+        // chnageDetectore()
+        return () => {
+            // unsub()
+            unsubscribe();
+            console.log('unmounting');
+        };
         // setOpdPatientList([...allopdPatientList].reverse())
         // setOpdPatientfilter(allopdPatientList)
-    }, [allopdPatientList])
+    }, [])
     const totalNumberofData = () => {
-        const parentDocRef = db.collection('opdPatients').doc('m5JHl3l4zhaBCa8Vihcb');
-        const subcollectionRef = parentDocRef.collection('opdPatient');
+        // const parentDocRef = db.collection('opdPatients').doc('m5JHl3l4zhaBCa8Vihcb');
+        // const subcollectionRef = parentDocRef.collection('opdPatient');
 
-        let query = subcollectionRef.where('hospitaluid', '==', hospitaluid).orderBy('timestamp', 'desc');
+        let query = subcollectionRef;
 
-        query.get().then(snapshot => {
+        query.onSnapshot((snapshot) => {
             console.log(snapshot);
             const totalDataCount = snapshot.size;
             setsetTotalNumData(totalDataCount)
             console.log('Total data count:', totalDataCount);
-        }).catch(error => {
-            console.error('Error retrieving data:', error);
-        });
+        })
     }
 
-    // const retrieveData = async (item) => {
-    //     try {
-    //         const parentDocRef = db.collection('opdPatients').doc('m5JHl3l4zhaBCa8Vihcb');
-    //         const subcollectionRef = parentDocRef.collection('opdPatient');
-    //         let query = subcollectionRef
-    //             .where('hospitaluid', '==', hospitaluid)
-    //             .orderBy('timestamp', 'desc')
-    //             .limit(perPageRows);
-    //         // console.log('prev', item);
-    //         if (lastVisible && !item) {
-    //             query = query.startAfter(lastVisible);
-    //             // console.log('lastVisible', lastVisible);
-    //         }
-    //         if (item) {
-    //             query = query.endBefore(firstVisible).limitToLast(perPageRows); // Retrieve previous page data
-    //             // console.log('firstVisible', firstVisible.data());
-    //         }
-
-    //         const querySnapshot = await query.get();
-    //         const newData = [];
-    //         querySnapshot.forEach((doc) => {
-    //             newData.push(doc.data());
-    //         });
-    //         setOpdPatientList(newData);
-
-    //         if (querySnapshot.size > 0) {
-    //             const lastVisibleDoc = querySnapshot.docs[querySnapshot.docs.length - 1];
-    //             console.log('lastVisibleDoc', lastVisibleDoc.data());
-    //             setLastVisible(lastVisibleDoc);
-    //             setFirstVisible(querySnapshot.docs[0]);
-    //             console.log('setFirstVisible', querySnapshot.docs[0].data());
-    //             // Set the firstVisible document for previous page data retrieval
-    //         } else {
-    //             setLastVisible(null);
-    //             setFirstVisible(null); // Reset firstVisible when no more previous pages are available
-    //         }
-    //     } catch (error) {
-    //         console.error('Error retrieving data:', error);
-    //     }
-    // };
-    // const retrieveData = (item) => {
-    //     try {
-    //         const parentDocRef = db.collection('opdPatients').doc('m5JHl3l4zhaBCa8Vihcb');
-    //         const subcollectionRef = parentDocRef.collection('opdPatient');
-    //         let query = subcollectionRef
-    //             .where('hospitaluid', '==', hospitaluid)
-    //             .orderBy('timestamp', 'desc')
-    //             .limit(perPageRows);
-
-    //         if (lastVisible && !item) {
-    //             query = query.startAfter(lastVisible);
-    //         }
-
-    //         if (item) {
-    //             query = query.endBefore(firstVisible).limitToLast(perPageRows);
-    //         }
-
-    //         const unsubscribe = query.onSnapshot((snapshot) => {
-    //             const newData = [];
-    //             snapshot.forEach((doc) => {
-    //                 newData.push(doc.data());
-    //             });
-    //             setOpdPatientList(newData);
-
-    //             if (snapshot.size > 0) {
-    //                 const lastVisibleDoc = snapshot.docs[snapshot.docs.length - 1];
-    //                 console.log('lastVisibleDoc', lastVisibleDoc.data());
-    //                 setLastVisible(lastVisibleDoc);
-    //                 setFirstVisible(snapshot.docs[0]);
-    //                 console.log('setFirstVisible', snapshot.docs[0].data());
-    //             } else {
-    //                 setLastVisible(null);
-    //                 setFirstVisible(null);
-    //             }
-    //         });
-
-    //         return () => {
-    //             unsubscribe();
-    //         };
-    //     } catch (error) {
-    //         console.error('Error retrieving data:', error);
-    //     }
-    // };
     const retrieveData = (query) => {
         try {
-            const unsubscribe = query.onSnapshot((snapshot) => {
+            // let initialSnapshot = true;
+            console.log('i am a lisitnor who alwas call');
+            setIsLoading(true)
+            unsubscribe = query.onSnapshot((snapshot) => {
                 const newData = [];
                 snapshot.forEach((doc) => {
                     newData.push(doc.data());
                 });
+                // if (initialSnapshot && snapshot.metadata.hasPendingWrites) {
+                //     // Skip the initial snapshot with local, unsaved changes
+                //     initialSnapshot = false;
+                //     return;
+                // }
                 setOpdPatientList(newData);
-
+                console.log('newData-------------------------------------', newData);
                 if (snapshot.size > 0) {
                     const lastVisibleDoc = snapshot.docs[snapshot.docs.length - 1];
-                    console.log('lastVisibleDoc', lastVisibleDoc.data());
+                    // console.log('lastVisibleDoc', lastVisibleDoc.data());
                     setLastVisible(lastVisibleDoc);
                     setFirstVisible(snapshot.docs[0]);
                     // setsetTotalNumData(snapshot.size)
-                    console.log('setFirstVisible', snapshot.docs[0].data());
+                    setIsLoading(false)
+
+                    // console.log('setFirstVisible', snapshot.docs[0].data());
                 } else {
+                    setIsLoading(false)
+
                     setLastVisible(null);
                     setFirstVisible(null);
                 }
@@ -628,9 +572,85 @@ const Opd = () => {
                 unsubscribe();
             };
         } catch (error) {
+            setIsLoading(false)
+
             console.error('Error retrieving data:', error);
         }
     };
+    const debouncedRetrieveData = debounce(retrieveData, 500);
+
+
+
+    // const retrieveData = (query) => {
+    //     try {
+    //         console.log('i am a listener who always calls');
+    //         unsubscribe = query.onSnapshot((snapshot) => {
+    //             console.log('i am calling ');
+    //             // When there is a change in the document, fetch the data again and call retrieveData
+    //             fetchAndUpdateData(query);
+    //         });
+    //     } catch (error) {
+    //         console.error('Error retrieving data:', error);
+    //     }
+    // };
+
+    // const fetchAndUpdateData = async (query) => {
+    //     try {
+    //         const querySnapshot = await query.get();
+    //         let temp_data = [];
+    //         querySnapshot.forEach((doc) => {
+    //             temp_data.push(doc.data());
+    //         });
+    //         console.log('temp_data', temp_data);
+    //         setOpdPatientList(temp_data);
+    //         // console.log('newData-------------------------------------', temp_data);
+    //         // if (snapshot.size > 0) {
+    //         const lastVisibleDoc = querySnapshot.docs[querySnapshot.docs.length - 1];
+    //         // console.log('lastVisibleDoc', lastVisibleDoc.data());
+    //         setLastVisible(lastVisibleDoc);
+    //         setFirstVisible(querySnapshot.docs[0]);
+    //         // }
+    //         // Get the last visible document for pagination
+    //         // let lastVisibleDoc = querySnapshot.docs[querySnapshot.docs.length - 1];
+    //     } catch (error) {
+
+    //     }
+    //     // await getSubcollectionDataWithoutsnapshot('opdPatients', 'm5JHl3l4zhaBCa8Vihcb', 'opdPatient', hospitaluid, lastOpdData, (data, lastData) => {
+    //     //     // Handle the updated data in the callback function
+    //     //     dispatch(FILL_OPD_PATIENTS(data))
+    //     //     dispatch(ADD_LAST_OPD_DATA(lastData))
+    //     //     console.log('getOPD with last Data', data, lastData);
+    //     // }).catch((error) => {
+    //     //     console.error('Error:', error);
+    //     // })
+    // };
+
+
+
+
+
+    // const onlyChangeDetector = () => {
+    //     if (!initialDataFetched) {
+    //         // Fetch the initial data once without subscribing to changes
+    //         unsubscribe = subcollectionRef
+    //             .where('hospitaluid', '==', hospitaluid)
+    //             .orderBy('timestamp', 'desc')
+    //             .onSnapshot((snapshot) => {
+    //                 const newData = [];
+    //                 snapshot.docChanges({ includeMetadataChanges: true }).forEach((change) => {
+    //                     if (change.type === 'added' || change.type === 'modified') {
+    //                         console.log('changes', change.doc.data(), change.type);
+    //                         // newData.push({ id: change.doc.id, ...change.doc.data() });
+    //                     }
+    //                 });
+    //                 // setData((prevData) => [...prevData, ...newData]);
+    //             });
+    //     }
+    //     return
+    // }
+
+
+
 
     const formik = useFormik({
         initialValues: initalValues,
@@ -650,13 +670,23 @@ const Opd = () => {
                     // await setData("opdPatients", 'm5JHl3l4zhaBCa8Vihcb', 'opdPatient', [...opdPatientfilter, newValues]);
                     // await addSingltObject("opdPatients", 'm5JHl3l4zhaBCa8Vihcb', 'opdPatient', newValues)
                     await addDatainsubcollection("opdPatients", 'm5JHl3l4zhaBCa8Vihcb', 'opdPatient', newValues)
+                        .then((newDocData) => {
+                            // Handle the new added data here
+                            console.log('newDocData', newDocData);
+                            // dispatch(ADD_OPD_PATIENTS(newDocData.data()))
+                            // dispatch(dispatch(ADD_LAST_OPD_DATA(newDocData.id)))
+                        })
+                        .catch((error) => {
+                            // Handle any errors that occurred during the addition
+                            console.error(error);
+                        });
                     // await getOnlyChangesLisitnor('opdPatients', 'm5JHl3l4zhaBCa8Vihcb', 'opdPatient', hospitaluid, (data) => {
                     //     console.log('new Data added', data);
                     //     dispatch(ADD_OPD_PATIENTS(data))
                     // }).catch((error) => {
                     //     console.error('Error:', error);
                     // })
-                    dispatch(ADD_OPD_PATIENTS(newValues));
+                    // dispatch(ADD_OPD_PATIENTS(newValues));
                     resetForm({ values: '' });
                     clearForm();
                     toast.success('Added Successfully.......')
@@ -697,6 +727,9 @@ const Opd = () => {
         setShow(true)
         formik.setFieldValue('consultingDate', new Date().toISOString().substr(0, 10));
     };
+
+
+
 
     const clearForm = () => {
         formik.setValues({
@@ -741,8 +774,8 @@ const Opd = () => {
         setConsultingCharges([])
     }
     const generateInvoice = (item) => {
-        // filDatainsubcollection(allopdPatientList, 'opdPatients', 'm5JHl3l4zhaBCa8Vihcb', 'opdPatient', hospitaluid)
-        // changeDateFormate()
+        // filDatainsubcollection(allopdPatientList, 'opdPatients', 'm5JHl3l4zhaBCa8Vihcb', 'opdPatient', 'opduid', 'hospitaluid')
+        changeDateFormate()
         if (item.paymentStatus === "Completed") {
             setPrintContent(<PrintComponent data={{
                 data1: {
@@ -801,6 +834,40 @@ const Opd = () => {
         setUpdate(true);
     }
 
+    // const deletePatientsDetails = async (item1) => {
+    //     try {
+    //         await confirmAlert({
+    //             title: 'Confirm to Delete',
+    //             message: 'Are you sure to delete this.',
+    //             buttons: [
+    //                 {
+    //                     label: 'Yes',
+    //                     onClick: async () => {
+    //                         const opd = opdPatientfilter.filter((item) => item.opduid !== item1.opduid);
+    //                         // await setData('opdPatients', 'm5JHl3l4zhaBCa8Vihcb', 'opdPatient', opd);
+    //                         // await deleteSingltObject('opdPatients', 'm5JHl3l4zhaBCa8Vihcb', 'opdPatient', item1, 'opduid', 'hospitaluid')
+    //                         await deleteDatainSubcollection('opdPatients', 'm5JHl3l4zhaBCa8Vihcb', 'opdPatient', item1, 'opduid', 'hospitaluid')
+    //                         dispatch(DELETE_OPD_PATIENTS(item1));
+    //                         // await getOnlyChangesLisitnor('opdPatients', 'm5JHl3l4zhaBCa8Vihcb', 'opdPatient', hospitaluid, (data) => {
+    //                         //     console.log('Deleted data', data);
+
+    //                         //     dispatch(DELETE_OPD_PATIENTS(data))
+    //                         // }).catch((error) => {
+    //                         //     console.error('Error:', error);
+    //                         // })
+    //                         toast.success('Deleted Successfully.......')
+    //                     }
+    //                 },
+    //                 {
+    //                     label: 'No',
+    //                 }
+    //             ]
+    //         });
+    //     } catch (error) {
+    //         toast.error(error.message);
+    //         console.error(error.message);
+    //     }
+    // };
     const deletePatientsDetails = async (item1) => {
         try {
             await confirmAlert({
@@ -810,23 +877,14 @@ const Opd = () => {
                     {
                         label: 'Yes',
                         onClick: async () => {
-                            const opd = opdPatientfilter.filter((item) => item.opduid !== item1.opduid);
-                            // await setData('opdPatients', 'm5JHl3l4zhaBCa8Vihcb', 'opdPatient', opd);
-                            // await deleteSingltObject('opdPatients', 'm5JHl3l4zhaBCa8Vihcb', 'opdPatient', item1, 'opduid', 'hospitaluid')
-                            await deleteDatainSubcollection('opdPatients', 'm5JHl3l4zhaBCa8Vihcb', 'opdPatient', item1, 'opduid', 'hospitaluid')
-                            dispatch(DELETE_OPD_PATIENTS(item1));
-                            // await getOnlyChangesLisitnor('opdPatients', 'm5JHl3l4zhaBCa8Vihcb', 'opdPatient', hospitaluid, (data) => {
-                            //     console.log('Deleted data', data);
-
-                            //     dispatch(DELETE_OPD_PATIENTS(data))
-                            // }).catch((error) => {
-                            //     console.error('Error:', error);
-                            // })
-                            toast.success('Deleted Successfully.......')
+                            // const opd = opdPatientfilter.filter(item => item.opduid !== item1.opduid);
+                            await deleteDatainSubcollection('opdPatients', 'm5JHl3l4zhaBCa8Vihcb', 'opdPatient', item1, 'opduid', 'hospitaluid');
+                            // dispatch(DELETE_OPD_PATIENTS(item1));
+                            toast.success('Deleted Successfully....');
                         }
                     },
                     {
-                        label: 'No',
+                        label: 'No'
                     }
                 ]
             });
@@ -836,68 +894,7 @@ const Opd = () => {
         }
     };
 
-    const requestSearch = () => {
-        // const searchString = searchvalue.toLowerCase();
-        // console.log(searchString, 'searchString');
-        if (searchString.length) {
-            var query = subcollectionRef
 
-            // query = query
-            //     .where('hospitaluid', '==', hospitaluid)
-            if (searchBy === 'Name') {
-                query = query
-                    .where('pName', '>=', searchString).
-                    where('pName', '<=', searchString + "\uf8ff")
-            } else if (searchBy === 'MobileNo') {
-                query = query
-                    .where('pMobileNo', '==', searchString)
-            }
-
-            // query = query
-            //     .where('pid', '<=', searchString)
-            // query = query
-            //     .where('pMobileNo', '>=', searchString)
-            query = query.limit(perPageRows);
-            retrieveData(query)
-            query.get().then(snapshot => {
-                console.log(snapshot);
-                const totalDataCount = snapshot.size;
-                setsetTotalNumData(totalDataCount)
-                console.log('Total data count:', totalDataCount);
-            }).catch(error => {
-                console.error('Error retrieving data:', error);
-            });
-        }
-
-
-
-        // if (searchvalue.length < 1) {
-        //     setOpdPatientList([...allopdPatientList].reverse())
-        //     return
-        // }
-
-        // const filteredRows = opdPatientfilter.filter((row) => {
-        //     const searchString = searchvalue.toLowerCase()
-        //     return row.pid.toString().includes(searchString) ||
-        //         row.pName.toLowerCase().includes(searchString) ||
-        //         row.pMobileNo.includes(searchString);
-        // });
-
-        // setOpdPatientList(filteredRows)
-    }
-
-    const onSearchInput = (value) => {
-        if (!value.length) {
-            setIsLoading(true)
-            let query = subcollectionRef
-                .where('hospitaluid', '==', hospitaluid)
-                .orderBy('timestamp', 'desc')
-                .limit(perPageRows)
-            retrieveData(query)
-            setIsLoading(false)
-            totalNumberofData()
-        }
-    }
     const handleOnSelect = (item) => {
         formik.setFieldValue('pid', item.pid);
         formik.setFieldValue('pName', item.pName);
@@ -1015,24 +1012,80 @@ const Opd = () => {
 
         // Perform any additional logic or actions based on the page change
     };
+    const requestSearch = () => {
+        // const searchString = searchvalue.toLowerCase();
+        // console.log(searchString, 'searchString');
+        if (searchString.length) {
+            var query = subcollectionRef
 
+            // query = query
+            //     .where('hospitaluid', '==', hospitaluid)
+            if (searchBy === 'Name') {
+                query = query
+                    .where('pName', '>=', searchString).
+                    where('pName', '<=', searchString + "\uf8ff")
+            } else if (searchBy === 'MobileNo') {
+                query = query
+                    .where('pMobileNo', '>=', searchString)
+                    .where('pMobileNo', '<=', searchString + "\uf8ff");
+            }
+
+
+            query = query.limit(perPageRows);
+            retrieveData(query)
+            query.get().then(snapshot => {
+                // console.log(snapshot);
+                const totalDataCount = snapshot.size;
+                setsetTotalNumData(totalDataCount)
+                console.log('Total data count:', totalDataCount);
+            }).catch(error => {
+                console.error('Error retrieving data:', error);
+            });
+        }
+
+
+
+        // if (searchvalue.length < 1) {
+        //     setOpdPatientList([...allopdPatientList].reverse())
+        //     return
+        // }
+
+        // const filteredRows = opdPatientfilter.filter((row) => {
+        //     const searchString = searchvalue.toLowerCase()
+        //     return row.pid.toString().includes(searchString) ||
+        //         row.pName.toLowerCase().includes(searchString) ||
+        //         row.pMobileNo.includes(searchString);
+        // });
+
+        // setOpdPatientList(filteredRows)
+    }
+
+    const onSearchInput = (value) => {
+        setSearchString(value)
+        if (!value.length) {
+            setIsLoading(true)
+            setSearchString('')
+
+            let query = subcollectionRef
+                .orderBy('timestamp', 'desc')
+                .limit(perPageRows)
+            retrieveData(query)
+            setIsLoading(false)
+            totalNumberofData()
+        }
+    }
     const nextPage = async () => {
         setIsLoading(true)
         let query = subcollectionRef
-            .where('hospitaluid', '==', hospitaluid)
             .orderBy('timestamp', 'desc')
             .limit(perPageRows).startAfter(lastVisible);
         retrieveData(query)
         setIsLoading(false)
 
     };
-
-
     const prevPage = async () => {
         setIsLoading(true)
-
         let query = subcollectionRef
-            .where('hospitaluid', '==', hospitaluid)
             .orderBy('timestamp', 'desc')
             .limit(perPageRows)
             .endBefore(firstVisible).limitToLast(perPageRows);
@@ -1052,9 +1105,6 @@ const Opd = () => {
                     action={<button className='btn btn-primary' onClick={handleShow}><span>  <BiPlus size={25} /></span></button>}
                     subHeaderComponent={<>
                         <input type='search' placeholder='search' className='w-25 form-control' onChange={(e) => requestSearch(e.target.value)} /></>}
-                    retrieveData={retrieveData}
-                    handlePerPageRowsChange={handlePerPageRowsChange}
-                    paginationTotalRows={totalnumData}
                 /> */}
 
                 <DataTable
@@ -1072,17 +1122,13 @@ const Opd = () => {
                     subHeaderComponent={<span className='d-flex w-100 justify-content-end'>
                         <select className="form-control mr-2" style={{ height: '40px', fontSize: '18px', width: '15%', marginRight: 10 }} name='searchBy' value={searchBy} onChange={(e) => setSearchBy(e.target.value)}>
                             <option selected >Search by</option>
-                            {/* <option value='Completed'>Completed</option> */}
                             <option value='Name' selected>Patient Name</option>
                             <option value='MobileNo' selected>Mobile No</option>
                         </select>
-                        <input type='search' placeholder='search' className='w-25 form-control' onChange={(e) => { setSearchString(e.target.value); onSearchInput(e.target.value) }} />
+                        <input type='search' placeholder='search' className='w-25 form-control' value={searchString} onChange={(e) => { onSearchInput(e.target.value) }} />
                         <button className='btn btn-primary' style={{ width: '10%', marginLeft: 10 }} disabled={!searchBy || !searchString} onClick={requestSearch}>Search</button>
                     </span>}
-                    // paginationTotalRows={totalnumData}
                     paginationTotalRows={totalnumData}
-
-                    // onChangeRowsPerPage={handlePerPageRowsChange}
                     onChangePage={(e) => handlePageChange(e)}
                 />
             </div>
@@ -1382,8 +1428,6 @@ const Opd = () => {
             handleShow={() => setModel(true)}
         ></Addpatientscommanmodel>
     </>
-
-
 }
 
 export default Opd;

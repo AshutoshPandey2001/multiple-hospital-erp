@@ -12,11 +12,11 @@ import { AiFillDelete } from 'react-icons/ai'
 import { BsEye } from 'react-icons/bs'
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { ADD_PATIENTS, DELETE_PATIENTS, EDIT_PATIENTS, FILL_PATIENTS, selectAllPatients } from 'src/redux/slice/patientMasterslice';
+import { ADD_LAST_PATIENT_DATA, ADD_PATIENTS, DELETE_PATIENTS, EDIT_PATIENTS, FILL_PATIENTS, selectAllPatients, selectlastPatientData } from 'src/redux/slice/patientMasterslice';
 import { selectMobileNo, selectUserId, selectUsertype } from 'src/redux/slice/authSlice';
 import CommanTable from 'src/comman/table/CommanTable';
 import Loaderspinner from 'src/comman/spinner/Loaderspinner';
-import { addDatainsubcollection, deleteDatainSubcollection, deleteSingltObject, filDatainsubcollection, getSubcollectionData, setData, updateDatainSubcollection } from 'src/services/firebasedb';
+import { addDatainsubcollection, deleteDatainSubcollection, deleteSingltObject, filDatainsubcollection, getSubcollectionData, getSubcollectionDataWithoutsnapshot, setData, updateDatainSubcollection } from 'src/services/firebasedb';
 import { confirmAlert } from 'react-confirm-alert';
 import { toast } from 'react-toastify';
 import Addpatientscommanmodel from 'src/comman/comman model/Addpatientscommanmodel';
@@ -25,6 +25,10 @@ import { useReactToPrint } from 'react-to-print';
 import ReactToPrint from 'react-to-print';
 import PrintButton from 'src/comman/printpageComponents/PrintButton';
 import { TfiReload } from 'react-icons/tfi'
+import { db } from 'src/firebaseconfig';
+import DataTable from 'react-data-table-component';
+import firebase from 'firebase/compat/app'
+import 'firebase/compat/firestore';
 
 // const initalValues = {
 //     pid: '',
@@ -57,7 +61,22 @@ const Addpatients = () => {
     const [printContent, setPrintContent] = useState(null);
     // const reversedArray = allPatientsList.slice().reverse();
     const hospitaluid = useSelector(selectUserId)
+    const [firstVisible, setFirstVisible] = useState(null);
+    const [lastVisible, setLastVisible] = useState(null);
+    const [perPageRows, setPerPageRows] = useState(10); // Initial value for rows per page
+    const [totalnumData, setsetTotalNumData] = useState(0); // Initial value for rows per page
+    const [currentPage, setCurrentPage] = useState(1);
+    const [prev, setPrev] = useState(false);
+    const [searchBy, setSearchBy] = useState('');
+    const [searchString, setSearchString] = useState('');
+    const parentDocRef = db.collection('Patients').doc('fBoxFLrzXexT8WNBzGGh');
+    const lastPatientData = useSelector(selectlastPatientData)
 
+    const subcollectionRef = parentDocRef.collection('patients').where('hospitaluid', '==', hospitaluid)
+    // const subcollectionRef = parentDocRef.collection('patients').where('hospitaluid', '==', hospitaluid)
+    //     .where('deleted', '==', 0);
+
+    let unsubscribe = undefined
 
     const columns = [
         { name: 'ID', selector: row => row.pid, sortable: true },
@@ -77,32 +96,141 @@ const Addpatients = () => {
 
 
     useEffect(() => {
+        // setPatientsList([...allPatientsList].reverse())
+        // setPatientsFilter(allPatientsList)
+        // setIsLoading(false)
+        let query = subcollectionRef
+            .orderBy('timestamp', 'desc')
+            .limit(perPageRows)
+        // let query = new firebase.firestore.Query(subcollectionRef)
+        //     .where('hospitaluid', '==', hospitaluid)
+        //     .whereEqualTo('deleted', null)
+        //     // .where('deleted', '!=', 1)
+        //     // .where('deleted', '==', null)
+        //     .orderBy('timestamp', 'desc')
+        //     .limit(perPageRows)
+        retrieveData(query)
+        setIsLoading(false)
+        totalNumberofData()
+        // chnageDetectore()
+        return () => {
+            // unsub()
+            unsubscribe();
+            setSearchString('')
+            console.log('unmounting');
+        };
+    }, [])
+
+    useEffect(() => {
         setPatientsList([...allPatientsList].reverse())
         setPatientsFilter(allPatientsList)
         setIsLoading(false)
 
-    }, [allPatientsList])
+        // chnageDetectore()
 
-    // useEffect(() => {
-    //     getSubcollectionData('Patients', 'fBoxFLrzXexT8WNBzGGh', 'patients', hospitaluid, (data) => {
-    //         // Handle the updated data in the callback function
-    //         dispatch(FILL_PATIENTS(data))
+    }, [allPatientsList])
+    const totalNumberofData = () => {
+        // const parentDocRef = db.collection('opdPatients').doc('m5JHl3l4zhaBCa8Vihcb');
+        // const subcollectionRef = parentDocRef.collection('opdPatient');
+
+        let query = subcollectionRef.where('hospitaluid', '==', hospitaluid).where('deleted', '==', 0).orderBy('timestamp', 'desc');
+
+        query.get().then(snapshot => {
+            console.log(snapshot);
+            const totalDataCount = snapshot.size;
+            setsetTotalNumData(totalDataCount)
+            console.log('Total data count:', totalDataCount);
+        }).catch(error => {
+            console.error('Error retrieving data:', error);
+        });
+    }
+
+
+    // const retrieveData = (query) => {
+    //     try {
+    //         // let initialSnapshot = true;
+    //         setIsLoading(true)
+    //         unsubscribe = query.onSnapshot((snapshot) => {
+    //             const newData = [];
+    //             console.log('snapshot', snapshot);
+
+    //             snapshot.forEach((doc) => {
+    //                 const data = doc.data();
+    //                 console.log('all Data', data);
+    //                 // Check if the 'deleted' field exists and is truthy (e.g., true)
+    //                 // if (!data.hasOwnProperty('deleted') || !data.deleted) {
+    //                 newData.push(data);
+    //                 // } else {
+    //                 //     console.log('deleted data', data);
+    //                 // }
+
+    //                 // newData.push(doc.data());
+    //             });
+
+    //             setPatientsList(newData);
+    //             console.log('newData-------------------------------------', newData);
+    //             if (snapshot.size > 0) {
+    //                 const lastVisibleDoc = snapshot.docs[snapshot.docs.length - 1];
+    //                 // console.log('lastVisibleDoc', lastVisibleDoc.data());
+    //                 setLastVisible(lastVisibleDoc);
+    //                 setFirstVisible(snapshot.docs[0]);
+    //                 // setsetTotalNumData(snapshot.size)
+    //                 setIsLoading(false)
+
+    //                 // console.log('setFirstVisible', snapshot.docs[0].data());
+    //             } else {
+    //                 setIsLoading(false)
+
+    //                 setLastVisible(null);
+    //                 setFirstVisible(null);
+    //             }
+    //         });
+
+    //         // return () => {
+    //         //     unsubscribe();
+    //         // };
+    //     } catch (error) {
     //         setIsLoading(false)
-    //         console.log('Received real-time data patients:', data);
-    //     }).catch((error) => {
-    //         setIsLoading(false)
-    //         console.error('Error:', error);
-    //     });
-    // }, [])
+
+    //         console.error('Error retrieving data:', error);
+    //     }
+    // };
+
+    const retrieveData = (query) => {
+        try {
+            // let initialSnapshot = true;
+            setIsLoading(true)
+            unsubscribe = query.onSnapshot((snapshot) => {
+                fetchData()
+            });
+
+            // return () => {
+            //     unsubscribe();
+            // };
+        } catch (error) {
+            setIsLoading(false)
+
+            console.error('Error retrieving data:', error);
+        }
+    };
+
+    const fetchData = async () => {
+        await getSubcollectionDataWithoutsnapshot('Patients', 'fBoxFLrzXexT8WNBzGGh', 'patients', hospitaluid, lastPatientData, (data, lastData) => {
+            // Handle the updated data in the callback function
+            dispatch(FILL_PATIENTS(data))
+            dispatch(ADD_LAST_PATIENT_DATA(lastData))
+            console.log('Get Patients data with last Data', data, lastData);
+        }).catch((error) => {
+            console.error('Error:', error);
+        })
+    }
 
     const handleClose = () => {
         setShow(false);
         setUpdate(false);
         setItems();
     }
-    // const handlePrint = useReactToPrint({
-    //     content: () => componentRef.current,
-    // });
+
     const handlePrintWithProps = async (items) => {
         console.log('items', items);
         setPrintContent(
@@ -159,7 +287,7 @@ const Addpatients = () => {
                             // await setData('Patients', 'fBoxFLrzXexT8WNBzGGh', 'patients', patient)
                             // await deleteSingltObject('Patients', 'fBoxFLrzXexT8WNBzGGh', 'patients', item1, 'pid', 'hospitaluid')
                             await deleteDatainSubcollection('Patients', 'fBoxFLrzXexT8WNBzGGh', 'patients', item1, 'pid', 'hospitaluid')
-                            dispatch(DELETE_PATIENTS(item1))
+                            // dispatch(DELETE_PATIENTS(item1))
                             toast.success("Deleted Successfully.......")
                         } catch (error) {
                             toast.error(error.message)
@@ -178,22 +306,65 @@ const Addpatients = () => {
 
     }
 
-    const requestSearch = (searchvalue) => {
-        console.log('searchvalue', searchvalue);
-        const filteredRows = patientsFilter.filter((row) => {
-            return row.pid.toString().includes(searchvalue.toLowerCase()) || row.pName.toLowerCase().includes(searchvalue.toLowerCase()) || row.pMobileNo.includes(searchvalue);
-        });
-        if (searchvalue.length < 1) {
 
-            setPatientsList([...allPatientsList].reverse())
-        }
-        else {
-            setPatientsList(filteredRows)
-        }
-        console.log('filteredRows', filteredRows);
+    const requestSearch = () => {
+        if (searchString.length) {
+            // var query = subcollectionRef.where('hospitaluid', '==', hospitaluid)
+            let query = undefined
+            if (searchBy === 'Name') {
+                query = subcollectionRef
+                    .where('pName', '>=', searchString).
+                    where('pName', '<=', searchString + "\uf8ff")
+            } else if (searchBy === 'MobileNo') {
+                query = subcollectionRef
+                    .where('pMobileNo', '>=', searchString)
+                    .where('pMobileNo', '<=', searchString + "\uf8ff");
+            }
 
+
+            query = query.limit(perPageRows);
+            retrieveData(query)
+            query.get().then(snapshot => {
+                console.log(snapshot);
+                const totalDataCount = snapshot.size;
+                setsetTotalNumData(totalDataCount)
+                console.log('Total data count:', totalDataCount);
+            }).catch(error => {
+                console.error('Error retrieving data:', error);
+            });
+        }
+
+
+
+        // if (searchvalue.length < 1) {
+        //     setOpdPatientList([...allopdPatientList].reverse())
+        //     return
+        // }
+
+        // const filteredRows = opdPatientfilter.filter((row) => {
+        //     const searchString = searchvalue.toLowerCase()
+        //     return row.pid.toString().includes(searchString) ||
+        //         row.pName.toLowerCase().includes(searchString) ||
+        //         row.pMobileNo.includes(searchString);
+        // });
+
+        // setOpdPatientList(filteredRows)
     }
 
+    const onSearchInput = (value) => {
+        setSearchString(value)
+        if (!value.length) {
+            setIsLoading(true)
+            setSearchString('')
+            let query = subcollectionRef
+                .where('hospitaluid', '==', hospitaluid)
+                .orderBy('timestamp', 'desc')
+                .limit(perPageRows)
+            retrieveData(query)
+            setIsLoading(false)
+            totalNumberofData()
+        }
+    }
     const patientHistory = (item) => {
         const itemString = JSON.stringify(item);
 
@@ -213,11 +384,77 @@ const Addpatients = () => {
             console.error('Error:', error);
         })
     }
+
+    const handlePageChange = async (page) => {
+        if (page < currentPage) {
+            setPrev(true)
+            prevPage()
+            // const one = true
+            // console.log('i am here');
+            // retrieveData(one)
+            setCurrentPage(page);
+        } else {
+            setPrev(false)
+            nextPage()
+            // const one = false
+            // retrieveData(one)
+            setCurrentPage(page);
+        }
+        console.log('page', page);
+
+        // Perform any additional logic or actions based on the page change
+    };
+
+    const nextPage = async () => {
+        setIsLoading(true)
+        let query = subcollectionRef
+            .orderBy('timestamp', 'desc')
+            .limit(perPageRows).startAfter(lastVisible);
+        retrieveData(query)
+        setIsLoading(false)
+
+    };
+    const prevPage = async () => {
+        setIsLoading(true)
+        let query = subcollectionRef
+            .orderBy('timestamp', 'desc')
+            .limit(perPageRows)
+            .endBefore(firstVisible).limitToLast(perPageRows);
+        retrieveData(query)
+        setIsLoading(false)
+
+    }
     return <>
         {isLoading ? <Loaderspinner /> :
             <>
                 <div style={{ display: 'none' }}>  {printContent && <PrintButton content={printContent} />}</div>
                 <div>
+
+                    {/* <DataTable
+                        title={"Patients List"}
+                        columns={columns}
+                        data={patientsList}
+                        pagination={true}
+                        fixedHeader={true}
+                        noHeader={false}
+                        persistTableHead
+                        actions={<button className='btn btn-primary' onClick={handleShow}><span>  <BiPlus size={25} /></span></button>}
+                        highlightOnHover
+                        paginationServer={true}
+                        subHeader={<div className='d-flex' style={{ justifyContent: 'space-between' }}></div>}
+                        subHeaderComponent={<span className='d-flex w-100 justify-content-end'>
+                            <select className="form-control mr-2" style={{ height: '40px', fontSize: '18px', width: '15%', marginRight: 10 }} name='searchBy' value={searchBy} onChange={(e) => setSearchBy(e.target.value)}>
+                                <option selected >Search by</option>
+                                <option value='Name' selected>Patient Name</option>
+                                <option value='MobileNo' selected>Mobile No</option>
+                            </select>
+                            <input type='search' placeholder='search' className='w-25 form-control' value={searchString} onChange={(e) => { onSearchInput(e.target.value) }} />
+                            <button className='btn btn-primary' style={{ width: '10%', marginLeft: 10 }} disabled={!searchBy || !searchString} onClick={requestSearch}>Search</button>
+                        </span>}
+                        paginationTotalRows={totalnumData}
+
+                        onChangePage={(e) => handlePageChange(e)}
+                    /> */}
                     <CommanTable
                         title={"Patients List"}
                         columns={columns}

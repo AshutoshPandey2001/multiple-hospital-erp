@@ -257,24 +257,24 @@ const Discharge = () => {
         setPrint(false);
 
     }
-    useEffect(() => {
-        getSubcollectionData('DischargePatients', 'cki4rIGKtNwyXr27cZBY', 'dischargePatients', hospitaluid, (data) => {
-            // Handle the updated data in the callback function
-            dispatch(FILL_DISCHARGE_PATIENTS(data))
-            setIsLoading(false)
-            console.log('Received real-time data:', data);
-        }).catch((error) => {
-            setIsLoading(false)
-            console.error('Error:', error);
-        })
-    }, [])
+    // useEffect(() => {
+    //     getSubcollectionData('DischargePatients', 'cki4rIGKtNwyXr27cZBY', 'dischargePatients', hospitaluid, (data) => {
+    //         // Handle the updated data in the callback function
+    //         dispatch(FILL_DISCHARGE_PATIENTS(data))
+    //         setIsLoading(false)
+    //         console.log('Received real-time data:', data);
+    //     }).catch((error) => {
+    //         setIsLoading(false)
+    //         console.error('Error:', error);
+    //     })
+    // }, [])
 
     useEffect(() => {
         setDischargePatient([...allDischargePatients].reverse())
         setDischargePatientfilter(allDischargePatients)
         setAdmitPatients(allAdmitPatients)
         setRoom([...roomList])
-
+        setIsLoading(false)
     }, [allAdmitPatients, roomList, allDischargePatients])
 
 

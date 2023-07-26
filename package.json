@@ -79,6 +79,7 @@
     "react-toastify": "^9.1.1",
     "recharts": "^2.5.0",
     "redux": "^4.2.0",
+    "redux-persist": "^6.0.0",
     "simplebar-react": "^2.4.1",
     "to-words": "^3.6.1",
     "yup": "^0.32.11"

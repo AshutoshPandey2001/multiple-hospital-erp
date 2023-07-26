@@ -8,6 +8,9 @@ import Overlay from 'react-bootstrap/Overlay';
 import Tooltip from 'react-bootstrap/Tooltip';
 import { selectAdmitPatients } from 'src/redux/slice/admitPatientsSlice';
 import { useSelector } from 'react-redux';
+import { useEffect } from 'react';
+import { getSelectedFieldData } from 'src/services/firebasedb';
+import { selectUserId } from 'src/redux/slice/authSlice';
 
 const ShowRoomcomponent = ({ roomType, selectedRoomDetails }) => {
     const bedRefs = useRef([]);
@@ -16,6 +19,12 @@ const ShowRoomcomponent = ({ roomType, selectedRoomDetails }) => {
     const [tooltipContent, setTooltipContent] = useState("");
     const [showTooltip, setShowTooltip] = useState(false);
     const [selectedBedIndex, setSelectedBedIndex] = useState(null);
+    const hospitaluid = useSelector(selectUserId)
+    useEffect(() => {
+
+        getSelectedFieldData('admitPatients', 'jSqDGnjO21bpPGhb6O2y', 'admitPatient', hospitaluid, ['admitDate', 'pName', 'dischargeDate', 'roomType', 'roomNo', 'bedNo'], 'dischargeDate')
+
+    }, [])
 
     const showPatientName = (item, index) => {
         const patientDetails = admitPatients.find((patient) => {

@@ -5,7 +5,7 @@ import ReceptionComponent from './Reception/ReceptionComponent'
 import { useDispatch, useSelector } from 'react-redux'
 import { selectChangeState } from 'src/redux/slice/changeStateslice'
 import { selectmenuStyle } from 'src/redux/slice/changeMenustyleSlice'
-import { addDatainsubcollection, getData, getDatawithhospitaluid, getHospitalProfile, getSubcollectionData, getSubcollectionDataopd, getTaxDatainsubCollection, getTaxDatawithhospitaluid } from 'src/services/firebasedb'
+import { addDatainsubcollection, getData, getDatawithhospitaluid, getHospitalProfile, getSubcollectionData, getSubcollectionDataWithoutsnapshot, getSubcollectionDataopd, getTaxDatainsubCollection, getTaxDatawithhospitaluid } from 'src/services/firebasedb'
 import { FILL_ADMIT_PATIENTS } from 'src/redux/slice/admitPatientsSlice'
 import { FILL_RETURN_PATIENTS_MEDICINES } from 'src/redux/slice/returnMedicineslice'
 import { FILL_TAXS } from 'src/redux/slice/taxSlice'
@@ -208,7 +208,7 @@ const ReceptionModule = () => {
             //         console.error(error);
             //     });
 
-            await getSubcollectionData('Patients', 'fBoxFLrzXexT8WNBzGGh', 'patients', hospitaluid, (data) => {
+            await getSubcollectionDataWithoutsnapshot('Patients', 'fBoxFLrzXexT8WNBzGGh', 'patients', hospitaluid, (data) => {
                 // Handle the updated data in the callback function
                 dispatch(FILL_PATIENTS(data))
                 console.log('Received real-time data patients:', data);
@@ -216,7 +216,7 @@ const ReceptionModule = () => {
                 console.error('Error:', error);
             });
 
-            await getSubcollectionDataopd('opdPatients', 'm5JHl3l4zhaBCa8Vihcb', 'opdPatient', hospitaluid, (data) => {
+            await getSubcollectionDataWithoutsnapshot('opdPatients', 'm5JHl3l4zhaBCa8Vihcb', 'opdPatient', hospitaluid, (data) => {
                 // Handle the updated data in the callback function
                 dispatch(FILL_OPD_PATIENTS(data))
                 console.log('Received real-time data:', data);

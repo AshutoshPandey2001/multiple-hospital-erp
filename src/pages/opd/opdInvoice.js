@@ -4,7 +4,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom';
 import Loaderspinner from '../../comman/spinner/Loaderspinner';
-import { getData, setData, updateHospitalProfile, updateMultiDatainSubcollection, updatemultitObject, uploadArray } from 'src/services/firebasedb';
+import { getData, getOnePatientsData, getOnePatientsOpdData, setData, updateHospitalProfile, updateMultiDatainSubcollection, updatemultitObject, uploadArray } from 'src/services/firebasedb';
 import Table from 'react-bootstrap/Table';
 import ReactToPrint from 'react-to-print';
 import { storage } from 'src/firebaseconfig';
@@ -240,10 +240,10 @@ const opdInvoice = () => {
 
     const dispatch = useDispatch();
     const allPatientsLaboratoryReports = useSelector(selectAlllaboratoryReports)
-    const admtPatients = useSelector(selectAdmitPatients)
+    // const admtPatients = useSelector(selectAdmitPatients)
     const allTaxs = useSelector(selectAlltax)
     const userName = useSelector(selectUserName)
-    const opdPatient = useSelector(selectOpdPatients)
+    // const opdPatient = useSelector(selectOpdPatients)
     const prevBillNo = useSelector(selectopdrprevBillNo)
     // console.log('prevBillNo',prevBillNo);
     const [consultingChargesHospital, setConsultingChargesHospital] = useState(0)
@@ -280,10 +280,17 @@ const opdInvoice = () => {
             clearForm()
         }
     }, [])
+    
+   
     const fetchData = async () => {
         try {
             setIsLoading(true);
-          
+            
+            const opdPatient =await getOnePatientsData('opdPatients', 'm5JHl3l4zhaBCa8Vihcb', 'opdPatient',state.hospitaluid,state.pid,'Pending')
+            // console.log('opd',);
+            const admtPatients =await getOnePatientsData('admitPatients', 'jSqDGnjO21bpPGhb6O2y', 'admitPatient',state.hospitaluid,state.pid,'Pending')
+        //   console.log('indoor',await getOnePatientsOpdData('admitPatients', 'jSqDGnjO21bpPGhb6O2y', 'admitPatient',state.hospitaluid,state.pid,'Pending')
+        //   )          
             if(state.invoiceuid){
                 const updatedCharges = Allcharges.map(charge => {
                     const isMatched = state.extraCharges.some(extracharge => extracharge.chargeName === charge.chargeName);
@@ -399,7 +406,6 @@ const opdInvoice = () => {
             setPendingAdmitPatientst(pendingIndoors)
             const totalofIndoor = await pendingIndoors.reduce((total, item) => total + item.totalRoomrent, 0);
             setTotalPendingAdmitPatientst(totalofIndoor)
-
             setIsLoading(false);
         } catch (error) {
             console.error(error);
@@ -435,11 +441,11 @@ const opdInvoice = () => {
     };
    
     const saveInvoice = async () => {
-        const [patients, patientsLabReports, medicines] = await Promise.all([
-            [...opdPatient],
-            [...allPatientsLaboratoryReports],
-            [...patientMedicine]
-        ]);
+        // const [patients, patientsLabReports, medicines] = await Promise.all([
+        //     [...opdPatient],
+        //     [...allPatientsLaboratoryReports],
+        //     [...patientMedicine]
+        // ]);
 
         const newObj = {
             // ...state,
@@ -463,12 +469,12 @@ const opdInvoice = () => {
             invoiceuid
         };
 
-        const newLabReportsarray = patientsLabReports.map((item) =>
-            item.pid === state.pid ? { ...item, paymentStatus: 'Completed' } : item
-        );
+        // const newLabReportsarray = patientsLabReports.map((item) =>
+        //     item.pid === state.pid ? { ...item, paymentStatus: 'Completed' } : item
+        // );
         const newLabobj ={paymentStatus: 'Completed'}
       
-         const newArray = await patients.map((item) => (item.pid === state.pid && item.paymentStatus === "Pending" ? { ...item, ...newObj } : item))
+        //  const newArray = await patients.map((item) => (item.pid === state.pid && item.paymentStatus === "Pending" ? { ...item, ...newObj } : item))
    
 
         try {
@@ -496,8 +502,8 @@ const opdInvoice = () => {
                 // setData('PatientsMedicines', 'GoKwC6l5NRWSonfUAal0', 'patientsMedicines', newMedarray),
 
             ]);
-            dispatch(FILL_OPD_PATIENTS(newArray));
-            dispatch(FILL_LABORATORY_REPORTS(newLabReportsarray));
+            // dispatch(FILL_OPD_PATIENTS(newArray));
+            // dispatch(FILL_LABORATORY_REPORTS(newLabReportsarray));
             // dispatch(CHANGE_STATUS_PATIENTS_MEDICINES(newMedarray))
             toast.success('Invoice Saved SuccessFully...');
             window.history.back();
@@ -639,11 +645,11 @@ const opdInvoice = () => {
 
     const saveopdpendinginvoice = async () => {
         setIsLoading(true)
-        const [patients, patientsLabReports, medicines] = await Promise.all([
-            [...opdPatient],
-            [...allPatientsLaboratoryReports],
-            [...patientMedicine]
-        ]);
+        // const [patients, patientsLabReports, medicines] = await Promise.all([
+        //     [...opdPatient],
+        //     [...allPatientsLaboratoryReports],
+        //     [...patientMedicine]
+        // ]);
 
         const newObj = {
             // ...state,

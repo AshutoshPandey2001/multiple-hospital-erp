@@ -1,5 +1,7 @@
 /* eslint-disable prettier/prettier */
 import { configureStore, combineReducers, getDefaultMiddleware } from '@reduxjs/toolkit'
+import { persistReducer, persistStore } from 'redux-persist';
+import storage from 'redux-persist/lib/storage';
 import admitPatientsReducer from './slice/admitPatientsSlice';
 import authSliceReducer from './slice/authSlice';
 import changeStateReducer from './slice/changeStateslice';
@@ -43,9 +45,14 @@ const rooReducer = combineReducers({
 }
 
 )
+const persistConfig = {
+    key: 'Hospital_Data',
+    storage,
+}
 
-const store = configureStore({
-    reducer: rooReducer,
+const persistedReducer = persistReducer(persistConfig, rooReducer)
+export const store = configureStore({
+    reducer: persistedReducer,
     devTools: false,
     middleware: (getDefaultMiddleware) =>
         getDefaultMiddleware({
@@ -53,5 +60,5 @@ const store = configureStore({
         }),
 })
 
-
-export default store;
+export const persistor = persistStore(store)
+// export default {store,persistor};

@@ -11,11 +11,11 @@ import { selectUserId, selectUsertype } from 'src/redux/slice/authSlice'
 import { FILL_DISCHARGE_PATIENTS } from 'src/redux/slice/dischargePatientSlice'
 import { FILL_DR } from 'src/redux/slice/doctorsSlice'
 import { UPLOAD_MEDICINES } from 'src/redux/slice/medicinesMasterSlice'
-import { FILL_OPD_PATIENTS } from 'src/redux/slice/opdPatientsList'
-import { FILL_PATIENTS } from 'src/redux/slice/patientMasterslice'
+import { ADD_LAST_OPD_DATA, FILL_OPD_PATIENTS, selectlastOpdData } from 'src/redux/slice/opdPatientsList'
+import { ADD_LAST_PATIENT_DATA, FILL_PATIENTS, selectlastPatientData } from 'src/redux/slice/patientMasterslice'
 import { FILL_PATIENTS_MEDICINES } from 'src/redux/slice/patientsMedicinesSlice'
 import { FILL_ROOMS } from 'src/redux/slice/roomMasterSlice'
-import { addDatainsubcollection, getData, getDatawithhospitaluid, getHospitalProfile, getSubcollectionData, getSubcollectionDataopd, getTaxDatainsubCollection, getTaxDatawithhospitaluid } from 'src/services/firebasedb'
+import { addDatainsubcollection, getData, getDatawithhospitaluid, getHospitalProfile, getOnlyChangesListener, getSubcollectionData, getSubcollectionDataWithoutsnapshot, getSubcollectionDatafter, getSubcollectionDataopd, getTaxDatainsubCollection, getTaxDatawithhospitaluid } from 'src/services/firebasedb'
 import { AppContent, AppSidebar, AppFooter, AppHeader } from '../components/index'
 import { FILL_PARAMETERS } from 'src/redux/slice/laborataryMaster'
 import { FILL_LABORATORY_REPORTS } from 'src/redux/slice/patientsLaboratoryReportsSlice'
@@ -38,10 +38,20 @@ const DefaultLayout = () => {
   const sidebarShow = useSelector(selectChangeState)
   const hospitaluid = useSelector(selectUserId)
   const selectedMenu = useSelector(selectmenuStyle)
+  const lastOpdData = useSelector(selectlastOpdData)
+  const lastPatientData = useSelector(selectlastPatientData)
   const [isLoading, setIsLoading] = useState(true)
   useEffect(() => {
     setTimeout(async () => {
       console.log('hospitaluid', hospitaluid);
+
+      // await getOnlyChangesListener('opdPatients', 'm5JHl3l4zhaBCa8Vihcb', 'opdPatient', hospitaluid, (data) => {
+      //   // Handle the updated data in the callback function
+      //   // dispatch(FILL_OPD_PATIENTS(data))
+      //   console.log('for only getting changes', data);
+      // }).catch((error) => {
+      //   console.error('Error:', error);
+      // })
       // addDatainsubcollection()
       // gteSubcollectionData()
       // await getDatawithhospitaluid('Patients', 'fBoxFLrzXexT8WNBzGGh', 'patients', hospitaluid).then((matchingValues) => {
@@ -58,13 +68,33 @@ const DefaultLayout = () => {
       // } catch (error) {
       //   console.error('Error retrieving subcollection data:', error);
       // }
-      await getSubcollectionData('Patients', 'fBoxFLrzXexT8WNBzGGh', 'patients', hospitaluid, (data) => {
+
+      // await getSubcollectionDatafter('opdPatients', 'm5JHl3l4zhaBCa8Vihcb', 'opdPatient', hospitaluid, lastOpdData, (data, lastData) => {
+      //   // Handle the updated data in the callback function
+      //   // dispatch(FILL_PATIENTS(data))
+      //   dispatch(ADD_LAST_OPD_DATA(lastData))
+      //   console.log('getOPD with last Data', data, lastData);
+      // }).catch((error) => {
+      //   console.error('Error:', error);
+      // });
+
+
+      // await getSubcollectionDataWithoutsnapshot('Patients', 'fBoxFLrzXexT8WNBzGGh', 'patients', hospitaluid, (data) => {
+      //   // Handle the updated data in the callback function
+      //   dispatch(FILL_PATIENTS(data))
+      //   console.log('Received real-time data patients:', data);
+      // }).catch((error) => {
+      //   console.error('Error:', error);
+      // });
+
+      await getSubcollectionDataWithoutsnapshot('Patients', 'fBoxFLrzXexT8WNBzGGh', 'patients', hospitaluid, lastPatientData, (data, lastData) => {
         // Handle the updated data in the callback function
         dispatch(FILL_PATIENTS(data))
-        console.log('Received real-time data patients:', data);
+        dispatch(ADD_LAST_PATIENT_DATA(lastData))
+        console.log('Get Patients data with last Data', data, lastData);
       }).catch((error) => {
         console.error('Error:', error);
-      });
+      })
       // .then((temp_data) => {
       //   // dispatch(FILL_PATIENTS())
 
@@ -81,13 +111,26 @@ const DefaultLayout = () => {
       //   .catch((error) => {
       //     console.error(error);
       //   });
-      await getSubcollectionDataopd('opdPatients', 'm5JHl3l4zhaBCa8Vihcb', 'opdPatient', hospitaluid, (data) => {
+
+      await getSubcollectionDataWithoutsnapshot('opdPatients', 'm5JHl3l4zhaBCa8Vihcb', 'opdPatient', hospitaluid, lastOpdData, (data, lastData) => {
         // Handle the updated data in the callback function
         dispatch(FILL_OPD_PATIENTS(data))
-        console.log('Received real-time data:', data);
+        dispatch(ADD_LAST_OPD_DATA(lastData))
+        console.log('getOPD with last Data', data, lastData);
       }).catch((error) => {
         console.error('Error:', error);
       })
+
+      // await getSubcollectionDataWithoutsnapshot('opdPatients', 'm5JHl3l4zhaBCa8Vihcb', 'opdPatient', hospitaluid, (data) => {
+      //   // Handle the updated data in the callback function
+      //   dispatch(FILL_OPD_PATIENTS(data))
+      //   console.log('Received real-time data:', data);
+      // }).catch((error) => {
+      //   console.error('Error:', error);
+      // })
+
+
+
       // .then((temp_data) => {
       //   dispatch(FILL_OPD_PATIENTS(temp_data))
 
