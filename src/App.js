@@ -53,7 +53,7 @@ const App = () => {
     //   console.log('token', token);
     // }).catch(error => {
     //   console.error('token error ', error);
-    // }); 
+    // });
     startTransition(() => {
       onAuthStateChanged(auth, (user) => {
         let usertype = '';

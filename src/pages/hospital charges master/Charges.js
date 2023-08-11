@@ -81,8 +81,8 @@ const Charges = () => {
                 let charges1 = [...chargesFilter, Values]
                 try {
                     // await setData('Charges', 'id6rOjHGDBEd63LQiGQe', 'charges', charges1)
-                    // await addSingltObject('Charges', 'id6rOjHGDBEd63LQiGQe', 'charges', values)
-                    await addDatainsubcollection('Charges', 'id6rOjHGDBEd63LQiGQe', 'charges', values)
+                    await addSingltObject('Charges', 'id6rOjHGDBEd63LQiGQe', 'charges', values)
+                    // await addDatainsubcollection('Charges', 'id6rOjHGDBEd63LQiGQe', 'charges', values)
                     dispatch(ADD_CHARGE(Values))
                     action.resetForm();
                     clearForm()
@@ -98,8 +98,8 @@ const Charges = () => {
                 charge[findindex] = Values;
                 try {
                     // await setData('Charges', 'id6rOjHGDBEd63LQiGQe', 'charges', charge)
-                    // await updateSingltObject('Charges', 'id6rOjHGDBEd63LQiGQe', 'charges', values, 'chargeuid', 'hospitaluid')
-                    await updateDatainSubcollection('Charges', 'id6rOjHGDBEd63LQiGQe', 'charges', values, 'chargeuid', 'hospitaluid')
+                    await updateSingltObject('Charges', 'id6rOjHGDBEd63LQiGQe', 'charges', values, 'chargeuid', 'hospitaluid')
+                    // await updateDatainSubcollection('Charges', 'id6rOjHGDBEd63LQiGQe', 'charges', values, 'chargeuid', 'hospitaluid')
                     dispatch(EDIT_CHARGE(Values))
                     action.resetForm()
                     clearForm()
@@ -127,6 +127,7 @@ const Charges = () => {
         });
     }
     const editCharges = (item) => {
+        // setData('Charges', 'id6rOjHGDBEd63LQiGQe', 'charges', charges)
         // filDatainsubcollection(allCharges, 'Charges', 'id6rOjHGDBEd63LQiGQe', 'charges', hospitaluid)
         values.chargeName = item.chargeName;
         values.chargeuid = item.chargeuid;
@@ -146,8 +147,8 @@ const Charges = () => {
                     onClick: async () => {
                         let charges = chargesFilter.filter((item) => item.chargeuid !== item1.chargeuid)
                         try {
-                            // await deleteSingltObject('Charges', 'id6rOjHGDBEd63LQiGQe', 'charges', item1, 'chargeuid', 'hospitaluid')
-                            await deleteDatainSubcollection('Charges', 'id6rOjHGDBEd63LQiGQe', 'charges', item1, 'chargeuid', 'hospitaluid')
+                            await deleteSingltObject('Charges', 'id6rOjHGDBEd63LQiGQe', 'charges', item1, 'chargeuid', 'hospitaluid')
+                            // await deleteDatainSubcollection('Charges', 'id6rOjHGDBEd63LQiGQe', 'charges', item1, 'chargeuid', 'hospitaluid')
                             // await setData('Charges', 'id6rOjHGDBEd63LQiGQe', 'charges', charges)
                             dispatch(DELETE_CHARGE(item1))
                             toast.success("Deleted Successfully.......");
@@ -189,7 +190,7 @@ const Charges = () => {
                     title={"Charges"}
                     columns={columns}
                     data={charges}
-                    action={<> <button className='btn btn-primary' onClick={handleShow}><span>  <BiPlus size={25} /></span></button></>}
+                    action={<> <button className='btn btn-primary' onClick={() => handleShow()}><span>  <BiPlus size={25} /></span></button></>}
 
                 />
             </div>

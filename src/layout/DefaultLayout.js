@@ -10,12 +10,12 @@ import { FILL_ADMIT_PATIENTS } from 'src/redux/slice/admitPatientsSlice'
 import { selectUserId, selectUsertype } from 'src/redux/slice/authSlice'
 import { FILL_DISCHARGE_PATIENTS } from 'src/redux/slice/dischargePatientSlice'
 import { FILL_DR } from 'src/redux/slice/doctorsSlice'
-import { UPLOAD_MEDICINES } from 'src/redux/slice/medicinesMasterSlice'
+import { ADD_LAST_MEDICINES, FILL_MEDICINES_STOCK, UPLOAD_MEDICINES, selectLastMedicine } from 'src/redux/slice/medicinesMasterSlice'
 import { ADD_LAST_OPD_DATA, FILL_OPD_PATIENTS, selectlastOpdData } from 'src/redux/slice/opdPatientsList'
 import { ADD_LAST_PATIENT_DATA, FILL_PATIENTS, selectlastPatientData } from 'src/redux/slice/patientMasterslice'
 import { FILL_PATIENTS_MEDICINES } from 'src/redux/slice/patientsMedicinesSlice'
 import { FILL_ROOMS } from 'src/redux/slice/roomMasterSlice'
-import { addDatainsubcollection, getData, getDatawithhospitaluid, getHospitalProfile, getOnlyChangesListener, getSubcollectionData, getSubcollectionDataWithoutsnapshot, getSubcollectionDatafter, getSubcollectionDataopd, getTaxDatainsubCollection, getTaxDatawithhospitaluid } from 'src/services/firebasedb'
+import { addDatainsubcollection, getData, getDatawithhospitaluid, getHospitalProfile, getOnlyChangesListener, getSubcollectionData, getSubcollectionDataWithoutsnapshot, getSubcollectionDataWithoutsnapshotMedicalAndPatients, getSubcollectionDatafter, getSubcollectionDataopd, getTaxDatainsubCollection, getTaxDatawithhospitaluid } from 'src/services/firebasedb'
 import { AppContent, AppSidebar, AppFooter, AppHeader } from '../components/index'
 import { FILL_PARAMETERS } from 'src/redux/slice/laborataryMaster'
 import { FILL_LABORATORY_REPORTS } from 'src/redux/slice/patientsLaboratoryReportsSlice'
@@ -29,6 +29,7 @@ import { FILL_TAXS } from 'src/redux/slice/taxSlice'
 import { FILL_CHARGES } from 'src/redux/slice/chargesSlice'
 import { SET_HOSPITAL_PROFILE } from 'src/redux/slice/hospitalProfileSlice'
 import { SET_INDOORPREVBILL_NO, SET_OPDPREVBILL_NO } from 'src/redux/slice/prevBillNoSlice'
+import { db } from 'src/firebaseconfig'
 
 const DefaultLayout = () => {
   // const { hospitaluid } = props
@@ -40,7 +41,39 @@ const DefaultLayout = () => {
   const selectedMenu = useSelector(selectmenuStyle)
   const lastOpdData = useSelector(selectlastOpdData)
   const lastPatientData = useSelector(selectlastPatientData)
+  const lastMedicines = useSelector(selectLastMedicine)
+  const parentDocRef = db.collection('Patients').doc('fBoxFLrzXexT8WNBzGGh');
+  const subcollectionRef = parentDocRef.collection('patients').where('hospitaluid', '==', hospitaluid)
   const [isLoading, setIsLoading] = useState(true)
+  let unsubscribe = undefined
+
+  // const retrieveData = (query) => {
+  //   try {
+  //     // let initialSnapshot = true;
+  //     setIsLoading(true)
+  //     unsubscribe = query.onSnapshot((snapshot) => {
+  //       fetchData()
+  //     });
+
+  //     // return () => {
+  //     //     unsubscribe();
+  //     // };
+  //   } catch (error) {
+  //     setIsLoading(false)
+
+  //     console.error('Error retrieving data:', error);
+  //   }
+  // };
+  // const fetchData = async () => {
+  //   await getSubcollectionDataWithoutsnapshot('Patients', 'fBoxFLrzXexT8WNBzGGh', 'patients', hospitaluid, lastPatientData, (data, lastData) => {
+  //     // Handle the updated data in the callback function
+  //     dispatch(FILL_PATIENTS(data))
+  //     dispatch(ADD_LAST_PATIENT_DATA(lastData))
+  //     console.log('Get Patients data with last Data', data, lastData);
+  //   }).catch((error) => {
+  //     console.error('Error:', error);
+  //   })
+  // }
   useEffect(() => {
     setTimeout(async () => {
       console.log('hospitaluid', hospitaluid);
@@ -87,6 +120,7 @@ const DefaultLayout = () => {
       //   console.error('Error:', error);
       // });
 
+      // retrieveData(subcollectionRef)
       await getSubcollectionDataWithoutsnapshot('Patients', 'fBoxFLrzXexT8WNBzGGh', 'patients', hospitaluid, lastPatientData, (data, lastData) => {
         // Handle the updated data in the callback function
         dispatch(FILL_PATIENTS(data))
@@ -95,31 +129,35 @@ const DefaultLayout = () => {
       }).catch((error) => {
         console.error('Error:', error);
       })
-      // .then((temp_data) => {
-      //   // dispatch(FILL_PATIENTS())
+        // .then((temp_data) => {
+        //   // dispatch(FILL_PATIENTS())
 
-      //   console.log('Retrieved subcollection data:', temp_data);
-      //   // Use temp_data for further processing
+        //   console.log('Retrieved subcollection data:', temp_data);
+        //   // Use temp_data for further processing
+        // })
+        // .catch((error) => {
+        //   console.error('Error retrieving subcollection data:', error);
+        // });
+
+        // await getDatawithhospitaluid('opdPatients', 'm5JHl3l4zhaBCa8Vihcb', 'opdPatient', hospitaluid).then((matchingValues) => {
+        //   dispatch(FILL_OPD_PATIENTS(matchingValues))
+        // })
+        //   .catch((error) => {
+        //     console.error(error);
+        //   })
+
+        ;
+
+      // await getSubcollectionDataWithoutsnapshot('opdPatients', 'm5JHl3l4zhaBCa8Vihcb', 'opdPatient', hospitaluid, lastOpdData, (data, lastData) => {
+      //   // Handle the updated data in the callback function
+      //   dispatch(FILL_OPD_PATIENTS(data))
+      //   dispatch(ADD_LAST_OPD_DATA(lastData))
+      //   console.log('getOPD with last Data', data, lastData);
+      // }).catch((error) => {
+      //   console.error('Error:', error);
       // })
-      // .catch((error) => {
-      //   console.error('Error retrieving subcollection data:', error);
-      // });
 
-      // await getDatawithhospitaluid('opdPatients', 'm5JHl3l4zhaBCa8Vihcb', 'opdPatient', hospitaluid).then((matchingValues) => {
-      //   dispatch(FILL_OPD_PATIENTS(matchingValues))
-      // })
-      //   .catch((error) => {
-      //     console.error(error);
-      //   });
 
-      await getSubcollectionDataWithoutsnapshot('opdPatients', 'm5JHl3l4zhaBCa8Vihcb', 'opdPatient', hospitaluid, lastOpdData, (data, lastData) => {
-        // Handle the updated data in the callback function
-        dispatch(FILL_OPD_PATIENTS(data))
-        dispatch(ADD_LAST_OPD_DATA(lastData))
-        console.log('getOPD with last Data', data, lastData);
-      }).catch((error) => {
-        console.error('Error:', error);
-      })
 
       // await getSubcollectionDataWithoutsnapshot('opdPatients', 'm5JHl3l4zhaBCa8Vihcb', 'opdPatient', hospitaluid, (data) => {
       //   // Handle the updated data in the callback function
@@ -148,13 +186,19 @@ const DefaultLayout = () => {
       //   .catch((error) => {
       //     console.error(error);
       //   });
-      await getSubcollectionData('admitPatients', 'jSqDGnjO21bpPGhb6O2y', 'admitPatient', hospitaluid, (data) => {
-        // Handle the updated data in the callback function
-        dispatch(FILL_ADMIT_PATIENTS(data))
-        console.log('Received real-time data:', data);
-      }).catch((error) => {
-        console.error('Error:', error);
-      })
+
+
+
+      // await getSubcollectionData('admitPatients', 'jSqDGnjO21bpPGhb6O2y', 'admitPatient', hospitaluid, (data) => {
+      //   // Handle the updated data in the callback function
+      //   dispatch(FILL_ADMIT_PATIENTS(data))
+      //   console.log('Received real-time data:', data);
+      // }).catch((error) => {
+      //   console.error('Error:', error);
+      // })
+
+
+
       // .then((temp_data) => {
       //   dispatch(FILL_ADMIT_PATIENTS(temp_data))
 
@@ -165,20 +209,20 @@ const DefaultLayout = () => {
       //   console.error('Error retrieving subcollection data:', error);
       // });
 
-      // await getDatawithhospitaluid('Rooms', '3PvtQ2G1RbG3l5VtiCMI', 'rooms', hospitaluid).then((matchingValues) => {
-      //   dispatch(FILL_ROOMS(matchingValues))
-      // })
-      //   .catch((error) => {
-      //     console.error(error);
-      //   });
-
-      await getSubcollectionData('Rooms', '3PvtQ2G1RbG3l5VtiCMI', 'rooms', hospitaluid, (data) => {
-        // Handle the updated data in the callback function
-        dispatch(FILL_ROOMS(data))
-        console.log('Received real-time data:', data);
-      }).catch((error) => {
-        console.error('Error:', error);
+      await getDatawithhospitaluid('Rooms', '3PvtQ2G1RbG3l5VtiCMI', 'rooms', hospitaluid).then((matchingValues) => {
+        dispatch(FILL_ROOMS(matchingValues))
       })
+        .catch((error) => {
+          console.error(error);
+        });
+
+      // await getSubcollectionData('Rooms', '3PvtQ2G1RbG3l5VtiCMI', 'rooms', hospitaluid, (data) => {
+      //   // Handle the updated data in the callback function
+      //   dispatch(FILL_ROOMS(data))
+      //   console.log('Received real-time data:', data);
+      // }).catch((error) => {
+      //   console.error('Error:', error);
+      // })
       // .then((temp_data) => {
       //   dispatch(FILL_ROOMS(temp_data))
       //   console.log('Retrieved subcollection data Opd:', temp_data);
@@ -193,13 +237,21 @@ const DefaultLayout = () => {
       //   .catch((error) => {
       //     console.error(error);
       //   });
-      await getSubcollectionData('Medicines', 'dHFKEhdhbOM4v6WRMb6z', 'medicines', hospitaluid, (data) => {
-        // Handle the updated data in the callback function
-        dispatch(UPLOAD_MEDICINES(data))
-        console.log('Received real-time data:', data);
+      await getSubcollectionDataWithoutsnapshotMedicalAndPatients("Medicines", 'dHFKEhdhbOM4v6WRMb6z', 'medicines', hospitaluid, lastMedicines, (data, lastData) => {
+        dispatch(FILL_MEDICINES_STOCK(data))
+        dispatch(ADD_LAST_MEDICINES(lastData))
+        console.log('Get Patients data with last Data', data, lastData);
       }).catch((error) => {
         console.error('Error:', error);
       })
+
+      // await getSubcollectionData('Medicines', 'dHFKEhdhbOM4v6WRMb6z', 'medicines', hospitaluid, (data) => {
+      //   // Handle the updated data in the callback function
+      //   dispatch(UPLOAD_MEDICINES(data))
+      //   console.log('Received real-time data:', data);
+      // }).catch((error) => {
+      //   console.error('Error:', error);
+      // })
       // .then((temp_data) => {
       //   dispatch(UPLOAD_MEDICINES(temp_data))
       //   console.log('Retrieved subcollection data labparameter:', temp_data);
@@ -232,19 +284,19 @@ const DefaultLayout = () => {
       //   console.error('Error retrieving subcollection data:', error);
       // });
 
-      // await getDatawithhospitaluid('Doctors', 'd3ryEUfqA2FMa0fEyxde', 'doctors', hospitaluid).then((matchingValues) => {
-      //   dispatch(FILL_DR(matchingValues))
-      // })
-      //   .catch((error) => {
-      //     console.error(error);
-      //   });
-      await getSubcollectionData('Doctors', 'd3ryEUfqA2FMa0fEyxde', 'doctors', hospitaluid, (data) => {
-        // Handle the updated data in the callback function
-        dispatch(FILL_DR(data))
-        console.log('Received real-time data:', data);
-      }).catch((error) => {
-        console.error('Error:', error);
+      await getDatawithhospitaluid('Doctors', 'd3ryEUfqA2FMa0fEyxde', 'doctors', hospitaluid).then((matchingValues) => {
+        dispatch(FILL_DR(matchingValues))
       })
+        .catch((error) => {
+          console.error(error);
+        });
+      // await getSubcollectionData('Doctors', 'd3ryEUfqA2FMa0fEyxde', 'doctors', hospitaluid, (data) => {
+      //   // Handle the updated data in the callback function
+      //   dispatch(FILL_DR(data))
+      //   console.log('Received real-time data:', data);
+      // }).catch((error) => {
+      //   console.error('Error:', error);
+      // })
       // .then((temp_data) => {
       //   dispatch(FILL_DR(temp_data))
 
@@ -363,20 +415,20 @@ const DefaultLayout = () => {
         console.error('Error:', error);
       })
 
-      // await getDatawithhospitaluid('Charges', 'id6rOjHGDBEd63LQiGQe', 'charges', hospitaluid).then((matchingValues) => {
-      //   dispatch(FILL_CHARGES(matchingValues))
-      // })
-      //   .catch((error) => {
-      //     console.error(error);
-      //   });
-
-      await getSubcollectionData('Charges', 'id6rOjHGDBEd63LQiGQe', 'charges', hospitaluid, (data) => {
-        // Handle the updated data in the callback function
-        dispatch(FILL_CHARGES(data))
-        console.log('Received real-time data :', data);
-      }).catch((error) => {
-        console.error('Error:', error);
+      await getDatawithhospitaluid('Charges', 'id6rOjHGDBEd63LQiGQe', 'charges', hospitaluid).then((matchingValues) => {
+        dispatch(FILL_CHARGES(matchingValues))
       })
+        .catch((error) => {
+          console.error(error);
+        });
+
+      // await getSubcollectionData('Charges', 'id6rOjHGDBEd63LQiGQe', 'charges', hospitaluid, (data) => {
+      //   // Handle the updated data in the callback function
+      //   dispatch(FILL_CHARGES(data))
+      //   console.log('Received real-time data :', data);
+      // }).catch((error) => {
+      //   console.error('Error:', error);
+      // })
       // .then((temp_data) => {
       //   dispatch(FILL_CHARGES(temp_data))
       //   console.log('Retrieved subcollection data Opd:', temp_data);

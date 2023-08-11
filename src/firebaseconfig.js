@@ -4,8 +4,8 @@
 // https://firebase.google.com/docs/web/setup#available-libraries
 import firebase from 'firebase/compat/app'
 import 'firebase/compat/firestore';
-import { getAuth } from "firebase/auth"
-import { getStorage } from "firebase/storage"
+import { getAuth } from 'firebase/auth'; // Corrected import
+import { getStorage } from 'firebase/storage'; // Corrected import
 import 'firebase/compat/messaging';
 
 // Your web app's Firebase configuration

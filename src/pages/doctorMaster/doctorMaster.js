@@ -94,8 +94,8 @@ const doctorMaster = () => {
                 let doctor = [...drFilter, Values]
                 try {
                     // await setData('Doctors', 'd3ryEUfqA2FMa0fEyxde', 'doctors', doctor)
-                    // await addSingltObject('Doctors', 'd3ryEUfqA2FMa0fEyxde', 'doctors', values)
-                    await addDatainsubcollection('Doctors', 'd3ryEUfqA2FMa0fEyxde', 'doctors', values)
+                    await addSingltObject('Doctors', 'd3ryEUfqA2FMa0fEyxde', 'doctors', values)
+                    // await addDatainsubcollection('Doctors', 'd3ryEUfqA2FMa0fEyxde', 'doctors', values)
                     dispatch(ADD_DR(Values))
                     action.resetForm();
                     clearForm()
@@ -111,8 +111,8 @@ const doctorMaster = () => {
                 doctor1[findindex] = Values;
                 try {
                     // await setData('Doctors', 'd3ryEUfqA2FMa0fEyxde', 'doctors', doctor1)
-                    await updateDatainSubcollection('Doctors', 'd3ryEUfqA2FMa0fEyxde', 'doctors', Values, 'druid', 'hospitaluid')
-                    // await updateSingltObject('Doctors', 'd3ryEUfqA2FMa0fEyxde', 'doctors', Values, 'druid', 'hospitaluid')
+                    // await updateDatainSubcollection('Doctors', 'd3ryEUfqA2FMa0fEyxde', 'doctors', Values, 'druid', 'hospitaluid')
+                    await updateSingltObject('Doctors', 'd3ryEUfqA2FMa0fEyxde', 'doctors', Values, 'druid', 'hospitaluid')
                     dispatch(EDIT_DR(Values))
                     action.resetForm()
                     clearForm()
@@ -150,6 +150,7 @@ const doctorMaster = () => {
     }
     const editDoctor = (item) => {
         // filDatainsubcollection(allDoctors, 'Doctors', 'd3ryEUfqA2FMa0fEyxde', 'doctors', hospitaluid)
+        // setData('Doctors', 'd3ryEUfqA2FMa0fEyxde', 'doctors', drList)
         values.drName = item.drName;
         values.druid = item.druid;
         values.hospitaluid = item.hospitaluid
@@ -168,8 +169,8 @@ const doctorMaster = () => {
                     onClick: async () => {
                         let room = drFilter.filter((item) => item.druid !== item1.druid)
                         try {
-                            // await deleteSingltObject('Doctors', 'd3ryEUfqA2FMa0fEyxde', 'doctors', item1, 'druid', 'hospitaluid')
-                            await deleteDatainSubcollection('Doctors', 'd3ryEUfqA2FMa0fEyxde', 'doctors', item1, 'druid', 'hospitaluid')
+                            await deleteSingltObject('Doctors', 'd3ryEUfqA2FMa0fEyxde', 'doctors', item1, 'druid', 'hospitaluid')
+                            // await deleteDatainSubcollection('Doctors', 'd3ryEUfqA2FMa0fEyxde', 'doctors', item1, 'druid', 'hospitaluid')
                             // await setData('Doctors', 'd3ryEUfqA2FMa0fEyxde', 'doctors', room)
                             dispatch(DELETE_DR(item1))
                             toast.success("Deleted Successfully.......");
@@ -212,7 +213,6 @@ const doctorMaster = () => {
                     columns={columns}
                     data={drList}
                     action={<> <button className='btn btn-primary' onClick={handleShow}><span>  <BiPlus size={25} /></span></button></>}
-
                 />
             </div>
         }

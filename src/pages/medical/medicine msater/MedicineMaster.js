@@ -9,15 +9,16 @@ import { medicineSchema } from 'src/schema';
 import { MdEdit } from 'react-icons/md'
 import { AiFillDelete } from 'react-icons/ai'
 import { useDispatch, useSelector } from 'react-redux';
-import { ADD_MEDICINES, DELETE_MEDICINES, EDIT_MEDICINES, UPLOAD_MEDICINES, selectAllMedicines } from 'src/redux/slice/medicinesMasterSlice';
+import { ADD_LAST_MEDICINES, ADD_MEDICINES, DELETE_MEDICINES, EDIT_MEDICINES, FILL_MEDICINES_STOCK, UPLOAD_MEDICINES, selectAllMedicines, selectLastMedicine } from 'src/redux/slice/medicinesMasterSlice';
 import Papa from "papaparse";
-import { addDatainsubcollection, addSingltObject, deleteDatainSubcollection, deleteSingltObject, filDatainsubcollection, setData, updateDatainSubcollection, updateSingltObject, uploadArray } from 'src/services/firebasedb';
+import { addDatainsubcollection, addDatainsubcollectionmedicalAndPatients, addSingltObject, deleteDatainSubcollection, deleteDatainSubcollectionMedicalAndPatients, deleteSingltObject, filDatainsubcollection, getSubcollectionDataWithoutsnapshotMedicalAndPatients, setData, updateDatainSubcollection, updateDatainSubcollectionMedicalAndPatients, updateSingltObject, uploadArray } from 'src/services/firebasedb';
 import Loaderspinner from 'src/comman/spinner/Loaderspinner';
 import CommanTable from 'src/comman/table/CommanTable';
 import { confirmAlert } from 'react-confirm-alert';
 import { toast } from 'react-toastify';
 import { selectUserId } from 'src/redux/slice/authSlice';
 import { TfiReload } from 'react-icons/tfi'
+import { db } from 'src/firebaseconfig';
 
 const initalValues = {
     medicineuid: '',
@@ -39,6 +40,10 @@ const MedicineMaster = () => {
     const [isLoading, setIsLoading] = useState(true)
     const [files, setFiles] = useState('')
     let [medicine, setMedicines] = useState([])
+    const lastMedicines = useSelector(selectLastMedicine)
+    const parentDocRef = db.collection('Medicines').doc('dHFKEhdhbOM4v6WRMb6z');
+    const subcollectionRef = parentDocRef.collection('medicines').where('hospitaluid', '==', hospitaluid)
+    let unsubscribe = undefined
     const columns = [
         { name: 'Id', selector: row => row.medicineuid },
         { name: 'Medicine Name', selector: row => row.medicineName, sortable: true },
@@ -71,31 +76,76 @@ const MedicineMaster = () => {
         setIsLoading(false)
     }, [allMedicinesList])
 
+    useEffect(() => {
+        let query = subcollectionRef
+        retrieveData(query)
+        return () => {
+            unsubscribe();
+        };
+    }, [])
+
+    const retrieveData = (query) => {
+        try {
+            setIsLoading(true)
+            unsubscribe = query.onSnapshot((snapshot) => {
+                fetchData()
+            });
+        } catch (error) {
+            setIsLoading(false)
+            console.error('Error retrieving data:', error);
+        }
+    };
+
+    const fetchData = async () => {
+        await getSubcollectionDataWithoutsnapshotMedicalAndPatients("Medicines", 'dHFKEhdhbOM4v6WRMb6z', 'medicines', hospitaluid, lastMedicines, (data, lastData) => {
+            dispatch(FILL_MEDICINES_STOCK(data))
+            dispatch(ADD_LAST_MEDICINES(lastData))
+            console.log('Get Medicines with last Data', data, lastData);
+            setIsLoading(false)
+        }).catch((error) => {
+            console.error('Error:', error);
+        })
+    }
+
 
     const formik = useFormik({
         initialValues: initalValues,
         validationSchema: medicineSchema,
         onSubmit: async (Values, action) => {
             setIsLoading(true)
-
-
             let medd = [...medicinessFilter]
             if (!update) {
                 values.hospitaluid = hospitaluid
                 // setMedicinessFilter([...medicinessFilter, Values])
                 let findMedicine = medd.findIndex((item1) => item1.medicineuid === Values.medicineuid)
                 if (findMedicine >= 0) {
-
                     let totalStock = medd[findMedicine].availableStock + Values.availableStock;
                     let newObj = { ...medd[findMedicine], availableStock: totalStock }
                     medd[findMedicine] = newObj
+                    try {
+                        await updateDatainSubcollectionMedicalAndPatients("Medicines", 'dHFKEhdhbOM4v6WRMb6z', 'medicines', newObj, 'medicineuid', 'hospitaluid')
+
+                        // await updateDatainSubcollection("Medicines", 'dHFKEhdhbOM4v6WRMb6z', 'medicines', values, 'medicineuid', 'hospitaluid')
+                        // dispatch(EDIT_MEDICINES(Values))
+                        action.resetForm()
+                        setShow(false)
+                        setUpdate(false)
+                        toast.success("Updated Successfully.......");
+                        setIsLoading(false)
+                        return
+                    } catch (error) {
+                        setIsLoading(false)
+                        toast.error(error.message)
+                        return
+                        console.error(error.message);
+                    }
                 } else {
                     medd.push(Values)
                 }
-
                 try {
-                    await addDatainsubcollection("Medicines", 'dHFKEhdhbOM4v6WRMb6z', 'medicines', values)
-                    dispatch(ADD_MEDICINES(Values))
+                    // await addDatainsubcollection("Medicines", 'dHFKEhdhbOM4v6WRMb6z', 'medicines', values)
+                    await addDatainsubcollectionmedicalAndPatients("Medicines", 'dHFKEhdhbOM4v6WRMb6z', 'medicines', values)
+                    // dispatch(ADD_MEDICINES(Values))
                     action.resetForm()
                     setShow(false)
                     toast.success("Added Successfully.......");
@@ -105,16 +155,16 @@ const MedicineMaster = () => {
                     toast.error(error.message)
                     console.error(error.message);
                 }
-
             } else {
 
                 let findindex = medd.findIndex((item) => item.medicineuid == Values.medicineuid);
                 medd[findindex] = Values;
 
                 try {
+                    await updateDatainSubcollectionMedicalAndPatients("Medicines", 'dHFKEhdhbOM4v6WRMb6z', 'medicines', values, 'medicineuid', 'hospitaluid')
 
-                    await updateDatainSubcollection("Medicines", 'dHFKEhdhbOM4v6WRMb6z', 'medicines', values, 'medicineuid', 'hospitaluid')
-                    dispatch(EDIT_MEDICINES(Values))
+                    // await updateDatainSubcollection("Medicines", 'dHFKEhdhbOM4v6WRMb6z', 'medicines', values, 'medicineuid', 'hospitaluid')
+                    // dispatch(EDIT_MEDICINES(Values))
                     action.resetForm()
                     setShow(false)
                     setUpdate(false)
@@ -154,9 +204,10 @@ const MedicineMaster = () => {
                         let med = medicinessFilter.filter((item) => item.medicineuid !== item1.medicineuid);
                         try {
                             // await deleteSingltObject("Medicines", 'dHFKEhdhbOM4v6WRMb6z', 'medicines', item1, 'medicineuid', 'hospitaluid')
-                            await deleteDatainSubcollection("Medicines", 'dHFKEhdhbOM4v6WRMb6z', 'medicines', item1, 'medicineuid', 'hospitaluid')
+                            // await deleteDatainSubcollection("Medicines", 'dHFKEhdhbOM4v6WRMb6z', 'medicines', item1, 'medicineuid', 'hospitaluid')
+                            await deleteDatainSubcollectionMedicalAndPatients("Medicines", 'dHFKEhdhbOM4v6WRMb6z', 'medicines', item1, 'medicineuid', 'hospitaluid')
                             // await setData("Medicines", 'dHFKEhdhbOM4v6WRMb6z', 'medicines', med)
-                            dispatch(DELETE_MEDICINES(item1))
+                            // dispatch(DELETE_MEDICINES(item1))
                             toast.success("Deleted Successfully.......");
                         } catch (error) {
                             toast.error(error.message)
@@ -208,10 +259,10 @@ const MedicineMaster = () => {
                             if (findMedicine >= 0) {
                                 let totalStock = medicine[findMedicine].availableStock + item.availableStock;
                                 let newObj = { ...medicine[findMedicine], availableStock: totalStock }
-                                updateDatainSubcollection("Medicines", 'dHFKEhdhbOM4v6WRMb6z', 'medicines', newObj, 'medicineuid', 'hospitaluid')
+                                updateDatainSubcollectionMedicalAndPatients("Medicines", 'dHFKEhdhbOM4v6WRMb6z', 'medicines', newObj, 'medicineuid', 'hospitaluid')
                                 // medicine[findMedicine] = newObj
                             } else {
-                                addDatainsubcollection("Medicines", 'dHFKEhdhbOM4v6WRMb6z', 'medicines', { ...item, hospitaluid: hospitaluid })
+                                addDatainsubcollectionmedicalAndPatients("Medicines", 'dHFKEhdhbOM4v6WRMb6z', 'medicines', { ...item, hospitaluid: hospitaluid })
                                 // medicine.push({ ...item, hospitaluid: hospitaluid })
                             }
                             tempData.push({ ...item, hospitaluid: hospitaluid })

@@ -112,8 +112,8 @@ const AddRooms = () => {
                 room1[findindex] = Values;
                 try {
                     // await setData('Rooms', '3PvtQ2G1RbG3l5VtiCMI', 'rooms', room1)
-                    // await updateSingltObject('Rooms', '3PvtQ2G1RbG3l5VtiCMI', 'rooms', Values, 'roomuid', 'hospitaluid')
-                    await updateDatainSubcollection('Rooms', '3PvtQ2G1RbG3l5VtiCMI', 'rooms', Values, 'roomuid', 'hospitaluid')
+                    await updateSingltObject('Rooms', '3PvtQ2G1RbG3l5VtiCMI', 'rooms', Values, 'roomuid', 'hospitaluid')
+                    // await updateDatainSubcollection('Rooms', '3PvtQ2G1RbG3l5VtiCMI', 'rooms', Values, 'roomuid', 'hospitaluid')
 
                     dispatch(EDIT_ROOM(Values))
                     action.resetForm()
@@ -149,6 +149,7 @@ const AddRooms = () => {
         });
     };
     const editRooms = (item) => {
+        // setData('Rooms', '3PvtQ2G1RbG3l5VtiCMI', 'rooms', roomList)
         // filDatainsubcollection(allRooms, 'Rooms', '3PvtQ2G1RbG3l5VtiCMI', 'rooms', hospitaluid)
         values.roomType = item.roomType;
         values.roomuid = item.roomuid;
@@ -170,8 +171,8 @@ const AddRooms = () => {
                         let room = roomsFilter.filter((item) => item.roomuid !== item1.roomuid)
                         try {
                             // await setData('Rooms', '3PvtQ2G1RbG3l5VtiCMI', 'rooms', room)
-                            // await deleteSingltObject('Rooms', '3PvtQ2G1RbG3l5VtiCMI', 'rooms', item1, 'roomuid', 'hospitaluid')
-                            await deleteDatainSubcollection('Rooms', '3PvtQ2G1RbG3l5VtiCMI', 'rooms', item1, 'roomuid', 'hospitaluid')
+                            await deleteSingltObject('Rooms', '3PvtQ2G1RbG3l5VtiCMI', 'rooms', item1, 'roomuid', 'hospitaluid')
+                            // await deleteDatainSubcollection('Rooms', '3PvtQ2G1RbG3l5VtiCMI', 'rooms', item1, 'roomuid', 'hospitaluid')
                             dispatch(DELETE_ROOM(item1))
                             toast.success("Deleted Successfully.......");
                         } catch (error) {
@@ -218,7 +219,7 @@ const AddRooms = () => {
                     title={"Rooms"}
                     columns={columns}
                     data={roomList}
-                    action={<> <button className='btn btn-primary' onClick={handleShow}><span>  <BiPlus size={25} /></span></button></>}
+                    action={<> <button className='btn btn-primary' onClick={() => handleShow()}><span>  <BiPlus size={25} /></span></button></>}
 
                 />
             </div>

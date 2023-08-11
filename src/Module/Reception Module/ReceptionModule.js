@@ -15,7 +15,7 @@ import { FILL_DISCHARGE_PATIENTS } from 'src/redux/slice/dischargePatientSlice'
 import { FILL_DR } from 'src/redux/slice/doctorsSlice'
 import { UPLOAD_MEDICINES } from 'src/redux/slice/medicinesMasterSlice'
 import { FILL_OPD_PATIENTS } from 'src/redux/slice/opdPatientsList'
-import { FILL_PATIENTS } from 'src/redux/slice/patientMasterslice'
+import { ADD_LAST_PATIENT_DATA, FILL_PATIENTS, selectlastPatientData } from 'src/redux/slice/patientMasterslice'
 import { FILL_PATIENTS_MEDICINES } from 'src/redux/slice/patientsMedicinesSlice'
 import { FILL_ROOMS } from 'src/redux/slice/roomMasterSlice'
 import Loaderspinner from 'src/comman/spinner/Loaderspinner'
@@ -31,6 +31,7 @@ const ReceptionModule = () => {
     const selectedMenu = useSelector(selectmenuStyle)
     const [isLoading, setIsLoading] = useState(true)
     const hospitaluid = useSelector(selectUserId)
+    const lastPatientData = useSelector(selectlastPatientData)
 
     useEffect(() => {
         setTimeout(async () => {
@@ -208,39 +209,54 @@ const ReceptionModule = () => {
             //         console.error(error);
             //     });
 
-            await getSubcollectionDataWithoutsnapshot('Patients', 'fBoxFLrzXexT8WNBzGGh', 'patients', hospitaluid, (data) => {
+            // await getSubcollectionDataWithoutsnapshot('Patients', 'fBoxFLrzXexT8WNBzGGh', 'patients', hospitaluid, (data) => {
+            //     // Handle the updated data in the callback function
+            //     dispatch(FILL_PATIENTS(data))
+            //     console.log('Received real-time data patients:', data);
+            // }).catch((error) => {
+            //     console.error('Error:', error);
+            // });
+
+
+            await getSubcollectionDataWithoutsnapshot('Patients', 'fBoxFLrzXexT8WNBzGGh', 'patients', hospitaluid, lastPatientData, (data, lastData) => {
                 // Handle the updated data in the callback function
                 dispatch(FILL_PATIENTS(data))
-                console.log('Received real-time data patients:', data);
-            }).catch((error) => {
-                console.error('Error:', error);
-            });
-
-            await getSubcollectionDataWithoutsnapshot('opdPatients', 'm5JHl3l4zhaBCa8Vihcb', 'opdPatient', hospitaluid, (data) => {
-                // Handle the updated data in the callback function
-                dispatch(FILL_OPD_PATIENTS(data))
-                console.log('Received real-time data:', data);
+                dispatch(ADD_LAST_PATIENT_DATA(lastData))
+                console.log('Get Patients data with last Data', data, lastData);
             }).catch((error) => {
                 console.error('Error:', error);
             })
 
+            // await getSubcollectionDataWithoutsnapshot('opdPatients', 'm5JHl3l4zhaBCa8Vihcb', 'opdPatient', hospitaluid, (data) => {
+            //     // Handle the updated data in the callback function
+            //     dispatch(FILL_OPD_PATIENTS(data))
+            //     console.log('Received real-time data:', data);
+            // }).catch((error) => {
+            //     console.error('Error:', error);
+            // })
 
-            await getSubcollectionData('admitPatients', 'jSqDGnjO21bpPGhb6O2y', 'admitPatient', hospitaluid, (data) => {
-                // Handle the updated data in the callback function
-                dispatch(FILL_ADMIT_PATIENTS(data))
-                console.log('Received real-time data:', data);
-            }).catch((error) => {
-                console.error('Error:', error);
+
+            // await getSubcollectionData('admitPatients', 'jSqDGnjO21bpPGhb6O2y', 'admitPatient', hospitaluid, (data) => {
+            //     // Handle the updated data in the callback function
+            //     dispatch(FILL_ADMIT_PATIENTS(data))
+            //     console.log('Received real-time data:', data);
+            // }).catch((error) => {
+            //     console.error('Error:', error);
+            // })
+
+            // await getSubcollectionData('Rooms', '3PvtQ2G1RbG3l5VtiCMI', 'rooms', hospitaluid, (data) => {
+            //     // Handle the updated data in the callback function
+            //     dispatch(FILL_ROOMS(data))
+            //     console.log('Received real-time data:', data);
+            // }).catch((error) => {
+            //     console.error('Error:', error);
+            // })
+            await getDatawithhospitaluid('Rooms', '3PvtQ2G1RbG3l5VtiCMI', 'rooms', hospitaluid).then((matchingValues) => {
+                dispatch(FILL_ROOMS(matchingValues))
             })
-
-            await getSubcollectionData('Rooms', '3PvtQ2G1RbG3l5VtiCMI', 'rooms', hospitaluid, (data) => {
-                // Handle the updated data in the callback function
-                dispatch(FILL_ROOMS(data))
-                console.log('Received real-time data:', data);
-            }).catch((error) => {
-                console.error('Error:', error);
-            })
-
+                .catch((error) => {
+                    console.error(error);
+                });
             await getSubcollectionData('Medicines', 'dHFKEhdhbOM4v6WRMb6z', 'medicines', hospitaluid, (data) => {
                 // Handle the updated data in the callback function
                 dispatch(UPLOAD_MEDICINES(data))
@@ -257,13 +273,21 @@ const ReceptionModule = () => {
                 console.error('Error:', error);
             })
 
-            await getSubcollectionData('Doctors', 'd3ryEUfqA2FMa0fEyxde', 'doctors', hospitaluid, (data) => {
-                // Handle the updated data in the callback function
-                dispatch(FILL_DR(data))
-                console.log('Received real-time data:', data);
-            }).catch((error) => {
-                console.error('Error:', error);
+            // await getSubcollectionData('Doctors', 'd3ryEUfqA2FMa0fEyxde', 'doctors', hospitaluid, (data) => {
+            //     // Handle the updated data in the callback function
+            //     dispatch(FILL_DR(data))
+            //     console.log('Received real-time data:', data);
+            // }).catch((error) => {
+            //     console.error('Error:', error);
+            // })
+
+            await getDatawithhospitaluid('Doctors', 'd3ryEUfqA2FMa0fEyxde', 'doctors', hospitaluid).then((matchingValues) => {
+                dispatch(FILL_DR(matchingValues))
             })
+                .catch((error) => {
+                    console.error(error);
+                });
+
 
             await getSubcollectionData('DischargePatients', 'cki4rIGKtNwyXr27cZBY', 'dischargePatients', hospitaluid, (data) => {
                 // Handle the updated data in the callback function
@@ -306,13 +330,20 @@ const ReceptionModule = () => {
             })
 
 
-            await getSubcollectionData('Charges', 'id6rOjHGDBEd63LQiGQe', 'charges', hospitaluid, (data) => {
-                // Handle the updated data in the callback function
-                dispatch(FILL_CHARGES(data))
-                console.log('Received real-time data :', data);
-            }).catch((error) => {
-                console.error('Error:', error);
+            // await getSubcollectionData('Charges', 'id6rOjHGDBEd63LQiGQe', 'charges', hospitaluid, (data) => {
+            //     // Handle the updated data in the callback function
+            //     dispatch(FILL_CHARGES(data))
+            //     console.log('Received real-time data :', data);
+            // }).catch((error) => {
+            //     console.error('Error:', error);
+            // })
+            await getDatawithhospitaluid('Charges', 'id6rOjHGDBEd63LQiGQe', 'charges', hospitaluid).then((matchingValues) => {
+                dispatch(FILL_CHARGES(matchingValues))
             })
+                .catch((error) => {
+                    console.error(error);
+                });
+
             await getHospitalProfile('HospitalMaster', 'S4fRJIO5ZxE5isoBIbEU', 'hospitalMaster', hospitaluid, (data) => {
                 // Handle the updated data in the callback function
                 dispatch(SET_HOSPITAL_PROFILE(data))

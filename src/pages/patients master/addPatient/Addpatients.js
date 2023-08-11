@@ -16,7 +16,7 @@ import { ADD_LAST_PATIENT_DATA, ADD_PATIENTS, DELETE_PATIENTS, EDIT_PATIENTS, FI
 import { selectMobileNo, selectUserId, selectUsertype } from 'src/redux/slice/authSlice';
 import CommanTable from 'src/comman/table/CommanTable';
 import Loaderspinner from 'src/comman/spinner/Loaderspinner';
-import { addDatainsubcollection, deleteDatainSubcollection, deleteSingltObject, filDatainsubcollection, getSubcollectionData, getSubcollectionDataWithoutsnapshot, setData, updateDatainSubcollection } from 'src/services/firebasedb';
+import { addDatainsubcollection, deleteDatainSubcollection, deleteDatainSubcollectionPatients, deleteSingltObject, filDatainsubcollection, getSubcollectionData, getSubcollectionDataWithoutsnapshot, setData, updateDatainSubcollection } from 'src/services/firebasedb';
 import { confirmAlert } from 'react-confirm-alert';
 import { toast } from 'react-toastify';
 import Addpatientscommanmodel from 'src/comman/comman model/Addpatientscommanmodel';
@@ -69,9 +69,8 @@ const Addpatients = () => {
     const [prev, setPrev] = useState(false);
     const [searchBy, setSearchBy] = useState('');
     const [searchString, setSearchString] = useState('');
-    const parentDocRef = db.collection('Patients').doc('fBoxFLrzXexT8WNBzGGh');
     const lastPatientData = useSelector(selectlastPatientData)
-
+    const parentDocRef = db.collection('Patients').doc('fBoxFLrzXexT8WNBzGGh');
     const subcollectionRef = parentDocRef.collection('patients').where('hospitaluid', '==', hospitaluid)
     // const subcollectionRef = parentDocRef.collection('patients').where('hospitaluid', '==', hospitaluid)
     //     .where('deleted', '==', 0);
@@ -95,55 +94,52 @@ const Addpatients = () => {
     ]
 
 
-    useEffect(() => {
-        // setPatientsList([...allPatientsList].reverse())
-        // setPatientsFilter(allPatientsList)
-        // setIsLoading(false)
-        let query = subcollectionRef
-            .orderBy('timestamp', 'desc')
-            .limit(perPageRows)
-        // let query = new firebase.firestore.Query(subcollectionRef)
-        //     .where('hospitaluid', '==', hospitaluid)
-        //     .whereEqualTo('deleted', null)
-        //     // .where('deleted', '!=', 1)
-        //     // .where('deleted', '==', null)
-        //     .orderBy('timestamp', 'desc')
-        //     .limit(perPageRows)
-        retrieveData(query)
-        setIsLoading(false)
-        totalNumberofData()
-        // chnageDetectore()
-        return () => {
-            // unsub()
-            unsubscribe();
-            setSearchString('')
-            console.log('unmounting');
-        };
-    }, [])
+    // useEffect(() => {
+    //     // setPatientsList([...allPatientsList].reverse())
+    //     // setPatientsFilter(allPatientsList)
+    //     // setIsLoading(false)
+    //     let query = subcollectionRef
+    //         .orderBy('timestamp', 'desc')
+    //         .limit(perPageRows)
+    //     // let query = new firebase.firestore.Query(subcollectionRef)
+    //     //     .where('hospitaluid', '==', hospitaluid)
+    //     //     .whereEqualTo('deleted', null)
+    //     //     // .where('deleted', '!=', 1)
+    //     //     // .where('deleted', '==', null)
+    //     //     .orderBy('timestamp', 'desc')
+    //     //     .limit(perPageRows)
+    //     retrieveData(query)
+    //     setIsLoading(false)
+    //     // totalNumberofData()
+    //     // chnageDetectore()
+    //     return () => {
+    //         // unsub()
+    //         unsubscribe();
+    //         // setSearchString('')
+    //         // console.log('unmounting');
+    //     };
+    // }, [])
 
     useEffect(() => {
         setPatientsList([...allPatientsList].reverse())
         setPatientsFilter(allPatientsList)
         setIsLoading(false)
-
-        // chnageDetectore()
-
     }, [allPatientsList])
-    const totalNumberofData = () => {
-        // const parentDocRef = db.collection('opdPatients').doc('m5JHl3l4zhaBCa8Vihcb');
-        // const subcollectionRef = parentDocRef.collection('opdPatient');
+    // const totalNumberofData = () => {
+    //     // const parentDocRef = db.collection('opdPatients').doc('m5JHl3l4zhaBCa8Vihcb');
+    //     // const subcollectionRef = parentDocRef.collection('opdPatient');
 
-        let query = subcollectionRef.where('hospitaluid', '==', hospitaluid).where('deleted', '==', 0).orderBy('timestamp', 'desc');
+    //     let query = subcollectionRef.where('hospitaluid', '==', hospitaluid).where('deleted', '==', 0).orderBy('timestamp', 'desc');
 
-        query.get().then(snapshot => {
-            console.log(snapshot);
-            const totalDataCount = snapshot.size;
-            setsetTotalNumData(totalDataCount)
-            console.log('Total data count:', totalDataCount);
-        }).catch(error => {
-            console.error('Error retrieving data:', error);
-        });
-    }
+    //     query.get().then(snapshot => {
+    //         console.log(snapshot);
+    //         const totalDataCount = snapshot.size;
+    //         setsetTotalNumData(totalDataCount)
+    //         console.log('Total data count:', totalDataCount);
+    //     }).catch(error => {
+    //         console.error('Error retrieving data:', error);
+    //     });
+    // }
 
 
     // const retrieveData = (query) => {
@@ -232,7 +228,7 @@ const Addpatients = () => {
     }
 
     const handlePrintWithProps = async (items) => {
-        console.log('items', items);
+
         setPrintContent(
             <div style={{ width: '800px', marginRight: '50px' }}>
                 <div className='card' style={{ border: "2px solid black", padding: '20px', height: '90vh' }}>
@@ -286,7 +282,15 @@ const Addpatients = () => {
 
                             // await setData('Patients', 'fBoxFLrzXexT8WNBzGGh', 'patients', patient)
                             // await deleteSingltObject('Patients', 'fBoxFLrzXexT8WNBzGGh', 'patients', item1, 'pid', 'hospitaluid')
-                            await deleteDatainSubcollection('Patients', 'fBoxFLrzXexT8WNBzGGh', 'patients', item1, 'pid', 'hospitaluid')
+                            await deleteDatainSubcollectionPatients('Patients', 'fBoxFLrzXexT8WNBzGGh', 'patients', item1, 'pid', 'hospitaluid')
+                            // .then((updatedData) => {
+                            //     dispatch(FILL_PATIENTS(updatedData))
+                            //     dispatch(ADD_LAST_PATIENT_DATA(updatedData[updatedData.length - 1]))
+                            //     console.log('updatedData[updatedData.length - 1])', updatedData[updatedData.length - 1]);
+                            // })
+                            //     .catch((error) => {
+                            //         console.error('Error updating data:', error);
+                            //     });
                             // dispatch(DELETE_PATIENTS(item1))
                             toast.success("Deleted Successfully.......")
                         } catch (error) {
@@ -351,20 +355,20 @@ const Addpatients = () => {
         // setOpdPatientList(filteredRows)
     }
 
-    const onSearchInput = (value) => {
-        setSearchString(value)
-        if (!value.length) {
-            setIsLoading(true)
-            setSearchString('')
-            let query = subcollectionRef
-                .where('hospitaluid', '==', hospitaluid)
-                .orderBy('timestamp', 'desc')
-                .limit(perPageRows)
-            retrieveData(query)
-            setIsLoading(false)
-            totalNumberofData()
-        }
-    }
+    // const onSearchInput = (value) => {
+    //     setSearchString(value)
+    //     if (!value.length) {
+    //         setIsLoading(true)
+    //         setSearchString('')
+    //         let query = subcollectionRef
+    //             .where('hospitaluid', '==', hospitaluid)
+    //             .orderBy('timestamp', 'desc')
+    //             .limit(perPageRows)
+    //         retrieveData(query)
+    //         setIsLoading(false)
+    //         totalNumberofData()
+    //     }
+    // }
     const patientHistory = (item) => {
         const itemString = JSON.stringify(item);
 
@@ -385,45 +389,45 @@ const Addpatients = () => {
         })
     }
 
-    const handlePageChange = async (page) => {
-        if (page < currentPage) {
-            setPrev(true)
-            prevPage()
-            // const one = true
-            // console.log('i am here');
-            // retrieveData(one)
-            setCurrentPage(page);
-        } else {
-            setPrev(false)
-            nextPage()
-            // const one = false
-            // retrieveData(one)
-            setCurrentPage(page);
-        }
-        console.log('page', page);
+    // const handlePageChange = async (page) => {
+    //     if (page < currentPage) {
+    //         setPrev(true)
+    //         prevPage()
+    //         // const one = true
+    //         // console.log('i am here');
+    //         // retrieveData(one)
+    //         setCurrentPage(page);
+    //     } else {
+    //         setPrev(false)
+    //         nextPage()
+    //         // const one = false
+    //         // retrieveData(one)
+    //         setCurrentPage(page);
+    //     }
+    //     console.log('page', page);
 
-        // Perform any additional logic or actions based on the page change
-    };
+    //     // Perform any additional logic or actions based on the page change
+    // };
 
-    const nextPage = async () => {
-        setIsLoading(true)
-        let query = subcollectionRef
-            .orderBy('timestamp', 'desc')
-            .limit(perPageRows).startAfter(lastVisible);
-        retrieveData(query)
-        setIsLoading(false)
+    // const nextPage = async () => {
+    //     setIsLoading(true)
+    //     let query = subcollectionRef
+    //         .orderBy('timestamp', 'desc')
+    //         .limit(perPageRows).startAfter(lastVisible);
+    //     retrieveData(query)
+    //     setIsLoading(false)
 
-    };
-    const prevPage = async () => {
-        setIsLoading(true)
-        let query = subcollectionRef
-            .orderBy('timestamp', 'desc')
-            .limit(perPageRows)
-            .endBefore(firstVisible).limitToLast(perPageRows);
-        retrieveData(query)
-        setIsLoading(false)
+    // };
+    // const prevPage = async () => {
+    //     setIsLoading(true)
+    //     let query = subcollectionRef
+    //         .orderBy('timestamp', 'desc')
+    //         .limit(perPageRows)
+    //         .endBefore(firstVisible).limitToLast(perPageRows);
+    //     retrieveData(query)
+    //     setIsLoading(false)
 
-    }
+    // }
     return <>
         {isLoading ? <Loaderspinner /> :
             <>
@@ -459,7 +463,7 @@ const Addpatients = () => {
                         title={"Patients List"}
                         columns={columns}
                         data={patientsList}
-                        action={<button className='btn btn-primary' onClick={handleShow}><span>  <BiPlus size={30} /></span></button>}
+                        action={<button className='btn btn-primary' onClick={() => handleShow()}><span>  <BiPlus size={30} /></span></button>}
                         subHeaderComponent={<>
                             <input type='search' placeholder='Search...' className='w-25 form-control' onChange={(e) => requestSearch(e.target.value)} /></>}
                     />

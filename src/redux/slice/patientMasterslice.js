@@ -85,6 +85,7 @@ const patientSlice = createSlice({
                     state.patientsList.push(newPatient);
                 }
             });
+            // state.lastPatientsData = actions.payload[actions.payload.length - 1] ? actions.payload[actions.payload.length - 1] : state.lastPatientsData
         },
 
         ADD_LAST_PATIENT_DATA: (state, actions) => {

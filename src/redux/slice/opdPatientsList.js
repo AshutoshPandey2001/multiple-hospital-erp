@@ -36,35 +36,35 @@ const opdpatientSlice = createSlice({
         },
 
         FILL_OPD_PATIENTS: (state, actions) => {
-            actions.payload.forEach((newPatient) => {
-                const existingPatientIndex = state.opdpatientsList.findIndex(
-                    (patient) => patient.opduid === newPatient.opduid
-                );
+            // actions.payload.forEach((newPatient) => {
+            //     const existingPatientIndex = state.opdpatientsList.findIndex(
+            //         (patient) => patient.opduid === newPatient.opduid
+            //     );
 
-                if (existingPatientIndex !== -1) {
-                    // If a patient with the same pid already exists
-                    const existingPatient = state.opdpatientsList[existingPatientIndex];
+            //     if (existingPatientIndex !== -1) {
+            //         // If a patient with the same pid already exists
+            //         const existingPatient = state.opdpatientsList[existingPatientIndex];
 
-                    // Check if the newPatient has a 'deleted' field and it is truthy (e.g., true)
-                    if (newPatient.hasOwnProperty('deleted') && newPatient.deleted) {
-                        // If the newPatient has a 'deleted' field with a truthy value,
-                        // we will remove the existing patient from the list
-                        state.opdpatientsList.splice(existingPatientIndex, 1);
-                    } else {
-                        // If the newPatient does not have a 'deleted' field or the 'deleted' field is falsy,
-                        // we will update the existing patient with the newPatient data
-                        state.opdpatientsList.splice(existingPatientIndex, 1, newPatient);
-                    }
-                } else {
-                    // If the patient with the same pid doesn't exist, add the new patient to the list
-                    if (newPatient.hasOwnProperty('deleted') && newPatient.deleted) {
-                        // If the newPatient has a 'deleted' field with a truthy value, skip pushing it to the list
-                        return;
-                    }
-                    state.opdpatientsList.push(newPatient);
-                }
-            });
-            // state.opdpatientsList = [...state.opdpatientsList, ...actions.payload];
+            //         // Check if the newPatient has a 'deleted' field and it is truthy (e.g., true)
+            //         if (newPatient.hasOwnProperty('deleted') && newPatient.deleted) {
+            //             // If the newPatient has a 'deleted' field with a truthy value,
+            //             // we will remove the existing patient from the list
+            //             state.opdpatientsList.splice(existingPatientIndex, 1);
+            //         } else {
+            //             // If the newPatient does not have a 'deleted' field or the 'deleted' field is falsy,
+            //             // we will update the existing patient with the newPatient data
+            //             state.opdpatientsList.splice(existingPatientIndex, 1, newPatient);
+            //         }
+            //     } else {
+            //         // If the patient with the same pid doesn't exist, add the new patient to the list
+            //         if (newPatient.hasOwnProperty('deleted') && newPatient.deleted) {
+            //             // If the newPatient has a 'deleted' field with a truthy value, skip pushing it to the list
+            //             return;
+            //         }
+            //         state.opdpatientsList.push(newPatient);
+            //     }
+            // });
+            state.opdpatientsList = [...state.opdpatientsList, ...actions.payload];
         },
         UPDATE_MULTI_OPD_PATIENTS: (state, actions) => {
 

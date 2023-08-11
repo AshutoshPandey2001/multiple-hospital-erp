@@ -15,7 +15,7 @@ import { selectAllDr } from 'src/redux/slice/doctorsSlice';
 import { admitformSchema } from 'src/schema';
 import { toast } from 'react-toastify';
 import { calculateTotalDaysDifference, ddMMyyyy, ddMMyyyyTHHmm, formatDateyyyymmddUtc, yyyyMMdd, yyyyMMddTHHmm } from 'src/services/dateFormate';
-import { addDatainsubcollection, addSingltObject, deleteDatainSubcollection, deleteSingltObject, filDatainsubcollection, setData, updateDatainSubcollection, updateSingltObject } from 'src/services/firebasedb';
+import { addDatainsubcollection, addSingltObject, deleteDatainSubcollection, getData, deleteSingltObject, filDatainsubcollection, setData, updateDatainSubcollection, updateSingltObject } from 'src/services/firebasedb';
 import moment from 'moment';
 
 const initalValues = {
@@ -54,11 +54,20 @@ const AdmitModel = ({ show, update, handleClose, data, roomValues, todayDate }) 
     const [bedNo, setBedNo] = useState([])
     const [rooms, setRooms] = useState([])
     const [autofocus, setAutofocus] = useState(false)
+    const [totalnumData, setsetTotalNumData] = useState(0); // Initial value for rows per page
 
     useEffect(() => {
         setAdmitPatientfilter(allAdmitPatients);
         setRoom([...roomList]);
         patchData();
+        getData('admitPatients', 'jSqDGnjO21bpPGhb6O2y').then((res) => {
+            // dispatch(FILL_PATIENTS(res.data().count))
+            setsetTotalNumData(res.data().count)
+            // count = res.data().count
+            console.log('res.data().count', res.data().count);
+        }).catch((error) => {
+            console.error("Error updating document: ", error);
+        });
         console.log('values', data);
     }, [allAdmitPatients, roomList, data, update, roomValues, show, todayDate])
 
@@ -113,9 +122,10 @@ const AdmitModel = ({ show, update, handleClose, data, roomValues, todayDate }) 
                     // await setData("admitPatients", 'jSqDGnjO21bpPGhb6O2y', 'admitPatient', admit)
                     // await addSingltObject("admitPatients", 'jSqDGnjO21bpPGhb6O2y', 'admitPatient', Values)
                     await addDatainsubcollection("admitPatients", 'jSqDGnjO21bpPGhb6O2y', 'admitPatient', Values)
-                    dispatch(ADD_ADMIT_PATIENTS(Values))
-                    // await updateSingltObject('Rooms', '3PvtQ2G1RbG3l5VtiCMI', 'rooms', roomArray, 'roomuid', 'hospitaluid')
-                    await updateDatainSubcollection('Rooms', '3PvtQ2G1RbG3l5VtiCMI', 'rooms', roomArray, 'roomuid', 'hospitaluid')
+                    setData('admitPatients', 'jSqDGnjO21bpPGhb6O2y', 'count', totalnumData + 1)
+                    // dispatch(ADD_ADMIT_PATIENTS(Values))
+                    await updateSingltObject('Rooms', '3PvtQ2G1RbG3l5VtiCMI', 'rooms', roomArray, 'roomuid', 'hospitaluid')
+                    // await updateDatainSubcollection('Rooms', '3PvtQ2G1RbG3l5VtiCMI', 'rooms', roomArray, 'roomuid', 'hospitaluid')
                     // await setData('Rooms', '3PvtQ2G1RbG3l5VtiCMI', 'rooms', roomArray)
                     dispatch(EDIT_ROOM(roomArray))
                     await resetForm({ values: '' })
@@ -134,7 +144,8 @@ const AdmitModel = ({ show, update, handleClose, data, roomValues, todayDate }) 
 
                     // await setData("admitPatients", 'jSqDGnjO21bpPGhb6O2y', 'admitPatient', admit1)
                     dispatch(EDIT_ADMIT_PATIENTS(Values))
-                    await updateDatainSubcollection('Rooms', '3PvtQ2G1RbG3l5VtiCMI', 'rooms', roomArray, 'roomuid', 'hospitaluid')
+                    await updateSingltObject('Rooms', '3PvtQ2G1RbG3l5VtiCMI', 'rooms', roomArray, 'roomuid', 'hospitaluid')
+                    // await updateDatainSubcollection('Rooms', '3PvtQ2G1RbG3l5VtiCMI', 'rooms', roomArray, 'roomuid', 'hospitaluid')
                     // await setData('Rooms', '3PvtQ2G1RbG3l5VtiCMI', 'rooms', roomArray)
                     dispatch(EDIT_ROOM(roomArray))
                     resetForm({ values: '' })

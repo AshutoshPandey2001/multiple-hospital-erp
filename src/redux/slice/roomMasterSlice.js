@@ -27,35 +27,35 @@ const roomMsterSlice = createSlice({
             state.roomsList = state.roomsList.filter((item) => item.roomuid !== actions.payload.roomuid)
         },
         FILL_ROOMS: (state, actions) => {
-            actions.payload.forEach((newRoom) => {
-                const existingRoomIndex = state.roomsList.findIndex(
-                    (room) => room.roomuid === newRoom.roomuid
-                );
+            // actions.payload.forEach((newRoom) => {
+            //     const existingRoomIndex = state.roomsList.findIndex(
+            //         (room) => room.roomuid === newRoom.roomuid
+            //     );
 
-                if (existingRoomIndex !== -1) {
-                    // If a patient with the same pid already exists
-                    const existingPatient = state.roomsList[existingRoomIndex];
+            //     if (existingRoomIndex !== -1) {
+            //         // If a patient with the same pid already exists
+            //         const existingPatient = state.roomsList[existingRoomIndex];
 
-                    // Check if the newRoom has a 'deleted' field and it is truthy (e.g., true)
-                    if (newRoom.hasOwnProperty('deleted') && newRoom.deleted) {
-                        // If the newRoom has a 'deleted' field with a truthy value,
-                        // we will remove the existing patient from the list
-                        state.roomsList.splice(existingRoomIndex, 1);
-                    } else {
-                        // If the newRoom does not have a 'deleted' field or the 'deleted' field is falsy,
-                        // we will update the existing patient with the newRoom data
-                        state.roomsList.splice(existingRoomIndex, 1, newRoom);
-                    }
-                } else {
-                    // If the patient with the same pid doesn't exist, add the new patient to the list
-                    if (newRoom.hasOwnProperty('deleted') && newRoom.deleted) {
-                        // If the newRoom has a 'deleted' field with a truthy value, skip pushing it to the list
-                        return;
-                    }
-                    state.roomsList.push(newRoom);
-                }
-            });
-            // state.roomsList = actions.payload;
+            //         // Check if the newRoom has a 'deleted' field and it is truthy (e.g., true)
+            //         if (newRoom.hasOwnProperty('deleted') && newRoom.deleted) {
+            //             // If the newRoom has a 'deleted' field with a truthy value,
+            //             // we will remove the existing patient from the list
+            //             state.roomsList.splice(existingRoomIndex, 1);
+            //         } else {
+            //             // If the newRoom does not have a 'deleted' field or the 'deleted' field is falsy,
+            //             // we will update the existing patient with the newRoom data
+            //             state.roomsList.splice(existingRoomIndex, 1, newRoom);
+            //         }
+            //     } else {
+            //         // If the patient with the same pid doesn't exist, add the new patient to the list
+            //         if (newRoom.hasOwnProperty('deleted') && newRoom.deleted) {
+            //             // If the newRoom has a 'deleted' field with a truthy value, skip pushing it to the list
+            //             return;
+            //         }
+            //         state.roomsList.push(newRoom);
+            //     }
+            // });
+            state.roomsList = actions.payload;
         },
         ADD_LAST_ROOM_DATA: (state, actions) => {
             console.log('last opd query snapshot', actions.payload);

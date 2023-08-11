@@ -24,7 +24,7 @@ import { setTimeout } from 'core-js';
 import Table from 'react-bootstrap/Table';
 import Loaderspinner from '../../comman/spinner/Loaderspinner';
 import CommanTable from 'src/comman/table/CommanTable';
-import { addDatainsubcollection, deleteDatainSubcollection, deleteSingltObject, filDatainsubcollection, getSubcollectionData, setData, updateDatainSubcollection, updateSingltObject } from 'src/services/firebasedb';
+import { addDatainsubcollection, deleteDatainSubcollection, deleteSingltObject, filDatainsubcollection, getSubcollectionData, setData, getData, updateDatainSubcollection, updateSingltObject } from 'src/services/firebasedb';
 import Dropdown from 'react-bootstrap/Dropdown';
 import { confirmAlert } from 'react-confirm-alert';
 import { toast } from 'react-toastify';
@@ -294,9 +294,9 @@ const Admit = () => {
     const [prev, setPrev] = useState(false);
     const [searchBy, setSearchBy] = useState('');
     const [searchString, setSearchString] = useState('');
-    const parentDocRef = db.collection('admitPatients').doc('jSqDGnjO21bpPGhb6O2y');
 
     // const subcollectionRef = parentDocRef.collection('opdPatient').where('hospitaluid', '==', hospitaluid);
+    const parentDocRef = db.collection('admitPatients').doc('jSqDGnjO21bpPGhb6O2y');
     const subcollectionRef = parentDocRef.collection('admitPatient').where('hospitaluid', '==', hospitaluid).where('deleted', '==', 0);
 
     let unsubscribe = undefined
@@ -559,19 +559,47 @@ const Admit = () => {
         // setOpdPatientList([...allopdPatientList].reverse())
         // setOpdPatientfilter(allopdPatientList)
     }, [])
-    const totalNumberofData = () => {
-        // const parentDocRef = db.collection('opdPatients').doc('m5JHl3l4zhaBCa8Vihcb');
-        // const subcollectionRef = parentDocRef.collection('opdPatient');
 
-        let query = subcollectionRef;
 
-        query.onSnapshot((snapshot) => {
-            console.log(snapshot);
-            const totalDataCount = snapshot.size;
-            setsetTotalNumData(totalDataCount)
-            console.log('Total data count:', totalDataCount);
-        })
-    }
+    const totalNumberofData = async () => {
+        try {
+            let count = 0
+            await getData('admitPatients', 'jSqDGnjO21bpPGhb6O2y').then((res) => {
+                // dispatch(FILL_PATIENTS(res.data().count))
+                count = res.data().count
+                console.log('res.data().count', res.data().count);
+            }).catch((error) => {
+                console.error("Error updating document: ", error);
+            });
+            // const parentDocRef = db.collection('opdPatients').doc('m5JHl3l4zhaBCa8Vihcb');
+            // const subcollectionRef = parentDocRef.collection('opdPatient');
+            if (count === 0 || count === undefined) {
+                const snapshot = await subcollectionRef.get();
+                const totalDataCount = snapshot.size;
+                setsetTotalNumData(totalDataCount);
+                await setData('admitPatients', 'jSqDGnjO21bpPGhb6O2y', 'count', totalDataCount)
+                console.log('Total data count:', totalDataCount);
+            } else {
+                setsetTotalNumData(count);
+            }
+
+        } catch (error) {
+            console.error('Error fetching data:', error);
+        }
+    };
+    // const totalNumberofData = () => {
+    //     // const parentDocRef = db.collection('opdPatients').doc('m5JHl3l4zhaBCa8Vihcb');
+    //     // const subcollectionRef = parentDocRef.collection('opdPatient');
+
+    //     let query = subcollectionRef;
+
+    //     query.onSnapshot((snapshot) => {
+    //         console.log(snapshot);
+    //         const totalDataCount = snapshot.size;
+    //         setsetTotalNumData(totalDataCount)
+    //         console.log('Total data count:', totalDataCount);
+    //     })
+    // }
 
     const retrieveData = (query) => {
         try {
@@ -579,6 +607,7 @@ const Admit = () => {
             console.log('i am a lisitnor who alwas call');
             setIsLoading(true)
             unsubscribe = query.onSnapshot((snapshot) => {
+                totalNumberofData()
                 const newData = [];
                 snapshot.forEach((doc) => {
                     newData.push(doc.data());
@@ -754,8 +783,9 @@ const Admit = () => {
                             // await setData("admitPatients", 'jSqDGnjO21bpPGhb6O2y', 'admitPatient', admit)
                             // await deleteSingltObject("admitPatients", 'jSqDGnjO21bpPGhb6O2y', 'admitPatient', item1, 'admituid', 'hospitaluid')
                             await deleteDatainSubcollection("admitPatients", 'jSqDGnjO21bpPGhb6O2y', 'admitPatient', item1, 'admituid', 'hospitaluid')
+                            setData('admitPatients', 'jSqDGnjO21bpPGhb6O2y', 'count', totalnumData - 1)
                             // setAdmitPatientList(admitPatientList.filter((item) => item.admituid !== item1.admituid))
-                            dispatch(DELETE_ADMIT_PATIENTS(item1))
+                            // dispatch(DELETE_ADMIT_PATIENTS(item1))
                             if (!item1.dischargeDate) {
                                 // await updateSingltObject('Rooms', '3PvtQ2G1RbG3l5VtiCMI', 'rooms', roomArray, 'roomuid', 'hospitaluid')
                                 await updateDatainSubcollection('Rooms', '3PvtQ2G1RbG3l5VtiCMI', 'rooms', roomArray, 'roomuid', 'hospitaluid')
@@ -1000,7 +1030,7 @@ const Admit = () => {
                     fixedHeader={true}
                     noHeader={false}
                     persistTableHead
-                    actions={<button className='btn btn-primary' onClick={handleShow}><span>  <BiPlus size={25} /></span></button>}
+                    actions={<button className='btn btn-primary' onClick={() => handleShow()}><span>  <BiPlus size={25} /></span></button>}
                     highlightOnHover
                     paginationServer={true}
                     subHeader={<div className='d-flex' style={{ justifyContent: 'space-between' }}></div>}

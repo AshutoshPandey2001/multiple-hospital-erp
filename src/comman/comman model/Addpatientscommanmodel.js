@@ -6,12 +6,13 @@ import Modal from 'react-bootstrap/Modal';
 import { useFormik } from 'formik';
 import { addpatientsSchema } from 'src/schema';
 import { useDispatch, useSelector } from 'react-redux';
-import { ADD_LAST_PATIENT_DATA, ADD_PATIENTS, EDIT_PATIENTS, selectAllPatients } from 'src/redux/slice/patientMasterslice';
-import { addDatainsubcollection, addSingltObject, getDatawithhospitaluid, setData, updateDatainSubcollection, updateSingltObject } from 'src/services/firebasedb';
+import { ADD_LAST_PATIENT_DATA, ADD_PATIENTS, EDIT_PATIENTS, FILL_PATIENTS, selectAllPatients, selectlastPatientData } from 'src/redux/slice/patientMasterslice';
+import { addDatainsubcollection, addSingltObject, getDatawithhospitaluid, getSubcollectionDataWithoutsnapshot, setData, updateDatainSubcollection, updateDatainSubcollectionPatients, updateSingltObject } from 'src/services/firebasedb';
 import { toast } from 'react-toastify';
 import { selectAllDr } from 'src/redux/slice/doctorsSlice';
 import Select from 'react-select';
 import { selectUserId } from 'src/redux/slice/authSlice';
+import { db } from 'src/firebaseconfig';
 
 const initalValues = {
     pid: '',
@@ -29,11 +30,59 @@ const Addpatientscommanmodel = ({ show, handleClose, update, data }) => {
     const allPatientsList = useSelector(selectAllPatients);
     const hospitaluid = useSelector(selectUserId);
     const [patientsFilter, setPatientsFilter] = useState([]);
+    const [lastPdata, setLastpData] = useState();
     const allDoctors = useSelector(selectAllDr)
+    const lastPatientData = useSelector(selectlastPatientData)
+    const parentDocRef = db.collection('Patients').doc('fBoxFLrzXexT8WNBzGGh');
+    const subcollectionRef = parentDocRef.collection('patients').where('hospitaluid', '==', hospitaluid)
+    let unsubscribe = undefined
+    // useEffect(() => {
+    //     console.log('change last p Data', lastPatientData);
+    //     setLastpData(lastPatientData)
+    // }, [lastPatientData])
     useEffect(() => {
         setPatientsFilter(allPatientsList)
         patchData()
     }, [allPatientsList, data])
+    // useEffect(() => {
+    //     let query = subcollectionRef
+    //         .orderBy('timestamp', 'desc')
+    //     retrieveData(query)
+    //     return () => {
+    //         // unsub()
+    //         unsubscribe();
+    //         // setSearchString('')
+    //         // console.log('unmounting');
+    //     };
+    // }, [])
+
+    // const retrieveData = (query) => {
+    //     try {
+    //         // console.log('retrive data call multipl time');
+
+    //         unsubscribe = query.onSnapshot((snapshot) => {
+    //             fetchData()
+    //         });
+    //     } catch (error) {
+    //         // setIsLoading(false)
+
+    //         console.error('Error retrieving data:', error);
+    //     }
+    // };
+
+    // const fetchData = async () => {
+    //     // console.log('i am call multipl time');
+    //     // console.log('lastPatientData', lastPatientData);
+
+    //     await getSubcollectionDataWithoutsnapshot('Patients', 'fBoxFLrzXexT8WNBzGGh', 'patients', hospitaluid, lastPatientData, (data, lastData) => {
+    //         // Handle the updated data in the callback function
+    //         dispatch(FILL_PATIENTS(data))
+    //         dispatch(ADD_LAST_PATIENT_DATA(lastData))
+    //         console.log('Get Patients data with last Data', data, lastData);
+    //     }).catch((error) => {
+    //         console.error('Error:', error);
+    //     })
+    // }
 
     const formik = useFormik({
         initialValues: initalValues,
@@ -45,9 +94,7 @@ const Addpatientscommanmodel = ({ show, handleClose, update, data }) => {
             if (!update) {
                 values.pid = Math.floor(Math.random() + timestamp)
                 values.hospitaluid = hospitaluid
-                // const index = patientsFilter.findIndex(obj => obj.pMobileNo === Values.pMobileNo);
                 console.log('patient', hospitaluid);
-                // if (index === -1) {
                 let patient = [...patientsFilter, Values]
                 try {
                     // await setData('Patients', 'fBoxFLrzXexT8WNBzGGh', 'patients', patient)
@@ -55,8 +102,8 @@ const Addpatientscommanmodel = ({ show, handleClose, update, data }) => {
                         .then((newDocData) => {
                             // Handle the new added data here
                             // console.log('newDocData', newDocData);
-                            // dispatch(ADD_PATIENTS(newDocData.data()))
-                            // dispatch(dispatch(ADD_LAST_PATIENT_DATA(newDocData.id)))
+                            dispatch(ADD_PATIENTS(newDocData.data()))
+                            dispatch(dispatch(ADD_LAST_PATIENT_DATA(newDocData.data())))
                         })
                         .catch((error) => {
                             // Handle any errors that occurred during the addition
@@ -71,16 +118,19 @@ const Addpatientscommanmodel = ({ show, handleClose, update, data }) => {
                     toast.error(error.message)
                     console.error(error.message)
                 }
-                // } else {
-                //     toast.error("This Mobile No already Exist")
-                // }
+
             } else {
                 let findindex = patient1.findIndex((item) => item.pid === Values.pid);
                 patient1[findindex] = Values;
                 try {
-                    // await setData('Patients', 'fBoxFLrzXexT8WNBzGGh', 'patients', patient1)
-
-                    await updateDatainSubcollection('Patients', 'fBoxFLrzXexT8WNBzGGh', 'patients', Values, 'pid', 'hospitaluid')
+                    await updateDatainSubcollectionPatients('Patients', 'fBoxFLrzXexT8WNBzGGh', 'patients', Values, 'pid', 'hospitaluid')
+                    // .then((updatedData) => {
+                    //     dispatch(FILL_PATIENTS(updatedData))
+                    //     dispatch(ADD_LAST_PATIENT_DATA(updatedData[updatedData.length - 1]))
+                    // })
+                    //     .catch((error) => {
+                    //         console.error('Error updating data:', error);
+                    //     });
                     // dispatch(EDIT_PATIENTS(Values))
                     action.resetForm()
                     handelClear()

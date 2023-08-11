@@ -32,36 +32,36 @@ const admitpatientSlice = createSlice({
             state.admitpatientsList = state.admitpatientsList.filter((item) => item.admituid !== actions.payload.admituid)
         },
         FILL_ADMIT_PATIENTS: (state, actions) => {
-            actions.payload.forEach((newPatient) => {
-                const existingPatientIndex = state.admitpatientsList.findIndex(
-                    (patient) => patient.admituid === newPatient.admituid
-                );
+            // actions.payload.forEach((newPatient) => {
+            //     const existingPatientIndex = state.admitpatientsList.findIndex(
+            //         (patient) => patient.admituid === newPatient.admituid
+            //     );
 
-                if (existingPatientIndex !== -1) {
-                    // If a patient with the same pid already exists
-                    const existingPatient = state.admitpatientsList[existingPatientIndex];
+            //     if (existingPatientIndex !== -1) {
+            //         // If a patient with the same pid already exists
+            //         const existingPatient = state.admitpatientsList[existingPatientIndex];
 
-                    // Check if the newPatient has a 'deleted' field and it is truthy (e.g., true)
-                    if (newPatient.hasOwnProperty('deleted') && newPatient.deleted) {
-                        // If the newPatient has a 'deleted' field with a truthy value,
-                        // we will remove the existing patient from the list
-                        state.admitpatientsList.splice(existingPatientIndex, 1);
-                    } else {
-                        // If the newPatient does not have a 'deleted' field or the 'deleted' field is falsy,
-                        // we will update the existing patient with the newPatient data
-                        state.admitpatientsList.splice(existingPatientIndex, 1, newPatient);
-                    }
-                } else {
-                    // If the patient with the same pid doesn't exist, add the new patient to the list
-                    if (newPatient.hasOwnProperty('deleted') && newPatient.deleted) {
-                        // If the newPatient has a 'deleted' field with a truthy value, skip pushing it to the list
-                        return;
-                    }
-                    state.admitpatientsList.push(newPatient);
-                }
-            });
+            //         // Check if the newPatient has a 'deleted' field and it is truthy (e.g., true)
+            //         if (newPatient.hasOwnProperty('deleted') && newPatient.deleted) {
+            //             // If the newPatient has a 'deleted' field with a truthy value,
+            //             // we will remove the existing patient from the list
+            //             state.admitpatientsList.splice(existingPatientIndex, 1);
+            //         } else {
+            //             // If the newPatient does not have a 'deleted' field or the 'deleted' field is falsy,
+            //             // we will update the existing patient with the newPatient data
+            //             state.admitpatientsList.splice(existingPatientIndex, 1, newPatient);
+            //         }
+            //     } else {
+            //         // If the patient with the same pid doesn't exist, add the new patient to the list
+            //         if (newPatient.hasOwnProperty('deleted') && newPatient.deleted) {
+            //             // If the newPatient has a 'deleted' field with a truthy value, skip pushing it to the list
+            //             return;
+            //         }
+            //         state.admitpatientsList.push(newPatient);
+            //     }
+            // });
 
-            // state.admitpatientsList = actions.payload;
+            state.admitpatientsList = actions.payload;
         },
 
         UPDATE_MULTI_ADMIT_PATIENTS: (state, actions) => {

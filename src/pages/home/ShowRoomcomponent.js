@@ -14,18 +14,20 @@ import { selectUserId } from 'src/redux/slice/authSlice';
 
 const ShowRoomcomponent = ({ roomType, selectedRoomDetails }) => {
     const bedRefs = useRef([]);
-    const admitPatients = useSelector(selectAdmitPatients);
+    // const admitPatients = useSelector(selectAdmitPatients);
     const todayDate = new Date().toISOString().substr(0, 10);
     const [tooltipContent, setTooltipContent] = useState("");
     const [showTooltip, setShowTooltip] = useState(false);
     const [selectedBedIndex, setSelectedBedIndex] = useState(null);
+    const [admitPatients, setAdmitPatients] = useState([]);
     const hospitaluid = useSelector(selectUserId)
     useEffect(() => {
-
-        getSelectedFieldData('admitPatients', 'jSqDGnjO21bpPGhb6O2y', 'admitPatient', hospitaluid, ['admitDate', 'pName', 'dischargeDate', 'roomType', 'roomNo', 'bedNo'], 'dischargeDate')
-
+        fetchData()
     }, [])
-
+    const fetchData = async () => {
+        const indoorData = await getSelectedFieldData('admitPatients', 'jSqDGnjO21bpPGhb6O2y', 'admitPatient', hospitaluid, ['admitDate', 'pName', 'dischargeDate', 'roomType', 'roomNo', 'bedNo'], 'dischargeDate')
+        setAdmitPatients([...indoorData])
+    }
     const showPatientName = (item, index) => {
         const patientDetails = admitPatients.find((patient) => {
             return (

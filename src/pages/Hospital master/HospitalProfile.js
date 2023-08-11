@@ -9,8 +9,9 @@ import { storage } from 'src/firebaseconfig';
 import { selectUserId } from 'src/redux/slice/authSlice';
 import { useSelector } from 'react-redux';
 import { addDatainsubcollection, updateDatainSubcollection, updateHospitalProfile } from 'src/services/firebasedb';
-import { selectContactnumber, selectHospitalAddress, selectHospitalLogo, selectHospitalName } from 'src/redux/slice/hospitalProfileSlice';
+import { selectContactnumber, selectHospitalAddress, selectHospitalLogo, selectHospitalName, selectSubscriptionExpireDate } from 'src/redux/slice/hospitalProfileSlice';
 import Subscription from '../subscription/subscription.js';
+import moment from 'moment';
 
 const initalValues = {
     hospitslLogo: '',
@@ -25,8 +26,11 @@ const HospitalProfile = () => {
     const hospitalAddress = useSelector(selectHospitalAddress)
     const hospitslName = useSelector(selectHospitalName)
     const contactNumber = useSelector(selectContactnumber)
+    const subscriptionExpireDate = useSelector(selectSubscriptionExpireDate)
+    const [totalRemaningDays, setTotalRemaningDays] = useState();
     const [image, setImage] = useState(null);
-
+    const currentDate = new Date();
+    const formattedDate = currentDate.toISOString().slice(0, 10);
     const [update, setUpdate] = useState(false)
     useEffect(() => {
         if (hospitslLogo || hospitalAddress || hospitslName || contactNumber) {
@@ -36,6 +40,7 @@ const HospitalProfile = () => {
             values.contactNumber = contactNumber
             setUpdate(true)
         }
+        calCulateDays()
     }, [hospitslLogo, hospitalAddress, hospitslName, contactNumber])
 
 
@@ -59,16 +64,19 @@ const HospitalProfile = () => {
         //     }
     };
 
-    // const handleSubmit = (event) => {
-    //     event.preventDefault();
-    //     // Handle form submission here (e.g., send data to a server)
-    //     // You can access the form values in the corresponding state variables (name, address, contact, image)
-    //     // Reset the form state after successful submission
-    //     setName('');
-    //     setAddress('');
-    //     setContact('');
-    //     setImage(null);
-    // };
+    const calCulateDays = () => {
+        let time_differ = (new Date(timeFilter(subscriptionExpireDate)) - new Date(formattedDate));
+        const days = time_differ / (1000 * 60 * 60 * 24);
+        setTotalRemaningDays(days)
+    }
+
+    const timeFilter = (timestamp) => {
+        const timestampWithNanoseconds = timestamp.seconds * 1000 + Math.floor(timestamp.nanoseconds / 1e6);
+        const dateObject = new Date(timestampWithNanoseconds);
+        const timeString = moment(dateObject).format('YYYY-MM-DD');
+        return timeString
+    }
+
 
     const formik = useFormik({
         initialValues: initalValues,
@@ -101,6 +109,7 @@ const HospitalProfile = () => {
     return (
         // <Subscription />
         <div className="container">
+            <div className='row justify-content-end'>Your Subscription Expire in {new Date(timeFilter(subscriptionExpireDate)).toLocaleDateString()}, {totalRemaningDays} Days</div>
             <div className="row justify-content-center">
                 <div className="col-md-6">
                     <h2 className="text-center mb-4">Update Hospital Information</h2>

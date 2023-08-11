@@ -1,5 +1,5 @@
 /* eslint-disable prettier/prettier */
-import React from 'react'
+import React, { useState } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
 import {
@@ -37,11 +37,13 @@ import laboratoryNav from 'src/_laboratoryNav'
 import { startTransition } from 'react';
 import adminnav from 'src/_adminNav'
 import '../pages/admit/admit.css'
-import { selectHospitalLogo } from 'src/redux/slice/hospitalProfileSlice'
+import { selectHospitalLogo, selectSubscriptionExpireDate } from 'src/redux/slice/hospitalProfileSlice'
 import ManagementNav from 'src/_managementNav'
 import { persistor } from 'src/redux/store'
 import { RESET_PATIENTS } from 'src/redux/slice/patientMasterslice'
 import { RESET_OPD } from 'src/redux/slice/opdPatientsList'
+import moment from 'moment'
+import { useEffect } from 'react'
 
 const AppHeader = () => {
   const dispatch = useDispatch()
@@ -49,11 +51,33 @@ const AppHeader = () => {
   // const sidebarShow = useSelector((state) => state.sidebarShow)
   const selectedMenu = useSelector(selectmenuStyle)
   const hospitslLogo = useSelector(selectHospitalLogo)
+  const subscriptionExpireDate = useSelector(selectSubscriptionExpireDate)
 
   const sidebarShow = useSelector(selectChangeState)
   const userType = useSelector(selectUsertype)
   const userName = useSelector(selectUserName)
   const userEmail = useSelector(selectEmail)
+  const [totalRemaningDays, setTotalRemaningDays] = useState();
+  const currentDate = new Date();
+  const formattedDate = currentDate.toISOString().slice(0, 10);
+
+  const calCulateDays = () => {
+    let time_differ = (new Date(timeFilter(subscriptionExpireDate)) - new Date(formattedDate));
+    const days = time_differ / (1000 * 60 * 60 * 24);
+    setTotalRemaningDays(days)
+  }
+
+  const timeFilter = (timestamp) => {
+    const timestampWithNanoseconds = timestamp.seconds * 1000 + Math.floor(timestamp.nanoseconds / 1e6);
+    const dateObject = new Date(timestampWithNanoseconds);
+    const timeString = moment(dateObject).format('YYYY-MM-DD');
+    return timeString
+  }
+
+  useEffect(() => {
+    calCulateDays()
+  }, [])
+
   // const logOut = () => {
   //   confirmAlert({
   //     title: 'Confirm to Logout',
@@ -290,10 +314,11 @@ const AppHeader = () => {
                         <Dropdown.Item ><b>Name:-{userName}</b> </Dropdown.Item>
                         <Dropdown.Item ><b>Email:-{userEmail}</b> </Dropdown.Item>
                         <Dropdown.Item ><b>User Type:-{userType}</b></Dropdown.Item>
-                        {(userType === 'Admin' || userType === "Super Admin") ?
+                        {(userType === 'Admin' || userType === "Super Admin") ? <>
+                          <Dropdown.Item ><b>Remaining Days:-{totalRemaningDays}</b></Dropdown.Item>
                           <Dropdown.Item className='d-flex justify-content-center'>
                             <Button onClick={() => { navigate('/subscription') }}>Subscribe</Button>
-                          </Dropdown.Item> : null
+                          </Dropdown.Item></> : null
                         }
 
                       </Dropdown.Menu>
