@@ -13,7 +13,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { ADD_LAST_OPD_DATA, ADD_OPD_PATIENTS, DELETE_OPD_PATIENTS, EDIT_OPD_PATIENTS, FILL_OPD_PATIENTS, selectOpdPatients, selectlastOpdData } from 'src/redux/slice/opdPatientsList';
 import Addpatientscommanmodel from '../../comman/comman model/Addpatientscommanmodel';
 import Table from 'react-bootstrap/Table';
-import { addDatainsubcollection, addSingltObject, deleteDatainSubcollection, deleteSingltObject, filDatainsubcollection, fillDeleteObject, getData, getOnlyChangesLisitnor, getSubcollectionData, getSubcollectionDataWithoutsnapshot, setData, updateDatainSubcollection, updateSingltObject } from 'src/services/firebasedb';
+import { addDataincollection, addDatainsubcollection, addSingltObject, deleteDatainSubcollection, deleteSingltObject, filDatainsubcollection, fillDeleteObject, getData, getOnlyChangesLisitnor, getSubcollectionData, getSubcollectionDataWithoutsnapshot, setData, updateDatainSubcollection, updateDataincollection, updateSingltObject } from 'src/services/firebasedb';
 import CommanTable from 'src/comman/table/CommanTable';
 import Loaderspinner from '../../comman/spinner/Loaderspinner';
 import { confirmAlert } from 'react-confirm-alert';
@@ -35,7 +35,7 @@ import { FiFilter } from 'react-icons/fi'
 import { TfiReload } from 'react-icons/tfi'
 
 import '../admit/admit.css'
-import { selectUserId } from 'src/redux/slice/authSlice';
+import { selectUserId, selectpermissions } from 'src/redux/slice/authSlice';
 import { ToWords } from 'to-words';
 import moment from 'moment';
 import { db } from 'src/firebaseconfig';
@@ -226,6 +226,7 @@ const initalValues = {
     pMobileNo: '',
     consultingDate: '',
     drName: '',
+    druid: '',
     consultingCharge: '',
     opduid: '',
     opdCaseNo: '',
@@ -255,14 +256,16 @@ const Opd = () => {
     const hospitaluid = useSelector(selectUserId)
     const [lastVisible, setLastVisible] = useState(null);
     const [perPageRows, setPerPageRows] = useState(10); // Initial value for rows per page
-    const [totalnumData, setsetTotalNumData] = useState(0); // Initial value for rows per page
+    const [totalnumData, setTotalNumData] = useState(0); // Initial value for rows per page
     const [currentPage, setCurrentPage] = useState(1);
     const [firstVisible, setFirstVisible] = useState(null);
     const [prev, setPrev] = useState(false);
     const [searchBy, setSearchBy] = useState('');
     const [searchString, setSearchString] = useState('');
+    const [userpermissions, setUserpermissions] = useState([]);
     const lastOpdData = useSelector(selectlastOpdData)
-
+    const permissions = useSelector(selectpermissions)
+    console.log('userpermissions', userpermissions);
     // const subcollectionRef = parentDocRef.collection('opdPatient').where('hospitaluid', '==', hospitaluid);
     const parentDocRef = db.collection('opdPatients').doc('m5JHl3l4zhaBCa8Vihcb');
     const subcollectionRef = parentDocRef.collection('opdPatient').where('hospitaluid', '==', hospitaluid).where('deleted', '==', 0);
@@ -282,7 +285,7 @@ const Opd = () => {
             query.get().then(snapshot => {
                 console.log(snapshot);
                 const totalDataCount = snapshot.size;
-                setsetTotalNumData(totalDataCount)
+                setTotalNumData(totalDataCount)
                 console.log('Total data count:', totalDataCount);
             }).catch(error => {
                 console.error('Error retrieving data:', error);
@@ -308,45 +311,6 @@ const Opd = () => {
         // { name: 'ID', selector: row => row.pid, sortable: true },
         {
             name: 'Date',
-            // name: (
-            //     <OverlayTrigger
-            //         placement="top"
-            //         overlay={<Tooltip ><div >
-            //             <div className='row'>
-            //                 <div className='col-lg-12'>
-            //                     <div className="form-group" >
-            //                         <label >Form<b style={{ color: 'red' }}>*</b>:</label>
-            //                         <input name='startDate'
-            //                             type="date" className="form-control" defaultValue={startDate} onChange={(e) => setStartDate(e.target.value)} />
-
-            //                     </div>
-            //                 </div>
-            //                 <div className='col-lg-12'>
-            //                     <div className="form-group" >
-            //                         <label >To<b style={{ color: 'red' }}>*</b>:</label>
-            //                         <input name='endDate'
-            //                             type="date" className="form-control" defaultValue={endDate} onChange={(e) => setEndDate(e.target.value)} min={startDate} />
-            //                     </div>
-            //                 </div>
-            //             </div>
-            //             <div className='d-flex mt-2 mb-1 justify-content-end'>
-            //                 <Button variant="secondary" onClick={clearfilterData}>
-            //                     Clear
-            //                 </Button>
-            //                 <Button variant="primary" style={{ marginLeft: '10px' }} onClick={() => filtertheData('consultingDate')}>
-            //                     Filter
-            //                 </Button>
-            //             </div>
-
-
-            //         </div></Tooltip>}
-            //         trigger='click'
-            //         show={showtooltip}
-
-            //     >
-            //         <span style={{ cursor: 'pointer' }} > <FiFilter onClick={() => setShowtooltip(!showtooltip)} />  Date </span>
-            //     </OverlayTrigger>
-            // ),
             selector: row => formatDateDDMMYYY(row.consultingDate),
             sortable: true,
             sortFunction: (a, b) => { return moment(a.consultingDate).toDate().getTime() - moment(b.consultingDate).toDate().getTime() }
@@ -362,14 +326,25 @@ const Opd = () => {
         },
         {
             name: 'Action', cell: row => <span style={{ display: 'flex', justifyContent: 'center' }}>
-                {row.paymentStatus === "Completed" ? <button onClick={() => viewInvoice(row)} style={{ color: 'skyblue', border: 'none' }} > <BsEye size={25} /></button >
+                {row.paymentStatus === "Completed" ?
+                    <>
+                        {userpermissions?.code.includes('INVOICE_OPD') ?
+                            <button onClick={() => viewInvoice(row)} style={{ color: 'skyblue', border: 'none' }} > <BsEye size={25} /></button >
+                            : null}
+                    </>
                     :
                     <>
-                        <button onClick={() => editPatientDetails(row)} style={{ color: 'orange', border: 'none' }}><MdEdit size={25} /></button>
+                        {userpermissions?.code.includes('EDIT_OPD') ?
+                            <button onClick={() => editPatientDetails(row)} style={{ color: 'orange', border: 'none' }}><MdEdit size={25} /></button>
+                            : null}
                     </>
                 }
-                <button onClick={() => generateInvoice(row)} style={{ color: 'skyblue', border: 'none' }} >{row.paymentStatus === "Completed" ? <AiFillPrinter size={25} /> : <img src={billingicon} alt='billingicon' />} </button >
-                <button onClick={() => deletePatientsDetails(row)} style={{ color: 'red', border: 'none' }} ><AiFillDelete size={25} /></button>
+                {userpermissions?.code.includes('INVOICE_OPD') ?
+                    <button onClick={() => generateInvoice(row)} style={{ color: 'skyblue', border: 'none' }} >{row.paymentStatus === "Completed" ? <AiFillPrinter size={25} /> : <img src={billingicon} alt='billingicon' />} </button >
+                    : null}
+                {userpermissions?.code.includes('DELETE_OPD') ?
+                    <button onClick={() => deletePatientsDetails(row)} style={{ color: 'red', border: 'none' }} ><AiFillDelete size={25} /></button>
+                    : null}
             </span >
         }
     ]
@@ -509,96 +484,83 @@ const Opd = () => {
             .limit(perPageRows)
         debouncedRetrieveData(query)
         setIsLoading(false)
-        // totalNumberofData()
-        // onlyChangeDetector()
-        // chnageDetectore()
+        totalNumberofData()
+        setUserpermissions(permissions?.find(permission => permission.module === "OPD"))
         return () => {
-            // unsub()
+            unsub()
             unsubscribe();
             console.log('unmounting');
         };
-        // setOpdPatientList([...allopdPatientList].reverse())
-        // setOpdPatientfilter(allopdPatientList)
+
     }, [])
 
-    // const totalNumberofData = () => {
-    //     // const parentDocRef = db.collection('opdPatients').doc('m5JHl3l4zhaBCa8Vihcb');
-    //     // const subcollectionRef = parentDocRef.collection('opdPatient');
-
-    //     let query = subcollectionRef;
-    //     // const snapshot = getCountFromServer(subcollectionRef);
-    //     // console.log('count', snapshot.data().count);
-    //     const snapshot = query.get();
-    //     const totalDataCount = snapshot.size;
-    //     setsetTotalNumData(totalDataCount)
-    //     console.log('Total data count:', totalDataCount);
-    //     // const totalCount = snapshot.size;
-    //     //         query.onSnapshot((snapshot) => {
-    //     //             console.log(snapshot);
-    //     //             const totalDataCount = snapshot.size;
-    //     //             setsetTotalNumData(totalDataCount)
-    //     //             console.log('Total data count:', totalDataCount);
-    //     //         })
-    // }
 
 
     const totalNumberofData = async () => {
+        // try {
+        //     let count = 0
+        //     await getData('opdPatients', 'm5JHl3l4zhaBCa8Vihcb').then((res) => {
+        //         // dispatch(FILL_PATIENTS(res.data().count))
+        //         count = res.data().count
+        //         console.log('res.data().count', res.data().count);
+        //     }).catch((error) => {
+        //         console.error("Error updating document: ", error);
+        //     });
+        //     // const parentDocRef = db.collection('opdPatients').doc('m5JHl3l4zhaBCa8Vihcb');
+        //     // const subcollectionRef = parentDocRef.collection('opdPatient');
+        //     if (count === 0) {
+        //         const snapshot = await subcollectionRef.get();
+        //         const totalDataCount = snapshot.size;
+        //         setTotalNumData(totalDataCount);
+        //         await setData('opdPatients', 'm5JHl3l4zhaBCa8Vihcb', 'count', totalDataCount)
+        //         console.log('Total data count:', totalDataCount);
+        //     } else {
+        //         setTotalNumData(count);
+        //     }
+
+        // } catch (error) {
+        //     console.error('Error fetching data:', error);
+        // }
         try {
-            let count = 0
-            await getData('opdPatients', 'm5JHl3l4zhaBCa8Vihcb').then((res) => {
-                // dispatch(FILL_PATIENTS(res.data().count))
-                count = res.data().count
-                console.log('res.data().count', res.data().count);
-            }).catch((error) => {
-                console.error("Error updating document: ", error);
-            });
-            // const parentDocRef = db.collection('opdPatients').doc('m5JHl3l4zhaBCa8Vihcb');
-            // const subcollectionRef = parentDocRef.collection('opdPatient');
-            if (count === 0) {
-                const snapshot = await subcollectionRef.get();
-                const totalDataCount = snapshot.size;
-                setsetTotalNumData(totalDataCount);
-                await setData('opdPatients', 'm5JHl3l4zhaBCa8Vihcb', 'count', totalDataCount)
-                console.log('Total data count:', totalDataCount);
-            } else {
-                setsetTotalNumData(count);
-            }
+            let count = 0;
+
+            unsub = db
+                .collection('OpdPatientsCount')
+                .where('hospitaluid', '==', hospitaluid)
+                .onSnapshot(async (snapshot) => {
+                    if (!snapshot.empty) {
+                        const newData = snapshot.docs[0].data();
+                        count = newData.count;
+                        setTotalNumData(count);
+                        console.log('res.data().count', count);
+                    } else {
+                        const snapshot = await subcollectionRef.get();
+                        const totalDataCount = snapshot.size;
+                        await addDataincollection('OpdPatientsCount', { hospitaluid: hospitaluid, count: totalDataCount })
+                        console.log('No documents found in the snapshot.');
+                    }
+                });
+
+            // You can save the unsubscribe function if needed to stop listening later
+            // unsub();
+
+            // Optionally, you can use the unsubscribe function to stop listening to changes
+            // when you no longer need it, e.g., when the component unmounts.
+            // useEffect(() => {
+            //   return () => unsubscribe();
+            // }, []);
 
         } catch (error) {
             console.error('Error fetching data:', error);
         }
     };
-
-
-
-
-
-    // const totalNumberofData = async () => {
-
-    //     await getData('opdPatients', 'm5JHl3l4zhaBCa8Vihcb').then((res) => {
-    //         // dispatch(FILL_PATIENTS(res.data().count))
-    //         console.log('res.data().count', res.data().count);
-    //     }).catch((error) => {
-    //         console.error("Error updating document: ", error);
-    //     });
-    //     try {
-    //         const parentDocRef = db.collection('opdPatients').doc('m5JHl3l4zhaBCa8Vihcb');
-    //         const subcollectionRef = parentDocRef.collection('opdPatient');
-
-    //         const totalDataCount = await subcollectionRef.count();
-    //         setsetTotalNumData(totalDataCount);
-    //         console.log('Total data count:', totalDataCount);
-    //     } catch (error) {
-    //         console.error('Error fetching data:', error);
-    //     }
-    // };
     const retrieveData = (query) => {
         try {
             // let initialSnapshot = true;
             console.log('i am a lisitnor who alwas call');
             setIsLoading(true)
             unsubscribe = query.onSnapshot((snapshot) => {
-                totalNumberofData()
+                // totalNumberofData()
                 const newData = [];
                 snapshot.forEach((doc) => {
                     newData.push(doc.data());
@@ -615,7 +577,7 @@ const Opd = () => {
                     // console.log('lastVisibleDoc', lastVisibleDoc.data());
                     setLastVisible(lastVisibleDoc);
                     setFirstVisible(snapshot.docs[0]);
-                    // setsetTotalNumData(snapshot.size)
+                    // setTotalNumData(snapshot.size)
                     setIsLoading(false)
 
                     // console.log('setFirstVisible', snapshot.docs[0].data());
@@ -731,8 +693,10 @@ const Opd = () => {
                     await addDatainsubcollection("opdPatients", 'm5JHl3l4zhaBCa8Vihcb', 'opdPatient', newValues)
                         .then((newDocData) => {
                             // Handle the new added data here
-                            setData('opdPatients', 'm5JHl3l4zhaBCa8Vihcb', 'count', totalnumData + 1)
-                            setsetTotalNumData(totalnumData + 1);
+                            updateDataincollection('OpdPatientsCount', { hospitaluid: hospitaluid, count: totalnumData + 1 })
+
+                            // setData('opdPatients', 'm5JHl3l4zhaBCa8Vihcb', 'count', totalnumData + 1)
+                            // setTotalNumData(totalnumData + 1);
                             console.log('newDocData', newDocData);
                             // dispatch(ADD_OPD_PATIENTS(newDocData.data()))
                             // dispatch(dispatch(ADD_LAST_OPD_DATA(newDocData.id)))
@@ -941,8 +905,8 @@ const Opd = () => {
                         onClick: async () => {
                             // const opd = opdPatientfilter.filter(item => item.opduid !== item1.opduid);
                             await deleteDatainSubcollection('opdPatients', 'm5JHl3l4zhaBCa8Vihcb', 'opdPatient', item1, 'opduid', 'hospitaluid');
-                            setData('opdPatients', 'm5JHl3l4zhaBCa8Vihcb', 'count', totalnumData - 1)
-                            // dispatch(DELETE_OPD_PATIENTS(item1));
+                            await updateDataincollection('OpdPatientsCount', { hospitaluid: hospitaluid, count: totalnumData - 1 })
+
                             toast.success('Deleted Successfully....');
                         }
                     },
@@ -972,6 +936,7 @@ const Opd = () => {
     const selectDoctor = async (e) => {
         const selectedDoctor = await allDoctors.find((doctor) => doctor.drName === e); // Find the corresponding doctor object
         formik.setFieldValue('drName', selectedDoctor.drName);
+        formik.setFieldValue('druid', selectedDoctor.druid);
         setConsultingCharges(selectedDoctor.consultingCharges)
         if (selectedDoctor.consultingCharges?.length === 1) {
             formik.setFieldValue('consultingCharge', selectedDoctor.consultingCharges[0].charge)
@@ -1099,7 +1064,7 @@ const Opd = () => {
             query.get().then(snapshot => {
                 // console.log(snapshot);
                 const totalDataCount = snapshot.size;
-                setsetTotalNumData(totalDataCount)
+                setTotalNumData(totalDataCount)
                 console.log('Total data count:', totalDataCount);
             }).catch(error => {
                 console.error('Error retrieving data:', error);
@@ -1178,7 +1143,7 @@ const Opd = () => {
                     fixedHeader={true}
                     noHeader={false}
                     persistTableHead
-                    actions={<button className='btn btn-primary' onClick={() => handleShow()}><span>  <BiPlus size={25} /></span></button>}
+                    actions={userpermissions?.code.includes('ADD_OPD') ? <button className='btn btn-primary' onClick={() => handleShow()}><span>  <BiPlus size={25} /></span></button> : null}
                     highlightOnHover
                     paginationServer={true}
                     subHeader={<div className='d-flex' style={{ justifyContent: 'space-between' }}></div>}

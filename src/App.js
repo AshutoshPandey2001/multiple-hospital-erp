@@ -10,15 +10,18 @@ import MedicalModule from './Module/Medial Module/MedicalModule'
 import PatientsReportmodel from './Module/Patients  module/PatientsReportmodel'
 import ReceptionModule from './Module/Reception Module/ReceptionModule'
 import Loaderspinner from './comman/spinner/Loaderspinner'
-import { SET_ACTIVE_USER, selectUsertype } from './redux/slice/authSlice'
+import { SET_ACTIVE_USER, selectUsertype, selectUserId } from './redux/slice/authSlice'
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import './scss/style.scss'
 import LaboratoryModule from './Module/Laboratory Module/LaboratoryModule'
-import { getDeviceToken } from './services/deviceToken'
 import AdminModule from './Module/Admin Module/AdminModule'
 import { startTransition } from 'react';
 import ManagementModule from './Module/Management Module/ManagementModule'
+import { getHospitalProfile } from 'src/services/firebasedb'
+import moment from 'moment'
+import { da } from 'date-fns/locale'
+import DoctorModule from './Module/Doctor Module/DoctorModule'
 
 const loading = (
   <div className="pt-3 text-center">
@@ -41,173 +44,75 @@ const App = () => {
   const [isLoading, setIsLoading] = useState(true)
   const [user, setUser] = useState()
   const userType = useSelector(selectUsertype)
-  // const [hospitaluid1, setHospitaluid] = useState('')
-
-  // const [userType, setUserType] = useState()
+  const hospitaluid = useSelector(selectUserId)
 
   const dispatch = useDispatch()
   const navigate = useNavigate()
+
+  const currentDate = new Date();
+  const formattedDate = currentDate.toISOString().slice(0, 10);
+
+  const calCulateDays = (subscriptionExpireDate) => {
+    let time_differ = (new Date(timeFilter(subscriptionExpireDate)) - new Date(formattedDate));
+    const days = time_differ / (1000 * 60 * 60 * 24);
+    return days
+  }
+
+  const timeFilter = (timestamp) => {
+    const timestampWithNanoseconds = timestamp.seconds * 1000 + Math.floor(timestamp.nanoseconds / 1e6);
+    const dateObject = new Date(timestampWithNanoseconds);
+    const timeString = moment(dateObject).format('YYYY-MM-DD');
+    return timeString
+  }
   useEffect(() => {
-    // setTimeout(() => {
-    // getDeviceToken().then(token => {
-    //   console.log('token', token);
-    // }).catch(error => {
-    //   console.error('token error ', error);
-    // });
     startTransition(() => {
-      onAuthStateChanged(auth, (user) => {
-        let usertype = '';
-        let mobileno = '';
-        let userName = '';
-        let hospitaluid = '';
-        if (!user) {
-          setUser('')
-          setIsLoading(false)
-        } else {
-          setUser(user.uid)
-          db.collection('UserList').doc(user.uid).get().then((res) => {
-            usertype = !res.exists ? null : res.data().userType;
-            mobileno = !res.exists ? null : res.data().userMobileNo;
-            userName = !res.exists ? null : res.data().userName;
-            hospitaluid = !res.exists ? null : res.data().hospitaluid;
-            // console.log('hospitaluid', hospitaluid);
-            // setHospitaluid(hospitaluid)
-            dispatch(SET_ACTIVE_USER({
-              email: user.email,
-              userName: userName,
-              userID: hospitaluid,
-              userType: usertype,
-              mobileNo: mobileno,
-            }))
-            setIsLoading(false)
-          }).catch((error) => {
-            console.error("Error updating document: ", error);
-            setIsLoading(false)
-
-          });
-        }
-
-      })
-    })
-
-    // setIsLoading(false)
-    // }, 3000)
+      // This code will not block the UI and will work correctly
+      setUser(userType);
+      console.log('userType', userType, hospitaluid);
+      setIsLoading(false);
+    });
+  }, [userType])
 
 
 
-  }, [dispatch, userType])
-
-
-
-  // useEffect(() => {
-  //   // Create a variable to track the completion of all processes
-  //   let isProcessCompleted = false;
-
-  //   // Define a function to check if all processes are completed and set isLoading to false
-  //   const checkProcessCompletion = () => {
-  //     if (isProcessCompleted) {
-  //       setIsLoading(false);
-  //     }
-  //   };
-
-  //   startTransition(() => {
-  //     onAuthStateChanged(auth, (user) => {
-  //       let usertype = '';
-  //       let mobileno = '';
-  //       let userName = '';
-  //       let hospitaluid = '';
-  //       if (!user) {
-  //         setUser('');
-  //         isProcessCompleted = true; // Set process completion to true
-  //         checkProcessCompletion();
-  //       } else {
-  //         setUser(user.uid);
-  //         db.collection('UserList')
-  //           .doc(user.uid)
-  //           .get()
-  //           .then((res) => {
-  //             usertype = !res.exists ? null : res.data().userType;
-  //             mobileno = !res.exists ? null : res.data().userMobileNo;
-  //             userName = !res.exists ? null : res.data().userName;
-  //             hospitaluid = !res.exists ? null : res.data().hospitaluid;
-  //             dispatch(
-  //               SET_ACTIVE_USER({
-  //                 email: user.email,
-  //                 userName: userName,
-  //                 userID: hospitaluid,
-  //                 userType: usertype,
-  //                 mobileNo: mobileno,
-  //               })
-  //             );
-  //             isProcessCompleted = true; // Set process completion to true
-  //             checkProcessCompletion();
-  //           })
-  //           .catch((error) => {
-  //             console.error("Error updating document: ", error);
-  //             isProcessCompleted = true; // Set process completion to true
-  //             checkProcessCompletion();
-  //           });
-  //       }
-  //     });
-  //   });
-  // }, [dispatch, userType]);
 
 
   return (
     <>
       <ToastContainer />
-      <Suspense fallback={loading}>
-        {startTransition(() => (
-          <Routes>
-            <Route exact path="/login" name="Login Page" element={<Login />} />
-            <Route exact path="/register" name="Register Page" element={<Register />} />
-            <Route exact path="/404" name="Page 404" element={<Page404 />} />
-            <Route exact path="/500" name="Page 500" element={<Page500 />} />
-          </Routes>
-        ))}
+      <Suspense fallback={<div>Loading...</div>}>
+        <Routes>
+          <Route path="/login" name="Login Page" element={<Login />} />
+          <Route exact path="/register" name="Register Page" element={<Register />} />
+          <Route exact path="/404" name="Page 404" element={<Page404 />} />
+          <Route exact path="/500" name="Page 500" element={<Page500 />} />
+        </Routes>
+
+        {isLoading ? <Loaderspinner /> :
+          <>
+            {user ?
+
+              (() => {
+                switch (userType) {
+                  case 'Management':
+                    return (
+                      <ManagementModule />
+                    )
+                  case 'Doctor':
+                    return (
+                      <DoctorModule />
+                    )
+                  default:
+                    return (
+                      <DefaultLayout />
+                    )
+                }
+              })()
+
+              : <Login />}</>
+
+        }
       </Suspense>
-
-      {isLoading ? <Loaderspinner /> :
-        <>
-          {user ?
-
-            (() => {
-              switch (userType) {
-
-                case 'Admin':
-                  return (
-                    <AdminModule />
-                  )
-                case 'Medical':
-                  return (
-                    <MedicalModule />
-                  )
-                case 'Reception':
-                  return (
-                    <ReceptionModule />
-                  )
-                case 'Laboratory':
-                  return (
-                    <LaboratoryModule />
-                  )
-                case 'Patient':
-                  return (
-                    <PatientsReportmodel />
-                  )
-                case 'Management':
-                  return (
-                    <ManagementModule />
-                  )
-                default:
-                  return (
-                    <DefaultLayout />
-                  )
-              }
-            })()
-
-            : <Login />}</>
-
-      }
 
     </>
 

@@ -46,12 +46,11 @@ const PrintButton = ({ content }) => {
                           }
                           .footer {
                             position: fixed;
-                            bottom: 0;
+                            bottom: -130px;
                             left: 0;
                             right: 0;
                             text-align: center;
-                            background-color: transparent;
-    
+                            background-color: none;    
                           }
                         }
                       `}

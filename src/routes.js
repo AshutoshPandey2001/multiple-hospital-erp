@@ -28,15 +28,17 @@ const Home = React.lazy(() => lazyRetry(() => import('./pages/home/Home'), "home
 const Charges = React.lazy(() => lazyRetry(() => import('./pages/hospital charges master/Charges'), "charges"))
 const HospitalMaster = React.lazy(() => lazyRetry(() => import('./pages/Hospital master/HospitalProfile'), "HospitalMaster"))
 const Subscription = React.lazy(() => lazyRetry(() => import('./pages/subscription/subscription'), "Subscription"))
+const Rolesmaster = React.lazy(() => lazyRetry(() => import('./pages/roles master/Rolesmaster'), "Rolesmaster"))
 
 const routes = [
   // { path: '/', exact: true, name: 'Home' },
   { path: '/home', exact: true, name: 'Home', element: Home },
   { path: '/dashboard', name: 'Dashboard', element: Dashboard },
   { path: '/usersmasters', name: 'Users', element: Usersmasters },
-  { path: '/patients', element: Patients, exact: true },
-  { path: '/patients/patientslist', name: 'Patients', element: Patients },
-  { path: '/patients/patientslist/patientshistory', name: 'PatientsHistory', element: PatientsHistory },
+  { path: '/patients', name: 'Patients', element: Patients, exact: true },
+  // { path: '/patients/patientslist', name: 'Patients', element: Patients },
+  // { path: '/patients/patientslist/patientshistory', name: 'PatientsHistory', element: PatientsHistory },
+  { path: '/patients/patientshistory', name: 'PatientsHistory', element: PatientsHistory },
   { path: '/patients/patientslist/patientshistory/admitinvoice', name: 'Invoice', element: Invoice },
   { path: '/patients/patientslist/patientshistory/opdinvoice', name: 'Invoice', element: Opdinvoice },
   { path: '/patients/patientslist/patientshistory/medicineinvoice', name: 'Invoice', element: Medicineinvoice },
@@ -62,6 +64,7 @@ const routes = [
   { path: '/charges', name: 'Charges', element: Charges, exact: true },
   { path: '/hospitalprofile', name: 'Hospital Profile', element: HospitalMaster, exact: true },
   { path: '/subscription', name: 'Subscription', element: Subscription, exact: true },
+  { path: '/rolemaster', name: 'Roles', element: Rolesmaster, exact: true },
 ]
 
 

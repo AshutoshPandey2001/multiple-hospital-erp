@@ -15,7 +15,7 @@ import CommanTable from 'src/comman/table/CommanTable';
 import { confirmAlert } from 'react-confirm-alert';
 import { toast } from 'react-toastify';
 import Loaderspinner from 'src/comman/spinner/Loaderspinner';
-import { selectUserId } from 'src/redux/slice/authSlice';
+import { selectUserId, selectpermissions } from 'src/redux/slice/authSlice';
 import { TfiReload } from 'react-icons/tfi'
 
 const initalValues = {
@@ -42,14 +42,18 @@ const AddRooms = () => {
     const [roomnoError, setRoomnoError] = useState(false)
     const [roomNum, setRoomnum] = useState()
     const hospitaluid = useSelector(selectUserId)
-
+    const permissions = useSelector(selectpermissions)
+    const [userpermissions, setUserpermissions] = useState([]);
     const columns = [
         { name: '#', selector: (row, index) => index + 1 },
         { name: 'Room Type', selector: row => row.roomType, sortable: true },
         { name: 'Price', selector: row => '₹' + row.priceperNight, sortable: true },
         {
-            name: 'Action', cell: row => <span><button onClick={() => editRooms(row)} style={{ color: 'orange', border: 'none' }}><MdEdit size={25} /></button>
-                <button onClick={() => deleteRooms(row)} style={{ color: 'red', border: 'none' }} ><AiFillDelete size={25} /></button>
+            name: 'Action', cell: row => <span>
+                {userpermissions?.code.includes('EDIT_ROOMS') ? <button onClick={() => editRooms(row)} style={{ color: 'orange', border: 'none' }}><MdEdit size={25} /></button>
+                    : null}
+                {userpermissions?.code.includes('DELETE_ROOMS') ? <button onClick={() => deleteRooms(row)} style={{ color: 'red', border: 'none' }} ><AiFillDelete size={25} /></button>
+                    : null}
             </span>
         }
     ]
@@ -60,6 +64,9 @@ const AddRooms = () => {
         setUpdate(false)
     }
     const handleShow = () => setShow(true);
+    useEffect(() => {
+        setUserpermissions(permissions?.find(permission => permission.module === "ROOMS"))
+    }, [])
     // useEffect(() => {
     //     getSubcollectionData('Rooms', '3PvtQ2G1RbG3l5VtiCMI', 'rooms', hospitaluid, (data) => {
     //         // Handle the updated data in the callback function
@@ -96,7 +103,7 @@ const AddRooms = () => {
                 try {
                     // await setData('Rooms', '3PvtQ2G1RbG3l5VtiCMI', 'rooms', room)
                     // await addSingltObject('Rooms', '3PvtQ2G1RbG3l5VtiCMI', 'rooms', Values)
-                    await addDatainsubcollection('Rooms', '3PvtQ2G1RbG3l5VtiCMI', 'rooms', Values)
+                    await addSingltObject('Rooms', '3PvtQ2G1RbG3l5VtiCMI', 'rooms', Values)
                     dispatch(ADD_ROOM(Values))
                     action.resetForm()
                     clearForm()
@@ -219,7 +226,7 @@ const AddRooms = () => {
                     title={"Rooms"}
                     columns={columns}
                     data={roomList}
-                    action={<> <button className='btn btn-primary' onClick={() => handleShow()}><span>  <BiPlus size={25} /></span></button></>}
+                    action={userpermissions?.code.includes('ADD_ROOMS') ? <> <button className='btn btn-primary' onClick={() => handleShow()}><span>  <BiPlus size={25} /></span></button></> : null}
 
                 />
             </div>

@@ -60,9 +60,7 @@ ChartJS.register(
 
 
 const Dashboard = () => {
-  // const random = (min, max) => Math.floor(Math.random() * (max - min + 1) + min)
-  // const admitPatientsdata = useSelector(selectAdmitPatients)
-  // const opdPatientsdata = useSelector(selectOpdPatients)
+
   const dispatch = useDispatch()
   const allRooms = useSelector(selectAllRooms)
   const allDoctors = useSelector(selectAllDr)
@@ -261,110 +259,11 @@ const Dashboard = () => {
     const totalNoofRoom = total_rooms.reduce((partialSum, a) => partialSum + a, 0)
     setTotalRooms(totalNoofRoom)
     pieChartFiltertoday(totalNoofRoom)
-    // lastFifteenDaysData(totalNoofRoom)
-    // setIsLoading(false)
+
     return () => {
       setChartData([])
     }
   }, [])
-
-  // const lastFifteenDaysData = async (totalNoofRoom) => {
-  //   const temp_data = []
-  //   const temp_data1 = []
-  //   const currentDate = new Date();
-  //   const lastFifteenDays = new Date();
-  //   lastFifteenDays.setDate(currentDate.getDate() - 14);
-  //   let query = await subcollectionRefopd.where('consultingDate', '<=', moment(currentDate).format('YYYY-MM-DD[Z]')).where('consultingDate', '>=', moment(lastFifteenDays).format('YYYY-MM-DD[Z]'))
-  //   // if (opdLastData) {
-  //   //   const timestamp = new firebase.firestore.Timestamp(opdLastData.timestamp.seconds, opdLastData.timestamp.nanoseconds);
-  //   //   console.log('i am inside this', timestamp);
-  //   //   query = query.where('lastUpdate', '>', timestamp);
-  //   // }
-  //   const opdfifteendaysdata = await retrieveData(query)
-  //   // dispatch(FILL_DASHBOARD_OPD_PATIENTS(opdfifteendaysdata))
-  //   setOpdPatientsdata([...opdfifteendaysdata])
-  //   const opdDataCount = await foruniqueOpdaDataCount(opdfifteendaysdata)
-  //   console.log('opdfifteendaysdata', opdfifteendaysdata);
-
-  //   // const opdDataAmount = await foruniqueOpdaDataAmount(opdMonthdata)
-  //   let query1 = await subcollectionRefIndoor.where('admitDate', '<=', `${moment(currentDate).format('YYYY-MM-DD')}T23:59Z`).where('admitDate', '>=', `${moment(lastFifteenDays).format('YYYY-MM-DD')}T00:00Z`)
-  //   // if (admitLastData) {
-  //   //   const timestamp = new firebase.firestore.Timestamp(admitLastData.timestamp.seconds, admitLastData.timestamp.nanoseconds);
-  //   //   query1 = query1.where('lastUpdate', '>', timestamp);
-  //   // }
-  //   const indoorfifteenDaysData = await retrieveData(query1)
-  //   // dispatch(FILL_DASHBOARD_INDOOR_PATIENTS(indoorfifteenDaysData))
-  //   setAdmitPatientsdata([...indoorfifteenDaysData])
-  //   console.log('indoorfifteenDaysData', indoorfifteenDaysData);
-  //   const indoorDataCount = await foruniqueIndoorDataCount(indoorfifteenDaysData)
-  //   for (let d = lastFifteenDays; d <= currentDate; d.setDate(d.getDate() + 1)) {
-  //     const dateString = d.toISOString().slice(0, 10);
-  //     const dataPoint = { date: dateString, count: 0 };
-  //     const dataPoint1 = { date: dateString, count: 0 };
-  //     const matchingData = opdDataCount?.find(item => item.date === dateString);
-  //     if (matchingData) {
-  //       dataPoint.count = matchingData.count;
-  //     }
-  //     temp_data.push(dataPoint);
-  //     const matchingData1 = indoorDataCount?.find(item =>
-  //       item.date === dateString);
-  //     if (matchingData1) {
-  //       dataPoint1.count = matchingData1.count;
-  //     }
-  //     temp_data1.push(dataPoint1);
-  //   }
-  //   setOpdData(temp_data)
-  //   setIndoorDaat(temp_data1)
-  //   // filterTodayData(opdfifteendaysdata, indoorfifteenDaysData, totalNoofRoom)
-
-  //   setChartData({
-  //     series: [
-  //       {
-  //         name: 'Indoor',
-  //         data: temp_data1?.map((item) => item.count),
-  //       },
-  //       {
-  //         name: 'OPD',
-  //         data: temp_data?.map((item) => item.count),
-  //       },
-  //     ],
-  //     options: {
-  //       chart: {
-  //         type: 'bar',
-  //         zoom: {
-  //           enabled: false
-  //         },
-  //       },
-  //       dataLabels: {
-  //         enabled: false
-  //       },
-  //       tooltip: {
-  //         theme: 'chart2-tooltip-theme',// Change the theme to 'light' for a light background tooltip        
-  //       },
-  //       xaxis: {
-  //         type: 'datetime',
-  //         categories: temp_data.map((item) => item.date),
-  //       },
-  //       stroke: {
-  //         show: true,
-  //         width: 2,
-  //         colors: ['transparent']
-  //       },
-  //       plotOptions: {
-  //         bar: {
-  //           horizontal: false,
-  //           columnWidth: '55%',
-  //           endingShape: 'rounded'
-  //         },
-  //       },
-  //     },
-  //   }
-  //   );
-  // }
-
-
-
-
 
   const retrieveData = async (query) => {
     try {
@@ -383,11 +282,6 @@ const Dashboard = () => {
       return []
     }
   };
-
-
-
-
-
 
   const pieChartFiltertoday = async (totalNoofRoom) => {
     try {
@@ -539,48 +433,7 @@ const Dashboard = () => {
       setIsLoading(false);
     }
   };
-  // const filterTodayData = async (opd, indoor, totalNoofRoom) => {
-  //   console.log('opd, indoor', opd, indoor);
-  //   setIsLoading(true)
-  //   const currentDate = new Date();
-  //   const formattedDate = currentDate.toISOString().slice(0, 10)
-  //   // const query = subcollectionRefopd.where('consultingDate', '==', moment(formattedDate).format('YYYY-MM-DD[Z]'))
-  //   // .where('consultingDate', '>=', moment(startDate).format('YYYY-MM-DD[Z]'))
-  //   // const opdTodayData = await retrieveData(query)
-  //   const opdTodayData = await opd.filter((item) => item.consultingDate === moment(formattedDate).format('YYYY-MM-DD[Z]'))
-  //   console.log('opdTodayData', opdTodayData);
-  //   const opdDataCount = await foruniqueOpdaDataCount(opdTodayData)
-  //   const opdDataAmount = await foruniqueOpdaDataAmount(opdTodayData)
-  //   console.log('formate date', formattedDate);
-  //   // const query1 = subcollectionRefIndoor.where('admitDate', '>=', `${formattedDate}T00:00Z`).where('admitDate', '<', `${formattedDate}T23:59Z`)
-  //   // .where('consultingDate', '>=', moment(startDate).format('YYYY-MM-DD[Z]'))
-  //   // const indoorTodayData = await retrieveData(query1)
-  //   const indoorTodayData = indoor.filter(item => {
-  //     // const itemDate = new Date(item.date);
-  //     return item.admitDate >= `${formattedDate}T00:00Z` && item.admitDate <= `${formattedDate}T23:59Z`;
-  //   });
-  //   console.log('indoorTodayData', indoorTodayData);
-  //   const indoorDataCount = await foruniqueIndoorDataCount(indoorTodayData)
-  //   const indoorDataAmount = await foruniqueIndooraDataAmount(indoorTodayData)
-  //   const indoortoday = indoorDataCount.find((item) => item.date === formattedDate)
-  //   const opdtoday = opdDataCount.find((item) => item.date === formattedDate)
-  //   setChartDatapie(prevState => ({
-  //     ...prevState,
-  //     series: [
-  //       indoortoday === undefined ? 0 : indoortoday.count,
-  //       opdtoday === undefined ? 0 : opdtoday.count,
-  //       allDoctors?.length,
-  //       totalNoofRoom ? totalNoofRoom : totalRooms
-  //     ]
-  //   }));
-  //   setTotalIndoorcount(indoortoday === undefined ? 0 : indoortoday.count)
-  //   setTotalOpdcount(opdtoday === undefined ? 0 : opdtoday.count)
-  //   const indoortodayAmount = indoorDataAmount.find((item, a) => item.date === formattedDate)
-  //   const opdtodayAmount = opdDataAmount.find((item, a) => item.date === formattedDate)
-  //   setTotalIndoorAmount(indoortodayAmount === undefined ? 0 : indoortodayAmount.payAbleAmount)
-  //   setTotalOpdAmount(opdtodayAmount === undefined ? 0 : opdtodayAmount.payAbleAmount)
-  //   setIsLoading(false)
-  // }
+
   const pieChartFilterweek = async () => {
     // last 7 days opd and indoor Amount
     setIsLoading(true)
@@ -957,13 +810,7 @@ const Dashboard = () => {
                 placement="bottom-start"
                 content={tooltipContent}
               />
-              {/* <Overlay target={target.current} show={showTooltip} placement="bottom-start">
-                {(props) => (
-                  <Tooltip id="custom-date-tooltip" {...props}>
-                    Your tooltip content goes here...
-                  </Tooltip>
-                )}
-              </Overlay> */}
+
             </div>
           </div>
           <div className='row'>
@@ -1041,19 +888,7 @@ const Dashboard = () => {
                       </h4>
                     </CCol>
                     <CCol sm={7} className="d-none d-md-block">
-                      {/* <CButtonGroup className="float-end me-3">
-                    {['Day', 'Weekly', 'Month'].map((value) => (
-                      <CButton
-                        color="outline-secondary"
-                        key={value}
-                        onClick={() => { changeTimeFrame(value) }}
-                        className="mx-0"
-                        active={value === timeFrame}
-                      >
-                        {value}
-                      </CButton>
-                    ))}
-                  </CButtonGroup> */}
+
                     </CCol>
                   </CRow>
 
@@ -1065,7 +900,6 @@ const Dashboard = () => {
                     height={350}
 
                   />
-                  {/* <Bar data={chartData} options={option} height={150} /> */}
                 </CCardBody>
               </CCard>
             </div>
@@ -1092,36 +926,6 @@ const Dashboard = () => {
                 </CCardBody>
               </CCard>
             </div>
-            {/* <div className='col-lg-6'>
-          <CCard className="box1"  >
-            <CCardBody>
-              <CRow>
-                <CCol sm={5}>
-                  <h4 id="traffic" className="card-title mb-0">
-                    OPD Patients
-                  </h4>
-                </CCol>
-                <CCol sm={7} className="d-none d-md-block">
-                  
-                  <CButtonGroup className="float-end me-3">
-                    {['Day', 'Weekly', 'Month'].map((value) => (
-                      <CButton
-                        color="outline-secondary"
-                        key={value}
-                        onClick={() => { changeTimeFrame(value) }}
-                        className="mx-0"
-                        active={value === timeFrame}
-                      >
-                        {value}
-                      </CButton>
-                    ))}
-                  </CButtonGroup>
-                </CCol>
-              </CRow>
-              <Bar data={chartData} options={option} height={150} />
-            </CCardBody>
-          </CCard>
-        </div> */}
 
           </div>
         </>

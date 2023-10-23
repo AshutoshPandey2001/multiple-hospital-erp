@@ -13,7 +13,7 @@ import { BsEye } from 'react-icons/bs'
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { ADD_LAST_PATIENT_DATA, ADD_PATIENTS, DELETE_PATIENTS, EDIT_PATIENTS, FILL_PATIENTS, selectAllPatients, selectlastPatientData } from 'src/redux/slice/patientMasterslice';
-import { selectMobileNo, selectUserId, selectUsertype } from 'src/redux/slice/authSlice';
+import { selectMobileNo, selectUserId, selectUsertype, selectpermissions } from 'src/redux/slice/authSlice';
 import CommanTable from 'src/comman/table/CommanTable';
 import Loaderspinner from 'src/comman/spinner/Loaderspinner';
 import { addDatainsubcollection, deleteDatainSubcollection, deleteDatainSubcollectionPatients, deleteSingltObject, filDatainsubcollection, getSubcollectionData, getSubcollectionDataWithoutsnapshot, setData, updateDatainSubcollection } from 'src/services/firebasedb';
@@ -61,10 +61,12 @@ const Addpatients = () => {
     const [printContent, setPrintContent] = useState(null);
     // const reversedArray = allPatientsList.slice().reverse();
     const hospitaluid = useSelector(selectUserId)
+    const permissions = useSelector(selectpermissions)
+    const [userpermissions, setUserpermissions] = useState([]);
     const [firstVisible, setFirstVisible] = useState(null);
     const [lastVisible, setLastVisible] = useState(null);
     const [perPageRows, setPerPageRows] = useState(10); // Initial value for rows per page
-    const [totalnumData, setsetTotalNumData] = useState(0); // Initial value for rows per page
+    const [totalnumData, setTotalNumData] = useState(0); // Initial value for rows per page
     const [currentPage, setCurrentPage] = useState(1);
     const [prev, setPrev] = useState(false);
     const [searchBy, setSearchBy] = useState('');
@@ -85,14 +87,22 @@ const Addpatients = () => {
         { name: 'Address', selector: row => row.pAddress },
         { name: 'Mobile No', selector: row => row.pMobileNo ? row.pMobileNo : '-' },
         {
-            name: 'Action', cell: row => <span className='d-flex justify-content-center'><button style={{ color: 'skyblue', border: 'none' }} onClick={() => patientHistory(row)} ><BsEye size={25} /></button><button onClick={() => editPatientDetails(row)} style={{ color: 'orange', border: 'none' }}><MdEdit size={25} /></button>
-                <button onClick={() => deletePatientsDetails(row)} style={{ color: 'red', border: 'none' }} ><AiFillDelete size={25} /></button>
-                <button onClick={() => handlePrintWithProps(row)} style={{ color: 'skyblue', border: 'none' }} ><AiFillPrinter size={25} /></button>
+            name: 'Action', cell: row => <span className='d-flex justify-content-center'>
+                {userpermissions?.code.includes('VIEW_PATIENTS') ? <><button style={{ color: 'skyblue', border: 'none' }} onClick={() => patientHistory(row)}><BsEye size={25} /></button></> : null}
+                {userpermissions?.code.includes('EDIT_PATIENTS') ? <><button onClick={() => editPatientDetails(row)} style={{ color: 'orange', border: 'none' }}><MdEdit size={25} /></button></> : null}
+                {userpermissions?.code.includes('DELETE_PATIENTS') ? <> <button onClick={() => deletePatientsDetails(row)} style={{ color: 'red', border: 'none' }} ><AiFillDelete size={25} /></button>
+                </> : null}
+                {userpermissions?.code.includes('PRINT_PATIENTS') ? <><button onClick={() => handlePrintWithProps(row)} style={{ color: 'skyblue', border: 'none' }} ><AiFillPrinter size={25} /></button>
+                </> : null}
+
 
             </span>, width: '200px'
         }
     ]
 
+    useEffect(() => {
+        setUserpermissions(permissions?.find(permission => permission.module === "PATIENTS"))
+    }, [])
 
     // useEffect(() => {
     //     // setPatientsList([...allPatientsList].reverse())
@@ -134,7 +144,7 @@ const Addpatients = () => {
     //     query.get().then(snapshot => {
     //         console.log(snapshot);
     //         const totalDataCount = snapshot.size;
-    //         setsetTotalNumData(totalDataCount)
+    //         setTotalNumData(totalDataCount)
     //         console.log('Total data count:', totalDataCount);
     //     }).catch(error => {
     //         console.error('Error retrieving data:', error);
@@ -170,7 +180,7 @@ const Addpatients = () => {
     //                 // console.log('lastVisibleDoc', lastVisibleDoc.data());
     //                 setLastVisible(lastVisibleDoc);
     //                 setFirstVisible(snapshot.docs[0]);
-    //                 // setsetTotalNumData(snapshot.size)
+    //                 // setTotalNumData(snapshot.size)
     //                 setIsLoading(false)
 
     //                 // console.log('setFirstVisible', snapshot.docs[0].data());
@@ -311,68 +321,27 @@ const Addpatients = () => {
     }
 
 
-    const requestSearch = () => {
-        if (searchString.length) {
-            // var query = subcollectionRef.where('hospitaluid', '==', hospitaluid)
-            let query = undefined
-            if (searchBy === 'Name') {
-                query = subcollectionRef
-                    .where('pName', '>=', searchString).
-                    where('pName', '<=', searchString + "\uf8ff")
-            } else if (searchBy === 'MobileNo') {
-                query = subcollectionRef
-                    .where('pMobileNo', '>=', searchString)
-                    .where('pMobileNo', '<=', searchString + "\uf8ff");
-            }
+    const requestSearch = (searchvalue) => {
 
-
-            query = query.limit(perPageRows);
-            retrieveData(query)
-            query.get().then(snapshot => {
-                console.log(snapshot);
-                const totalDataCount = snapshot.size;
-                setsetTotalNumData(totalDataCount)
-                console.log('Total data count:', totalDataCount);
-            }).catch(error => {
-                console.error('Error retrieving data:', error);
-            });
+        if (searchvalue.length < 1) {
+            setPatientsList([...allPatientsList].reverse())
+            return
         }
 
+        const filteredRows = patientsFilter.filter((row) => {
+            const searchString = searchvalue.toLowerCase()
+            return row.pid.toString().includes(searchString) ||
+                row.pName.toLowerCase().includes(searchString) ||
+                row.pMobileNo.includes(searchString);
+        });
 
-
-        // if (searchvalue.length < 1) {
-        //     setOpdPatientList([...allopdPatientList].reverse())
-        //     return
-        // }
-
-        // const filteredRows = opdPatientfilter.filter((row) => {
-        //     const searchString = searchvalue.toLowerCase()
-        //     return row.pid.toString().includes(searchString) ||
-        //         row.pName.toLowerCase().includes(searchString) ||
-        //         row.pMobileNo.includes(searchString);
-        // });
-
-        // setOpdPatientList(filteredRows)
+        setPatientsList(filteredRows)
     }
-
-    // const onSearchInput = (value) => {
-    //     setSearchString(value)
-    //     if (!value.length) {
-    //         setIsLoading(true)
-    //         setSearchString('')
-    //         let query = subcollectionRef
-    //             .where('hospitaluid', '==', hospitaluid)
-    //             .orderBy('timestamp', 'desc')
-    //             .limit(perPageRows)
-    //         retrieveData(query)
-    //         setIsLoading(false)
-    //         totalNumberofData()
-    //     }
-    // }
     const patientHistory = (item) => {
         const itemString = JSON.stringify(item);
 
-        navigate(`/patients/patientslist/patientshistory`, { state: item })
+        // navigate(`/patients/patientslist/patientshistory`, { state: item })
+        navigate(`/patients/patientshistory`, { state: item })
     }
     const reloadData = () => {
         setIsLoading(true)
@@ -463,7 +432,7 @@ const Addpatients = () => {
                         title={"Patients List"}
                         columns={columns}
                         data={patientsList}
-                        action={<button className='btn btn-primary' onClick={() => handleShow()}><span>  <BiPlus size={30} /></span></button>}
+                        action={userpermissions?.code.includes('ADD_PATIENTS') ? <button className='btn btn-primary' onClick={() => handleShow()}><span>  <BiPlus size={30} /></span></button> : null}
                         subHeaderComponent={<>
                             <input type='search' placeholder='Search...' className='w-25 form-control' onChange={(e) => requestSearch(e.target.value)} /></>}
                     />

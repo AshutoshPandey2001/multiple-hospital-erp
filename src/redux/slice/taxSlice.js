@@ -27,10 +27,13 @@ const taxMsterSlice = createSlice({
         FILL_TAXS: (state, actions) => {
             state.taxList = actions.payload;
         },
+        RESET_TAX: (state, actions) => {
+            state.taxList = [];
+        },
     }
 });
 
-export const { ADD_TAX, EDIT_TAX, DELETE_TAX, FILL_TAXS } = taxMsterSlice.actions;
+export const { ADD_TAX, EDIT_TAX, DELETE_TAX, FILL_TAXS, RESET_TAX } = taxMsterSlice.actions;
 export const selectAlltax = (state) => state.alltax.taxList;
 
 export default taxMsterSlice.reducer

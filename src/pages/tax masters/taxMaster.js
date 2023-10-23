@@ -13,6 +13,7 @@ import { useFormik } from 'formik'
 import { taxSchema } from 'src/schema'
 import { useDispatch, useSelector } from 'react-redux'
 import { EDIT_TAX, selectAlltax } from 'src/redux/slice/taxSlice'
+import { selectpermissions } from 'src/redux/slice/authSlice'
 
 const initalValues = {
     taxUid: '',
@@ -25,22 +26,25 @@ const taxMaster = () => {
     const allTax = useSelector(selectAlltax)
     const [taxData, setTaxData] = useState([])
     const dispatch = useDispatch()
+    const permissions = useSelector(selectpermissions)
+    const [userpermissions, setUserpermissions] = useState([]);
     const columns = [
         { name: '#', selector: (row, index) => index + 1 },
         { name: 'Tax Name', selector: row => row.taxName, sortable: true },
         { name: 'Value', selector: row => row.taxValue, sortable: true },
         {
-            name: 'Action', cell: row => <span><button onClick={() => editTax(row)} style={{ color: 'orange', border: 'none' }}><MdEdit size={25} /></button>
+            name: 'Action', cell: row => <span>
+                {userpermissions?.code?.includes('EDIT_TAX') ? (
+                    <button onClick={() => editTax(row)} style={{ color: 'orange', border: 'none' }}>
+                        <MdEdit size={25} />
+                    </button>
+                ) : null}
                 {/* <button onClick={() => deleteTax(row)} style={{ color: 'red', border: 'none' }} ><AiFillDelete size={25} /></button> */}
             </span>
         }
     ]
     useEffect(() => {
-        // getData('Tax', 'LZnOzIOavFxXLPkmFaWc').then((res) => {
-        //     setTaxData(res.data().tax);
-        // }).catch((err) => {
-        //     console.error(err);
-        // })
+
         setTaxData(allTax)
     }, [allTax])
 
@@ -49,7 +53,10 @@ const taxMaster = () => {
         formik.resetForm();
     }
 
-
+    useEffect(() => {
+        setUserpermissions(permissions?.find(permission => permission.module === "TAX"))
+        console.log(permissions?.find(permission => permission.module === "TAX"), 'permissions?.find(permission => permission.module === "TAX")');
+    }, [])
     const formik = useFormik({
         initialValues: initalValues,
         validationSchema: taxSchema,

@@ -22,6 +22,8 @@ import chargesReducer from './slice/chargesSlice';
 import hospitalProfileReducer from './slice/hospitalProfileSlice';
 import prevBillNoReducer from './slice/prevBillNoSlice';
 import dashboardReducer from './slice/dashboardSlice';
+import userRolesReducer from './slice/userRolesSlice';
+
 const rooReducer = combineReducers({
     changeState: changeStateReducer,
     allPatiets: patientREducer,
@@ -42,7 +44,8 @@ const rooReducer = combineReducers({
     allCharges: chargesReducer,
     hospitalProfile: hospitalProfileReducer,
     prevBillNo: prevBillNoReducer,
-    dashboard: dashboardReducer
+    dashboard: dashboardReducer,
+    allroles: userRolesReducer
 }
 
 )

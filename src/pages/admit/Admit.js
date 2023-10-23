@@ -24,7 +24,7 @@ import { setTimeout } from 'core-js';
 import Table from 'react-bootstrap/Table';
 import Loaderspinner from '../../comman/spinner/Loaderspinner';
 import CommanTable from 'src/comman/table/CommanTable';
-import { addDatainsubcollection, deleteDatainSubcollection, deleteSingltObject, filDatainsubcollection, getSubcollectionData, setData, getData, updateDatainSubcollection, updateSingltObject } from 'src/services/firebasedb';
+import { addDatainsubcollection, deleteDatainSubcollection, deleteSingltObject, filDatainsubcollection, getSubcollectionData, setData, getData, updateDatainSubcollection, updateSingltObject, addDataincollection, updateDataincollection } from 'src/services/firebasedb';
 import Dropdown from 'react-bootstrap/Dropdown';
 import { confirmAlert } from 'react-confirm-alert';
 import { toast } from 'react-toastify';
@@ -39,7 +39,7 @@ import billingicon from 'src/assets/images/billing-icon.png'
 import { OverlayTrigger, Tooltip, Overlay } from 'react-bootstrap';
 import { ddMMyyyy, dd_mm_YYYY, formatDateDDMMYYY, formatDateYYYYMMDD, formatDateyyyymmddUtc, yyyyMMddTHHmm } from 'src/services/dateFormate';
 import { filterData, filterDatainIndoor } from 'src/services/dataFilter';
-import { selectUserId } from 'src/redux/slice/authSlice';
+import { selectUserId, selectpermissions } from 'src/redux/slice/authSlice';
 import { ToWords } from 'to-words';
 import moment from 'moment';
 import { debounce } from 'lodash';
@@ -288,18 +288,21 @@ const Admit = () => {
     const [endDate, setEndDate] = useState()
     const [lastVisible, setLastVisible] = useState(null);
     const [perPageRows, setPerPageRows] = useState(10); // Initial value for rows per page
-    const [totalnumData, setsetTotalNumData] = useState(0); // Initial value for rows per page
+    const [totalnumData, setTotalNumData] = useState(0); // Initial value for rows per page
     const [currentPage, setCurrentPage] = useState(1);
     const [firstVisible, setFirstVisible] = useState(null);
     const [prev, setPrev] = useState(false);
     const [searchBy, setSearchBy] = useState('');
     const [searchString, setSearchString] = useState('');
+    const permissions = useSelector(selectpermissions)
+    const [userpermissions, setUserpermissions] = useState([]);
 
     // const subcollectionRef = parentDocRef.collection('opdPatient').where('hospitaluid', '==', hospitaluid);
     const parentDocRef = db.collection('admitPatients').doc('jSqDGnjO21bpPGhb6O2y');
     const subcollectionRef = parentDocRef.collection('admitPatient').where('hospitaluid', '==', hospitaluid).where('deleted', '==', 0);
 
     let unsubscribe = undefined
+    let unsub = undefined
 
     const filtertheData = (date) => {
         if (startDate && endDate) {
@@ -320,42 +323,43 @@ const Admit = () => {
 
     const columns = [
         {
-            name: (
-                <OverlayTrigger
-                    placement="top"
-                    overlay={
-                        <Tooltip style={{ textAlign: 'left', color: 'white' }}>
-                            <div>
-                                <div className='row'>
-                                    <div className='col-lg-12'>
-                                        <div className="form-group">
-                                            <label>Form<b style={{ color: 'red' }}>*</b>:</label>
-                                            <input name='startDate' type="date" className="form-control" defaultValue={startDate} onChange={(e) => setStartDate(e.target.value)} />
-                                        </div>
-                                    </div>
-                                    <div className='col-lg-12'>
-                                        <div className="form-group">
-                                            <label>To<b style={{ color: 'red' }}>*</b>:</label>
-                                            <input name='endDate' type="date" className="form-control" defaultValue={endDate} onChange={(e) => setEndDate(e.target.value)} min={startDate} />
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className='d-flex mt-2 mb-1 justify-content-end'>
-                                    <Button variant="secondary" onClick={clearfilterData}>
-                                        Clear
-                                    </Button>
-                                    <Button variant="primary" style={{ marginLeft: '10px' }} onClick={() => filtertheData('admitDate')}>
-                                        Filter
-                                    </Button>
-                                </div>
-                            </div>
-                        </Tooltip>}
-                    trigger='click'
-                    show={showtooltipadmit}
-                >
-                    <span className='d-flex justify-content-center w-100' style={{ cursor: 'pointer', display: 'flex' }} ><FiFilter onClick={() => setShowtooltipadmit(!showtooltipadmit)} /> Admit Date </span>
-                </OverlayTrigger>
-            ),
+            // name: (
+            //     <OverlayTrigger
+            //         placement="top"
+            //         overlay={
+            //             <Tooltip style={{ textAlign: 'left', color: 'white' }}>
+            //                 <div>
+            //                     <div className='row'>
+            //                         <div className='col-lg-12'>
+            //                             <div className="form-group">
+            //                                 <label>Form<b style={{ color: 'red' }}>*</b>:</label>
+            //                                 <input name='startDate' type="date" className="form-control" defaultValue={startDate} onChange={(e) => setStartDate(e.target.value)} />
+            //                             </div>
+            //                         </div>
+            //                         <div className='col-lg-12'>
+            //                             <div className="form-group">
+            //                                 <label>To<b style={{ color: 'red' }}>*</b>:</label>
+            //                                 <input name='endDate' type="date" className="form-control" defaultValue={endDate} onChange={(e) => setEndDate(e.target.value)} min={startDate} />
+            //                             </div>
+            //                         </div>
+            //                     </div>
+            //                     <div className='d-flex mt-2 mb-1 justify-content-end'>
+            //                         <Button variant="secondary" onClick={clearfilterData}>
+            //                             Clear
+            //                         </Button>
+            //                         <Button variant="primary" style={{ marginLeft: '10px' }} onClick={() => filtertheData('admitDate')}>
+            //                             Filter
+            //                         </Button>
+            //                     </div>
+            //                 </div>
+            //             </Tooltip>}
+            //         trigger='click'
+            //         show={showtooltipadmit}
+            //     >
+            //         <span className='d-flex justify-content-center w-100' style={{ cursor: 'pointer', display: 'flex' }} ><FiFilter onClick={() => setShowtooltipadmit(!showtooltipadmit)} /> Admit Date </span>
+            //     </OverlayTrigger>
+            // ),
+            name: "Admit Date",
             selector: row => row.admitDate,
             sortable: true,
             sortFunction: (a, b) => { return moment(a.admitDate).toDate().getTime() - moment(b.admitDate).toDate().getTime() },
@@ -365,42 +369,43 @@ const Admit = () => {
             padding: 0
         },
         {
-            name: (
-                <OverlayTrigger
-                    placement="top"
-                    overlay={
-                        <Tooltip>
-                            <div>
-                                <div className='row'>
-                                    <div className='col-lg-12'>
-                                        <div className="form-group">
-                                            <label>Form<b style={{ color: 'red' }}>*</b>:</label>
-                                            <input name='startDate' type="date" className="form-control" defaultValue={startDate} onChange={(e) => setStartDate(e.target.value)} />
-                                        </div>
-                                    </div>
-                                    <div className='col-lg-12'>
-                                        <div className="form-group">
-                                            <label>To<b style={{ color: 'red' }}>*</b>:</label>
-                                            <input name='endDate' type="date" className="form-control" defaultValue={endDate} onChange={(e) => setEndDate(e.target.value)} min={startDate} />
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className='d-flex mt-2 mb-1 justify-content-end'>
-                                    <Button variant="secondary" onClick={clearfilterData}>
-                                        Clear
-                                    </Button>
-                                    <Button variant="primary" style={{ paddingLeft: '10px' }} onClick={() => filtertheData('dischargeDate')}>
-                                        Filter
-                                    </Button>
-                                </div>
-                            </div>
-                        </Tooltip>}
-                    trigger='click'
-                    show={showtooltipDischarge}
-                >
-                    <span className='d-flex justify-content-center w-100' style={{ cursor: 'pointer', display: 'flex' }} > <FiFilter onClick={() => setShowtooltipDischarge(!showtooltipDischarge)} /> Discharge Date </span>
-                </OverlayTrigger>
-            ),
+            // name: (
+            //     <OverlayTrigger
+            //         placement="top"
+            //         overlay={
+            //             <Tooltip>
+            //                 <div>
+            //                     <div className='row'>
+            //                         <div className='col-lg-12'>
+            //                             <div className="form-group">
+            //                                 <label>Form<b style={{ color: 'red' }}>*</b>:</label>
+            //                                 <input name='startDate' type="date" className="form-control" defaultValue={startDate} onChange={(e) => setStartDate(e.target.value)} />
+            //                             </div>
+            //                         </div>
+            //                         <div className='col-lg-12'>
+            //                             <div className="form-group">
+            //                                 <label>To<b style={{ color: 'red' }}>*</b>:</label>
+            //                                 <input name='endDate' type="date" className="form-control" defaultValue={endDate} onChange={(e) => setEndDate(e.target.value)} min={startDate} />
+            //                             </div>
+            //                         </div>
+            //                     </div>
+            //                     <div className='d-flex mt-2 mb-1 justify-content-end'>
+            //                         <Button variant="secondary" onClick={clearfilterData}>
+            //                             Clear
+            //                         </Button>
+            //                         <Button variant="primary" style={{ paddingLeft: '10px' }} onClick={() => filtertheData('dischargeDate')}>
+            //                             Filter
+            //                         </Button>
+            //                     </div>
+            //                 </div>
+            //             </Tooltip>}
+            //         trigger='click'
+            //         show={showtooltipDischarge}
+            //     >
+            //         <span className='d-flex justify-content-center w-100' style={{ cursor: 'pointer', display: 'flex' }} > <FiFilter onClick={() => setShowtooltipDischarge(!showtooltipDischarge)} /> Discharge Date </span>
+            //     </OverlayTrigger>
+            // ),
+            name: "Discharge Date",
             selector: row => row.dischargeDate ? row.dischargeDate : '-',
             sortable: true,
             cell: row => <div style={{ textAlign: 'center', justifyContent: 'center', width: '100%' }}>{row.dischargeDate ? formatDateDDMMYYY(row.dischargeDate) : '-'}</div>,
@@ -469,26 +474,33 @@ const Admit = () => {
             cell: row => (
                 <span style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%' }}>
                     {row.paymentStatus === 'Completed' ? (
-                        <span style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                            <button onClick={() => viewInvoice(row)} style={{ color: 'skyblue', border: 'none' }}>
-                                <BsEye size={22} />
-                            </button>
-                        </span>
+                        <>
+                            {userpermissions?.code.includes('VIEW_INDOOR') ?
+                                <span style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                                    <button onClick={() => viewInvoice(row)} style={{ color: 'skyblue', border: 'none' }}>
+                                        <BsEye size={22} />
+                                    </button>
+                                </span> : null}
+                        </>
+
                     ) : (
                         <>
-                            <button onClick={() => editPatientDetails(row)} style={{ color: 'orange', border: 'none' }}>
-                                <MdEdit size={22} />
-                            </button>
+                            {userpermissions?.code.includes('EDIT_INDOOR') ?
+                                <button onClick={() => editPatientDetails(row)} style={{ color: 'orange', border: 'none' }}>
+                                    <MdEdit size={22} />
+                                </button> : null}
                         </>
                     )}
-                    {row.dischargeDate ? (
-                        <button onClick={() => generateInvoice(row)} style={{ color: 'skyblue', border: 'none' }}>
-                            {row.paymentStatus === 'Completed' ? <AiFillPrinter size={25} /> : <img src={billingicon} alt='billingicon' />}
-                        </button>
+                    {row.dischargeDate ? (<>
+                        {userpermissions?.code.includes('INVOICE_INDOOR') ?
+                            <button onClick={() => generateInvoice(row)} style={{ color: 'skyblue', border: 'none' }}>
+                                {row.paymentStatus === 'Completed' ? <AiFillPrinter size={25} /> : <img src={billingicon} alt='billingicon' />}
+                            </button> : null}</>
                     ) : null}
-                    <button onClick={() => deletePatientsDetails(row)} style={{ color: 'red', border: 'none' }}>
-                        <AiFillDelete size={22} />
-                    </button>
+                    {userpermissions?.code.includes('DELETE_INDOOR') ?
+                        <button onClick={() => deletePatientsDetails(row)} style={{ color: 'red', border: 'none' }}>
+                            <AiFillDelete size={22} />
+                        </button> : null}
                 </span>
             ),
 
@@ -532,9 +544,7 @@ const Admit = () => {
     // }, [allAdmitPatients, roomList])
 
     useEffect(() => {
-        // addDatainsubcollection()
-        // setAdmitPatientList([...allAdmitPatients].reverse());
-        // setAdmitPatientfilter(allAdmitPatients);
+
         setRoom([...roomList]);
         setIsLoading(false);
 
@@ -551,8 +561,10 @@ const Admit = () => {
         totalNumberofData()
         // onlyChangeDetector()
         // chnageDetectore()
+        setUserpermissions(permissions?.find(permission => permission.module === "INDOOR"))
+
         return () => {
-            // unsub()
+            unsub()
             unsubscribe();
             console.log('unmounting');
         };
@@ -562,26 +574,59 @@ const Admit = () => {
 
 
     const totalNumberofData = async () => {
+        // try {
+        //     let count = 0
+        //     await getData('admitPatients', 'jSqDGnjO21bpPGhb6O2y').then((res) => {
+        //         // dispatch(FILL_PATIENTS(res.data().count))
+        //         count = res.data().count
+        //         console.log('res.data().count', res.data().count);
+        //     }).catch((error) => {
+        //         console.error("Error updating document: ", error);
+        //     });
+        //     // const parentDocRef = db.collection('opdPatients').doc('m5JHl3l4zhaBCa8Vihcb');
+        //     // const subcollectionRef = parentDocRef.collection('opdPatient');
+        //     if (count === 0 || count === undefined) {
+        //         const snapshot = await subcollectionRef.get();
+        //         const totalDataCount = snapshot.size;
+        //         setTotalNumData(totalDataCount);
+        //         await setData('admitPatients', 'jSqDGnjO21bpPGhb6O2y', 'count', totalDataCount)
+        //         console.log('Total data count:', totalDataCount);
+        //     } else {
+        //         setTotalNumData(count);
+        //     }
+
+        // } catch (error) {
+        //     console.error('Error fetching data:', error);
+        // }
+
         try {
-            let count = 0
-            await getData('admitPatients', 'jSqDGnjO21bpPGhb6O2y').then((res) => {
-                // dispatch(FILL_PATIENTS(res.data().count))
-                count = res.data().count
-                console.log('res.data().count', res.data().count);
-            }).catch((error) => {
-                console.error("Error updating document: ", error);
-            });
-            // const parentDocRef = db.collection('opdPatients').doc('m5JHl3l4zhaBCa8Vihcb');
-            // const subcollectionRef = parentDocRef.collection('opdPatient');
-            if (count === 0 || count === undefined) {
-                const snapshot = await subcollectionRef.get();
-                const totalDataCount = snapshot.size;
-                setsetTotalNumData(totalDataCount);
-                await setData('admitPatients', 'jSqDGnjO21bpPGhb6O2y', 'count', totalDataCount)
-                console.log('Total data count:', totalDataCount);
-            } else {
-                setsetTotalNumData(count);
-            }
+            let count = 0;
+
+            unsub = db
+                .collection('AdmitPatientsCount')
+                .where('hospitaluid', '==', hospitaluid)
+                .onSnapshot(async (snapshot) => {
+                    if (!snapshot.empty) {
+                        const newData = snapshot.docs[0].data();
+                        count = newData.count;
+                        setTotalNumData(count);
+                        console.log('res.data().count', count);
+                    } else {
+                        const snapshot = await subcollectionRef.get();
+                        const totalDataCount = snapshot.size;
+                        await addDataincollection('AdmitPatientsCount', { hospitaluid: hospitaluid, count: totalDataCount })
+                        console.log('No documents found in the snapshot.');
+                    }
+                });
+
+            // You can save the unsubscribe function if needed to stop listening later
+            // unsub();
+
+            // Optionally, you can use the unsubscribe function to stop listening to changes
+            // when you no longer need it, e.g., when the component unmounts.
+            // useEffect(() => {
+            //   return () => unsubscribe();
+            // }, []);
 
         } catch (error) {
             console.error('Error fetching data:', error);
@@ -596,7 +641,7 @@ const Admit = () => {
     //     query.onSnapshot((snapshot) => {
     //         console.log(snapshot);
     //         const totalDataCount = snapshot.size;
-    //         setsetTotalNumData(totalDataCount)
+    //         setTotalNumData(totalDataCount)
     //         console.log('Total data count:', totalDataCount);
     //     })
     // }
@@ -607,7 +652,7 @@ const Admit = () => {
             console.log('i am a lisitnor who alwas call');
             setIsLoading(true)
             unsubscribe = query.onSnapshot((snapshot) => {
-                totalNumberofData()
+                // totalNumberofData()
                 const newData = [];
                 snapshot.forEach((doc) => {
                     newData.push(doc.data());
@@ -624,7 +669,7 @@ const Admit = () => {
                     // console.log('lastVisibleDoc', lastVisibleDoc.data());
                     setLastVisible(lastVisibleDoc);
                     setFirstVisible(snapshot.docs[0]);
-                    // setsetTotalNumData(snapshot.size)
+                    // setTotalNumData(snapshot.size)
                     setIsLoading(false)
 
                     // console.log('setFirstVisible', snapshot.docs[0].data());
@@ -783,7 +828,9 @@ const Admit = () => {
                             // await setData("admitPatients", 'jSqDGnjO21bpPGhb6O2y', 'admitPatient', admit)
                             // await deleteSingltObject("admitPatients", 'jSqDGnjO21bpPGhb6O2y', 'admitPatient', item1, 'admituid', 'hospitaluid')
                             await deleteDatainSubcollection("admitPatients", 'jSqDGnjO21bpPGhb6O2y', 'admitPatient', item1, 'admituid', 'hospitaluid')
-                            setData('admitPatients', 'jSqDGnjO21bpPGhb6O2y', 'count', totalnumData - 1)
+                            await updateDataincollection('AdmitPatientsCount', { hospitaluid: hospitaluid, count: totalnumData - 1 })
+
+                            // setData('admitPatients', 'jSqDGnjO21bpPGhb6O2y', 'count', totalnumData - 1)
                             // setAdmitPatientList(admitPatientList.filter((item) => item.admituid !== item1.admituid))
                             // dispatch(DELETE_ADMIT_PATIENTS(item1))
                             if (!item1.dischargeDate) {
@@ -942,7 +989,7 @@ const Admit = () => {
             query.get().then(snapshot => {
                 // console.log(snapshot);
                 const totalDataCount = snapshot.size;
-                setsetTotalNumData(totalDataCount)
+                setTotalNumData(totalDataCount)
                 console.log('Total data count:', totalDataCount);
             }).catch(error => {
                 console.error('Error retrieving data:', error);
@@ -1003,23 +1050,7 @@ const Admit = () => {
         {isLoading ? <Loaderspinner /> : <>
             <div>
                 <div style={{ display: 'none' }}>  {printContent && <PrintButton content={printContent} />}</div>
-                {/* <CommanTable
-                    title={"Indoor Patients"}
-                    columns={columns}
-                    data={admitPatientList}
-                    action={<button className='btn btn-primary ' onClick={handleShow}><span>  <BiPlus size={25} /></span></button>}
-                    subHeaderComponent={<><Dropdown style={{ marginRight: '20px', marginLeft: '20px' }}>
-                        <Dropdown.Toggle variant="primary" >
-                            <FiFilter size={22} />
-                        </Dropdown.Toggle>
-                        <Dropdown.Menu>
-                            <Dropdown.Item onClick={filterDataAdmit}>Admit</Dropdown.Item>
-                            <Dropdown.Item onClick={filterDataDischarge}>Discharged</Dropdown.Item>
-                            <Dropdown.Item onClick={clearFilter}>Clear Filter</Dropdown.Item>
-                        </Dropdown.Menu>
-                    </Dropdown>
-                        <input type='search' placeholder='search' className='w-25 form-control' onChange={(e) => requestSearch(e.target.value)} /></>}
-                /> */}
+
 
 
                 <DataTable
@@ -1030,7 +1061,7 @@ const Admit = () => {
                     fixedHeader={true}
                     noHeader={false}
                     persistTableHead
-                    actions={<button className='btn btn-primary' onClick={() => handleShow()}><span>  <BiPlus size={25} /></span></button>}
+                    actions={userpermissions?.code.includes('ADD_INDOOR') ? <button className='btn btn-primary' onClick={() => handleShow()}><span>  <BiPlus size={25} /></span></button> : null}
                     highlightOnHover
                     paginationServer={true}
                     subHeader={<div className='d-flex' style={{ justifyContent: 'space-between' }}></div>}

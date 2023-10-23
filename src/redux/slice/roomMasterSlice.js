@@ -62,10 +62,15 @@ const roomMsterSlice = createSlice({
             state.lastroomData = actions.payload
 
         },
+        RESET_ROOM: (state, actions) => {
+            state.roomsList = [];
+            state.lastroomData = undefined
+
+        },
     }
 });
 
-export const { ADD_ROOM, EDIT_ROOM, DELETE_ROOM, FILL_ROOMS, ADD_LAST_ROOM_DATA } = roomMsterSlice.actions;
+export const { ADD_ROOM, EDIT_ROOM, DELETE_ROOM, FILL_ROOMS, ADD_LAST_ROOM_DATA, RESET_ROOM } = roomMsterSlice.actions;
 export const selectAllRooms = (state) => state.allRooms.roomsList;
 export const selectlastRoomData = (state) => state.allRooms.lastroomData;
 

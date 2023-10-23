@@ -93,7 +93,7 @@ const dashboardSlice = createSlice({
     }
 });
 
-export const { RESET_INDOOR, FILL_DASHBOARD_INDOOR_PATIENTS, FILL_DASHBOARD_OPD_PATIENTS } = dashboardSlice.actions;
+export const { RESET_DASHBOARD, FILL_DASHBOARD_INDOOR_PATIENTS, FILL_DASHBOARD_OPD_PATIENTS } = dashboardSlice.actions;
 export const selectDashboardAdmitData = (state) => state.dashboard.admitList;
 export const selectDashboardopdData = (state) => state.dashboard.opdList;
 export const selectDashboardAdmitLastData = (state) => state.dashboard.lastAdmitData;

@@ -96,6 +96,7 @@ import { useSelector } from 'react-redux';
 import routes from '../routes';
 import receptionRoutes from 'src/receptionRoutes';
 import medroutes from 'src/medRoutes';
+import doctorRoutes from 'src/doctorRoutes';
 import laboratoryRoutes from 'src/laboratoryRoutes';
 import { selectUsertype } from 'src/redux/slice/authSlice';
 import moment from 'moment-timezone';
@@ -146,6 +147,8 @@ const AppBreadcrumb = () => {
           break;
         case 'Management':
           routeName = getRouteName(currentPathname, managementRoutes);
+        case 'Doctor':
+          routeName = getRouteName(currentPathname, doctorRoutes);
           break;
         default:
           routeName = getRouteName(currentPathname, routes);

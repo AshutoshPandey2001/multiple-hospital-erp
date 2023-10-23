@@ -90,11 +90,14 @@ const medicinesMsterSlice = createSlice({
             state.medicinesList = actions.payload;
         },
 
-
+        RESET_MEDICINES: (state, actions) => {
+            state.medicinesList = [];
+            state.lastMedicines = undefined;
+        },
     }
 });
 
-export const { ADD_MEDICINES, EDIT_MEDICINES, DELETE_MEDICINES, UPLOAD_MEDICINES, UPDATE_MEDICINES, FILL_MEDICINES_STOCK, ADD_LAST_MEDICINES } = medicinesMsterSlice.actions;
+export const { ADD_MEDICINES, EDIT_MEDICINES, DELETE_MEDICINES, UPLOAD_MEDICINES, RESET_MEDICINES, UPDATE_MEDICINES, FILL_MEDICINES_STOCK, ADD_LAST_MEDICINES } = medicinesMsterSlice.actions;
 export const selectAllMedicines = (state) => state.allmedicines.medicinesList;
 export const selectLastMedicine = (state) => state.allmedicines.lastMedicines;
 

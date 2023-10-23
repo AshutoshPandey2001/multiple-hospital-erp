@@ -28,8 +28,9 @@ import { FILL_RETURN_PATIENTS_MEDICINES } from 'src/redux/slice/returnMedicinesl
 import { FILL_TAXS } from 'src/redux/slice/taxSlice'
 import { FILL_CHARGES } from 'src/redux/slice/chargesSlice'
 import { SET_HOSPITAL_PROFILE } from 'src/redux/slice/hospitalProfileSlice'
-import { SET_INDOORPREVBILL_NO, SET_OPDPREVBILL_NO } from 'src/redux/slice/prevBillNoSlice'
+import { SET_INDOORPREVBILL_NO, SET_MEDICINEPREVBILL_NO, SET_OPDPREVBILL_NO, SET_RETURN_MEDICINEPREVBILL_NO } from 'src/redux/slice/prevBillNoSlice'
 import { db } from 'src/firebaseconfig'
+import { FILL_ROLE } from 'src/redux/slice/userRolesSlice'
 
 const DefaultLayout = () => {
   // const { hospitaluid } = props
@@ -290,6 +291,13 @@ const DefaultLayout = () => {
         .catch((error) => {
           console.error(error);
         });
+
+      await getDatawithhospitaluid('Roles', 'd3ryEUt65hfqA2FMa0fEyxde', 'roles', hospitaluid).then((matchingValues) => {
+        dispatch(FILL_ROLE(matchingValues))
+      })
+        .catch((error) => {
+          console.error(error);
+        });
       // await getSubcollectionData('Doctors', 'd3ryEUfqA2FMa0fEyxde', 'doctors', hospitaluid, (data) => {
       //   // Handle the updated data in the callback function
       //   dispatch(FILL_DR(data))
@@ -461,6 +469,22 @@ const DefaultLayout = () => {
       await getHospitalProfile('lastOpdbillNo', 'zyojcRPH1zTQLiT1Gepz', 'lastopdbillNo', hospitaluid, (data) => {
         // Handle the updated data in the callback function
         dispatch(SET_OPDPREVBILL_NO(data))
+        console.log('Received real-time data :', data);
+      }).catch((error) => {
+        console.error('Error:', error);
+      })
+
+      await getHospitalProfile('lastMedicineBillNo', 'VE8TfjLSEWC69ik8HUGr', 'lastMedicineBillno', hospitaluid, (data) => {
+        // Handle the updated data in the callback function
+        dispatch(SET_MEDICINEPREVBILL_NO(data))
+        console.log('Received real-time data :', data);
+      }).catch((error) => {
+        console.error('Error:', error);
+      })
+
+      await getHospitalProfile('lastReturnMedicineBillNo', '4I3NWbYnR86xYlxbSHp4', 'lastReturnMedicineBillNo', hospitaluid, (data) => {
+        // Handle the updated data in the callback function
+        dispatch(SET_RETURN_MEDICINEPREVBILL_NO(data))
         console.log('Received real-time data :', data);
       }).catch((error) => {
         console.error('Error:', error);

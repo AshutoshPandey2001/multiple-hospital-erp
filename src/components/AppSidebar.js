@@ -14,7 +14,7 @@ import 'simplebar/dist/simplebar.min.css'
 import navigation from '../_nav'
 import { selectChangeState, SET_STATE } from 'src/redux/slice/changeStateslice'
 import medNav from '../_medNav'
-import { selectIsLoggedIn, selectUsertype } from 'src/redux/slice/authSlice'
+import { selectIsLoggedIn, selectUsertype, selectpermissions } from 'src/redux/slice/authSlice'
 import receptionNav from '../_receptionNav'
 import laboratoryNav from '../_laboratoryNav'
 import './appsidebar.css';
@@ -22,14 +22,51 @@ import { NavLink } from 'react-router-dom'
 import adminnav from 'src/_adminNav'
 import { selectHospitalLogo } from 'src/redux/slice/hospitalProfileSlice'
 import ManagementNav from 'src/_managementNav'
+import drNav from '../_drNav'
 
 const AppSidebar = () => {
   const dispatch = useDispatch()
   const sidebarShow = useSelector(selectChangeState)
   const userType = useSelector(selectUsertype)
+  const userpermissions = useSelector(selectpermissions)
   const isLoggesIn = useSelector(selectIsLoggedIn)
   const hospitslLogo = useSelector(selectHospitalLogo)
 
+
+  // const permissionNav = navigation.map((item) => {
+  //   const selectedmodule = userpermissions?.find((item1) => item.key === item1.module)
+  //   if (selectedmodule && selectedmodule.module === item.key) {
+  //     if (item.items?.length > 0) {
+  //       const filteredarray = item.items?.map((item2) => {
+  //         if (selectedmodule?.code.includes(item2.key)) {
+  //           return item2
+  //         } else {
+
+  //         }
+  //       }).filter((route1) => route1 !== undefined)
+  //       if (filteredarray.length > 0) {
+  //         return item.items = filteredarray
+  //       }
+  //     } else {
+
+  //       return item
+  //     }
+  //   }
+  // }).filter((route) => route !== undefined);
+  const permissionNav = navigation.map(item => {
+    const selectedModule = userpermissions?.find(item1 => item.key === item1.module);
+    if (selectedModule) {
+      if (item.items?.length > 0) {
+        const filteredArray = item.items?.filter(item2 => selectedModule.code.includes(item2.key));
+        if (filteredArray.length > 0) {
+          item.items = filteredArray;
+          return item;
+        }
+      } else {
+        return item;
+      }
+    }
+  }).filter(route => route !== undefined);
   return (
     <CSidebar
       position="fixed"
@@ -48,36 +85,44 @@ const AppSidebar = () => {
         {
           (() => {
             switch (userType) {
-
-              case 'Admin':
-                return (
-                  <AppSidebarNav items={adminnav} />
-                )
-              case 'Medical':
-                return (
-                  <AppSidebarNav items={medNav} />
-                )
-              case 'Reception':
-                return (
-                  <AppSidebarNav items={receptionNav} />
-                )
-              case 'Laboratory':
-                return (
-                  <AppSidebarNav items={laboratoryNav} />
-                )
+              // case 'Admin':
+              //   return (
+              //     <AppSidebarNav items={adminnav} />
+              //   )
+              // case 'Medical':
+              //   return (
+              //     <AppSidebarNav items={medNav} />
+              //   )
+              // case 'Reception':
+              //   return (
+              //     <AppSidebarNav items={receptionNav} />
+              //   )
+              // case 'Laboratory':
+              //   return (
+              //     <AppSidebarNav items={laboratoryNav} />
+              //   )
               case 'Management':
                 return (
                   <AppSidebarNav items={ManagementNav} />
                 )
+              case 'Doctor':
+                return (
+                  <AppSidebarNav items={drNav} />
+                )
+              // case 'Super Admin':
+              //   return (
+              //     <AppSidebarNav items={navigation} />
+              //   )
 
               default:
                 return (
-                  <AppSidebarNav items={navigation} />
+                  <AppSidebarNav items={permissionNav} />
                 )
             }
           })()
 
         }
+        {/* <AppSidebarNav items={permissionNav} /> */}
 
         {/* </SimpleBar> */}
       </CSidebarNav>

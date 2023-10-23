@@ -31,10 +31,13 @@ const laboratoryReportSlice = createSlice({
         FILL_LABORATORY_REPORTS: (state, actions) => {
             state.laboratoryReportsList = actions.payload;
         },
+        RESET_LABORATORY_REPORTS: (state, actions) => {
+            state.laboratoryReportsList = [];
+        },
     }
 });
 
-export const { ADD_LABORATORY_REPORT, EDIT_LABORATORY_REPORT, DELETE_LABORATORY_REPORT, FILL_LABORATORY_REPORTS } = laboratoryReportSlice.actions;
+export const { ADD_LABORATORY_REPORT, EDIT_LABORATORY_REPORT, DELETE_LABORATORY_REPORT, FILL_LABORATORY_REPORTS, RESET_LABORATORY_REPORTS } = laboratoryReportSlice.actions;
 export const selectAlllaboratoryReports = (state) => state.alllaboratoryReports.laboratoryReportsList;
 
 export default laboratoryReportSlice.reducer

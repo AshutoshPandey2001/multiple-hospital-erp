@@ -7,15 +7,14 @@ import PrintFooter from "./PrintFooter";
 
 const PrintableComponent = forwardRef((props, ref) => (
     <div ref={ref}>
-        <table style={{ margin: "0 50px 0 50px" }}>
+        <table style={{ margin: "10px 50px 10px 50px" }}>
             <thead>
                 <div className="header"> <PrintHeader /></div>
             </thead>
             <tbody style={{ fontSize: "12px" }}>
                 {props.content}
-
             </tbody>
-            <tfoot>
+            <tfoot style={{ backgroundColor: 'none' }}>
                 <div style={{ marginTop: '50px' }}></div>
                 <div className="footer" ><PrintFooter /></div>
             </tfoot>

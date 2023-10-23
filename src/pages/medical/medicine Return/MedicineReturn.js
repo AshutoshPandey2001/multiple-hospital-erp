@@ -12,10 +12,10 @@ import { ImCross } from 'react-icons/im'
 import { AiFillDelete } from 'react-icons/ai'
 import { ReactSearchAutocomplete } from "react-search-autocomplete";
 import { selectAllPatients } from 'src/redux/slice/patientMasterslice';
-import { selectAllMedicines, UPDATE_MEDICINES } from 'src/redux/slice/medicinesMasterSlice';
+import { ADD_LAST_MEDICINES, FILL_MEDICINES_STOCK, selectAllMedicines, selectLastMedicine, UPDATE_MEDICINES } from 'src/redux/slice/medicinesMasterSlice';
 import { ADD_PATIENTS_MEDICINES, DELETE_PATIENTS_MEDICINES, EDIT_PATIENTS_MEDICINES, selectAllPatientsMedicines } from 'src/redux/slice/patientsMedicinesSlice';
 import { useDispatch, useSelector } from 'react-redux';
-import { addDatainsubcollection, addSingltObject, deleteDatainSubcollection, deleteSingltObject, filDatainsubcollection, setData, updateDatainSubcollection, updateSingltObject, uploadArray } from 'src/services/firebasedb';
+import { addDataincollection, addDatainsubcollection, addSingltObject, deleteDatainSubcollection, deleteSingltObject, filDatainsubcollection, getData, getSubcollectionDataWithoutsnapshotMedicalAndPatients, setData, updateDatainSubcollection, updateDatainSubcollectionMedicalAndPatients, updateDataincollection, updateHospitalProfile, updateSingltObject, uploadArray } from 'src/services/firebasedb';
 import Loaderspinner from 'src/comman/spinner/Loaderspinner';
 import CommanTable from 'src/comman/table/CommanTable';
 import { confirmAlert } from 'react-confirm-alert';
@@ -30,6 +30,10 @@ import PrintButton from 'src/comman/printpageComponents/PrintButton';
 import { ddMMyyyy, yyyyMMdd } from 'src/services/dateFormate';
 import { selectUserId } from 'src/redux/slice/authSlice';
 import { TfiReload } from 'react-icons/tfi'
+import { db } from 'src/firebaseconfig';
+import { debounce } from 'lodash';
+import DataTable from 'react-data-table-component';
+import { selectreturnmedicinerprevBillNo } from 'src/redux/slice/prevBillNoSlice';
 
 const PrintComponent = ({ data }) => {
     const state = data.data1
@@ -47,7 +51,7 @@ const PrintComponent = ({ data }) => {
                 </div>
                 <div className='col-lg-6 col-md-6 col-sm-6 d-flex justify-content-end'>
                     <div>
-                        <span><b>Return Bill No: {state.returnuid}</b></span>
+                        <span><b>Return Bill No: {state.invoiceuid}</b></span>
                         <span><div>Age /sex: {state.page} / {state.pGender}</div></span>
                         <span><div>Mobile No: {state.pMobileNo}</div></span>
 
@@ -110,8 +114,7 @@ let initalValues = {
     page: '',
     pAddress: '',
     returnDate: '',
-    // paymentStatus: '',
-    // medicineDate: '',
+
     medicines: [
         {
             medname: '',
@@ -126,6 +129,7 @@ let initalValues = {
     hospitaluid: ''
 
 }
+
 const MedicineReturn = () => {
     const navigate = useNavigate()
     const [show, setShow] = useState(false);
@@ -144,15 +148,29 @@ const MedicineReturn = () => {
     const [medList, setMedList] = useState([])
     const [printContent, setPrintContent] = useState(null);
     const hospitaluid = useSelector(selectUserId)
+    const lastMedicines = useSelector(selectLastMedicine)
+    const [lastVisible, setLastVisible] = useState(null);
+    const [perPageRows, setPerPageRows] = useState(10); // Initial value for rows per page
+    const [totalnumData, setTotalNumData] = useState(0); // Initial value for rows per page
+    const [currentPage, setCurrentPage] = useState(1);
+    const [firstVisible, setFirstVisible] = useState(null);
+    const [prev, setPrev] = useState(false);
+    const prevBillno = useSelector(selectreturnmedicinerprevBillNo)
+    const [searchBy, setSearchBy] = useState('');
+    const [searchString, setSearchString] = useState('');
+    const parentDocRefMedicineStock = db.collection('Medicines').doc('dHFKEhdhbOM4v6WRMb6z');
+    const subcollectionRefMedicineStock = parentDocRefMedicineStock.collection('medicines').where('hospitaluid', '==', hospitaluid)
+    let unsubscribe = undefined
+    const parentDocRefMedicineInvoice = db.collection('ReturnMedicine').doc('lGxMW7T2f7Dsb93A19qa');
+    const subcollectionRefMedicineInvoice = parentDocRefMedicineInvoice.collection('returnMedicine').where('hospitaluid', '==', hospitaluid).where('deleted', '==', 0);
+    let unsub = undefined
 
-    // let medList = medicineList
-    // const reversedArray = allPatientsMedicines.slice().reverse();
 
     const columns = [
-        { name: 'ID', selector: row => row.pid, sortable: true },
+        // { name: 'ID', selector: row => row.pid, sortable: true },
         { name: 'Date', selector: row => row.returnDate, sortable: true },
         { name: 'Patient Name', selector: row => row.pName, sortable: true },
-        { name: 'Address', selector: row => row.pAddress },
+        // { name: 'Address', selector: row => row.pAddress },
         { name: 'Mobile No', selector: row => row.pMobileNo },
         { name: 'Total Amount Return', selector: row => row.allMedTotalprice },
         {
@@ -175,24 +193,147 @@ const MedicineReturn = () => {
         formik.setFieldValue('returnDate', new Date().toISOString().substr(0, 10));
     };
 
-    useEffect(() => {
-        setPatientsReturnMedicineList([...allreturnPatientsMedicines].reverse())
-        setPatientsReturnMedicineFilter(allreturnPatientsMedicines)
-        setMedList([...medicineList])
-        setIsLoading(false)
-    }, [allreturnPatientsMedicines, medicineList])
 
+    useEffect(() => {
+
+        setMedList([...medicineList])
+        // medList = [...medicineList]
+        setIsLoading(false)
+    }, [medicineList])
+
+    useEffect(() => {
+        let query = subcollectionRefMedicineStock
+        retrieveData(query)
+        let query1 = subcollectionRefMedicineInvoice
+            .orderBy('timestamp', 'desc')
+            .limit(perPageRows)
+        debouncedRetrieveData(query1)
+        return () => {
+            unsubscribe();
+            unsub()
+        };
+    }, [])
+
+    const totalNumberofData = async () => {
+        // try {
+        //     let count = 0
+        //     await getData('ReturnMedicine', 'lGxMW7T2f7Dsb93A19qa').then((res) => {
+        //         // dispatch(FILL_PATIENTS(res.data().count))
+        //         count = res.data().count
+        //         console.log('res.data().count', res.data().count);
+        //     }).catch((error) => {
+        //         console.error("Error updating document: ", error);
+        //     });
+        //     // const parentDocRef = db.collection('opdPatients').doc('m5JHl3l4zhaBCa8Vihcb');
+        //     // const subcollectionRef = parentDocRef.collection('opdPatient');
+        //     if (count === 0) {
+        //         const snapshot = await subcollectionRefMedicineInvoice.get();
+        //         const totalDataCount = snapshot.size;
+        //         setTotalNumData(totalDataCount);
+        //         await setData('ReturnMedicine', 'lGxMW7T2f7Dsb93A19qa', 'count', totalDataCount)
+        //         console.log('Total data count:', totalDataCount);
+        //     } else {
+        //         setTotalNumData(count);
+        //     }
+
+        // } catch (error) {
+        //     console.error('Error fetching data:', error);
+        // }
+        try {
+            let count = 0;
+
+            unsub = db
+                .collection('ReturnMedicinePatientsCount')
+                .where('hospitaluid', '==', hospitaluid)
+                .onSnapshot(async (snapshot) => {
+                    if (!snapshot.empty) {
+                        const newData = snapshot.docs[0].data();
+                        count = newData.count;
+                        setTotalNumData(count);
+                        console.log('res.data().count', count);
+                    } else {
+                        const snapshot = await subcollectionRefMedicineInvoice.get();
+                        const totalDataCount = snapshot.size;
+                        await addDataincollection('ReturnMedicinePatientsCount', { hospitaluid: hospitaluid, count: totalDataCount })
+                        console.log('No documents found in the snapshot.');
+                    }
+                });
+
+            // You can save the unsubscribe function if needed to stop listening later
+            // unsub();
+
+            // Optionally, you can use the unsubscribe function to stop listening to changes
+            // when you no longer need it, e.g., when the component unmounts.
+            // useEffect(() => {
+            //   return () => unsubscribe();
+            // }, []);
+
+        } catch (error) {
+            console.error('Error fetching data:', error);
+        }
+    };
+    const retrieveDataMedcineInvoice = (query) => {
+        try {
+            setIsLoading(true);
+            unsub = query.onSnapshot((snapshot) => {
+                const newData = snapshot.docs.map((doc) => doc.data());
+                setPatientsReturnMedicineList(newData);
+
+                const snapshotSize = snapshot.size;
+                const lastVisibleDoc = snapshot.docs[snapshotSize - 1];
+
+                setLastVisible(lastVisibleDoc);
+                setFirstVisible(snapshot.docs[0]);
+                setTotalNumData(snapshotSize);
+
+                setIsLoading(false);
+            });
+
+            return () => {
+                unsub();
+            };
+        } catch (error) {
+            setIsLoading(false);
+            console.error('Error retrieving data:', error);
+        }
+    };
+
+    const debouncedRetrieveData = debounce(retrieveDataMedcineInvoice, 500);
+
+    const retrieveData = (query) => {
+        try {
+            setIsLoading(true)
+            unsubscribe = query.onSnapshot((snapshot) => {
+                fetchData()
+            });
+        } catch (error) {
+            setIsLoading(false)
+            console.error('Error retrieving data:', error);
+        }
+    };
+
+    const fetchData = async () => {
+        await getSubcollectionDataWithoutsnapshotMedicalAndPatients("Medicines", 'dHFKEhdhbOM4v6WRMb6z', 'medicines', hospitaluid, lastMedicines, (data, lastData) => {
+            dispatch(FILL_MEDICINES_STOCK(data))
+            dispatch(ADD_LAST_MEDICINES(lastData))
+            console.log('Get Medicines with last Data', data, lastData);
+            setIsLoading(false)
+        }).catch((error) => {
+            console.error('Error:', error);
+        })
+    }
 
     const formik = useFormik({
         initialValues: initalValues,
         validationSchema: returnpadtientmedicineSchema,
         onSubmit: async (Values, action) => {
             console.log('before', medList, values);
-            let medd = [...patientsReturnMedicineFilter]
+            let medd = [...patientsReturnMedicineList]
             // const date = new Date(values.returnDate); // Convert input value to Date object
             // const formattedDate = date.toLocaleDateString("en-GB").split('/').join('-');
             values.returnDate = values.returnDate ? ddMMyyyy(values.returnDate) : values.returnDate;
             if (!update) {
+                values.invoiceuid = prevBillno + 1;
                 values.returnuid = Math.floor(717 + Math.random() * 6574)
                 setPatientsReturnMedicineFilter([...patientsReturnMedicineFilter, Values])
                 let med = [...patientsReturnMedicineFilter, Values]
@@ -200,14 +341,12 @@ const MedicineReturn = () => {
                 console.log('after', medList, med);
 
                 try {
-                    // await addSingltObject('ReturnMedicine', 'lGxMW7T2f7Dsb93A19qa', 'returnMedicine', values)
                     await addDatainsubcollection('ReturnMedicine', 'lGxMW7T2f7Dsb93A19qa', 'returnMedicine', values)
-                    // await addSingltObject('ReturnMedicine', 'lGxMW7T2f7Dsb93A19qa', 'returnMedicine', med)
-                    // await setData('ReturnMedicine', 'lGxMW7T2f7Dsb93A19qa', 'returnMedicine', med)
-                    // dispatch(ADD_RETURN_PATIENTS_MEDICINES(Values))
-                    // await setData("Medicines", 'dHFKEhdhbOM4v6WRMb6z', 'medicines', medList)
-                    // await uploadArray("Medicines", 'dHFKEhdhbOM4v6WRMb6z', 'medicines', medList, 'medicineuid', 'hospitaluid')
-                    // dispatch(UPDATE_MEDICINES(medList))
+                    await updateHospitalProfile('lastReturnMedicineBillNo', '4I3NWbYnR86xYlxbSHp4', 'lastReturnMedicineBillNo', { hospitaluid: hospitaluid, billNo: values.invoiceuid })
+                    await updateDataincollection('ReturnMedicinePatientsCount', { hospitaluid: hospitaluid, count: totalnumData + 1 })
+
+                    // await setData('ReturnMedicine', 'lGxMW7T2f7Dsb93A19qa', 'count', totalnumData + 1)
+                    setTotalNumData(totalnumData + 1)
                     action.resetForm()
                     clearForm()
                     setShow(false)
@@ -283,16 +422,16 @@ const MedicineReturn = () => {
         const findIndex = medList.findIndex((item1) => item1.medicineuid === item.meduid)
         let newObj = { ...medList[findIndex], availableStock: medList[findIndex].availableStock + Number(item.medQty) }
         medList[findIndex] = newObj;
-        await updateDatainSubcollection("Medicines", 'dHFKEhdhbOM4v6WRMb6z', 'medicines', newObj, 'medicineuid', 'hospitaluid')
+        await updateDatainSubcollectionMedicalAndPatients("Medicines", 'dHFKEhdhbOM4v6WRMb6z', 'medicines', newObj, 'medicineuid', 'hospitaluid')
     }
     const updateStockonUpdate = async (item) => {
         const findIndex = medList.findIndex((item1) => item1.medicineuid === item.meduid)
         let newObj = { ...medList[findIndex], availableStock: medList[findIndex].availableStock - parseInt(item.medQty) }
-        await updateDatainSubcollection("Medicines", 'dHFKEhdhbOM4v6WRMb6z', 'medicines', newObj, 'medicineuid', 'hospitaluid')
+        await updateDatainSubcollectionMedicalAndPatients("Medicines", 'dHFKEhdhbOM4v6WRMb6z', 'medicines', newObj, 'medicineuid', 'hospitaluid')
         // medList[findIndex] = newObj;
     }
     const generateInvoice = (item) => {
-        filDatainsubcollection(allreturnPatientsMedicines, 'ReturnMedicine', 'lGxMW7T2f7Dsb93A19qa', 'returnMedicine')
+        // filDatainsubcollection(allreturnPatientsMedicines, 'ReturnMedicine', 'lGxMW7T2f7Dsb93A19qa', 'returnMedicine')
         setPrintContent(<PrintComponent data={{
             data1: {
                 ...item,
@@ -330,8 +469,7 @@ const MedicineReturn = () => {
                             // await deleteSingltObject('ReturnMedicine', 'lGxMW7T2f7Dsb93A19qa', 'returnMedicine', item1, 'returnuid', 'hospitaluid')
                             await deleteDatainSubcollection('ReturnMedicine', 'lGxMW7T2f7Dsb93A19qa', 'returnMedicine', item1, 'returnuid', 'hospitaluid')
                             await item1.medicines.map((item) => updateStockonUpdate(item))
-                            // await setData('ReturnMedicine', 'lGxMW7T2f7Dsb93A19qa', 'returnMedicine', med)
-                            // dispatch(DELETE_RETURN_PATIENTS_MEDICINES(item1))
+                            await updateDataincollection('ReturnMedicinePatientsCount', { hospitaluid: hospitaluid, count: totalnumData - 1 })
                             toast.success("Deleted Successfully.......");
                         } catch (error) {
                             toast.error(error.message)
@@ -347,19 +485,7 @@ const MedicineReturn = () => {
 
 
     }
-    const requestSearch = (searchvalue) => {
-        const filteredRows = patientsReturnMedicineFilter.filter((row) => {
-            return row.pid.toString().includes(searchvalue.toLowerCase()) || row.pName.toLowerCase().includes(searchvalue.toLowerCase()) || row.pMobileNo.includes(searchvalue);
-        });
-        if (searchvalue.length < 1) {
 
-            setPatientsReturnMedicineList([...allreturnPatientsMedicines].reverse())
-        }
-        else {
-
-            setPatientsReturnMedicineList(filteredRows)
-        }
-    }
     const totalmedprice = (e, medicine) => {
         medicine.medQty = e;
         medicine.totalmedPrice = medicine.medPrice * e;
@@ -384,26 +510,7 @@ const MedicineReturn = () => {
         formik.setFieldValue('hospitaluid', item.hospitaluid);
 
     };
-    const handleOnSelectmobile = (item) => {
-        values.pid = item.pid;
-        values.pName = item.pName;
-        values.pMobileNo = item.pMobileNo;
-        values.pGender = item.pGender;
-        values.page = item.page;
-        values.pAddress = item.pAddress;
-        setAutofocus(!autofocus)
 
-    };
-    const handleOnSelectName = (item) => {
-        values.pid = item.pid;
-        values.pName = item.pName;
-        values.pMobileNo = item.pMobileNo;
-        values.pGender = item.pGender;
-        values.page = item.page;
-        values.pAddress = item.pAddress;
-        setAutofocus(!autofocus)
-
-    };
     const selectMedicine = (item, med) => {
         med.medname = item.medicineName;
         med.medPrice = item.medicinePrice;
@@ -422,19 +529,136 @@ const MedicineReturn = () => {
         // values.allMedTotalprice = await values.medicines.reduce((price, item) => price + item.medPrice * item.medQty, 0);
         setAutofocus(!autofocus);
     }
+
+    const handlePageChange = async (page) => {
+        if (page < currentPage) {
+            setPrev(true)
+            prevPage()
+            // const one = true
+            // console.log('i am here');
+            // retrieveData(one)
+            setCurrentPage(page);
+        } else {
+            setPrev(false)
+            nextPage()
+            // const one = false
+            // retrieveData(one)
+            setCurrentPage(page);
+        }
+        console.log('page', page);
+
+        // Perform any additional logic or actions based on the page change
+    };
+    const requestSearch = () => {
+        // const searchString = searchvalue.toLowerCase();
+        // console.log(searchString, 'searchString');
+        if (searchString.length) {
+            var query = subcollectionRefMedicineInvoice
+
+            // query = query
+            //     .where('hospitaluid', '==', hospitaluid)
+            if (searchBy === 'Name') {
+                query = query
+                    .where('pName', '>=', searchString).
+                    where('pName', '<=', searchString + "\uf8ff")
+            } else if (searchBy === 'MobileNo') {
+                query = query
+                    .where('pMobileNo', '>=', searchString)
+                    .where('pMobileNo', '<=', searchString + "\uf8ff");
+            }
+
+
+            query = query.limit(perPageRows);
+            debouncedRetrieveData(query)
+            query.get().then(snapshot => {
+                // console.log(snapshot);
+                const totalDataCount = snapshot.size;
+                setTotalNumData(totalDataCount)
+                console.log('Total data count:', totalDataCount);
+            }).catch(error => {
+                console.error('Error retrieving data:', error);
+            });
+        }
+
+
+
+        // if (searchvalue.length < 1) {
+        //     setOpdPatientList([...allopdPatientList].reverse())
+        //     return
+        // }
+
+        // const filteredRows = opdPatientfilter.filter((row) => {
+        //     const searchString = searchvalue.toLowerCase()
+        //     return row.pid.toString().includes(searchString) ||
+        //         row.pName.toLowerCase().includes(searchString) ||
+        //         row.pMobileNo.includes(searchString);
+        // });
+
+        // setOpdPatientList(filteredRows)
+    }
+
+    const onSearchInput = (value) => {
+        setSearchString(value)
+        if (!value.length) {
+            setIsLoading(true)
+            setSearchString('')
+
+            let query = subcollectionRefMedicineInvoice
+                .orderBy('timestamp', 'desc')
+                .limit(perPageRows)
+            debouncedRetrieveData(query)
+            setIsLoading(false)
+            totalNumberofData()
+        }
+    }
+    const nextPage = async () => {
+        setIsLoading(true)
+        let query = subcollectionRefMedicineInvoice
+            .orderBy('timestamp', 'desc')
+            .limit(perPageRows).startAfter(lastVisible);
+        debouncedRetrieveData(query)
+        setIsLoading(false)
+
+    };
+    const prevPage = async () => {
+        setIsLoading(true)
+        let query = subcollectionRefMedicineInvoice
+            .orderBy('timestamp', 'desc')
+            .limit(perPageRows)
+            .endBefore(firstVisible).limitToLast(perPageRows);
+        debouncedRetrieveData(query)
+        setIsLoading(false)
+
+    }
+
     return <>
 
         {isLoading ? <Loaderspinner /> :
             <>
                 <div style={{ display: 'none' }}>  {printContent && <PrintButton content={printContent} />}</div>
-
-                <CommanTable
-                    title={"Return Medicines invoice "}
+                <DataTable
+                    title={"Return Medicines invoice"}
                     columns={columns}
                     data={patientsReturnMedicineList}
-                    action={<button className='btn btn-primary' onClick={handleShow}><span>  <BiPlus size={25} /></span></button>}
-                    subHeaderComponent={<>
-                        <input type='search' placeholder='search' className='w-25 form-control' onChange={(e) => requestSearch(e.target.value)} /></>}
+                    pagination={true}
+                    fixedHeader={true}
+                    noHeader={false}
+                    persistTableHead
+                    actions={<button className='btn btn-primary' onClick={() => handleShow()}><span>  <BiPlus size={25} /></span></button>}
+                    highlightOnHover
+                    paginationServer={true}
+                    subHeader={<div className='d-flex' style={{ justifyContent: 'space-between' }}></div>}
+                    subHeaderComponent={<span className='d-flex w-100 justify-content-end'>
+                        <select className="form-control mr-2" style={{ height: '40px', fontSize: '18px', width: '15%', marginRight: 10 }} name='searchBy' value={searchBy} onChange={(e) => setSearchBy(e.target.value)}>
+                            <option selected >Search by</option>
+                            <option value='Name' selected>Patient Name</option>
+                            <option value='MobileNo' selected>Mobile No</option>
+                        </select>
+                        <input type='search' placeholder='search' className='w-25 form-control' value={searchString} onChange={(e) => { onSearchInput(e.target.value) }} />
+                        <button className='btn btn-primary' style={{ width: '10%', marginLeft: 10 }} disabled={!searchBy || !searchString} onClick={requestSearch}>Search</button>
+                    </span>}
+                    paginationTotalRows={totalnumData}
+                    onChangePage={(e) => handlePageChange(e)}
                 />
             </>
         }

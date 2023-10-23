@@ -15,7 +15,7 @@ import { confirmAlert } from 'react-confirm-alert';
 import { toast } from 'react-toastify';
 import Loaderspinner from 'src/comman/spinner/Loaderspinner';
 import { ADD_CHARGE, DELETE_CHARGE, EDIT_CHARGE, FILL_CHARGES, selectAllCharges } from 'src/redux/slice/chargesSlice';
-import { selectUserId } from 'src/redux/slice/authSlice';
+import { selectUserId, selectpermissions } from 'src/redux/slice/authSlice';
 import { TfiReload } from 'react-icons/tfi'
 
 const initalValues = {
@@ -33,13 +33,17 @@ const Charges = () => {
     const [update, setUpdate] = useState(false)
     const [isLoading, setIsLoading] = useState(true)
     const hospitaluid = useSelector(selectUserId)
-
+    const permissions = useSelector(selectpermissions)
+    const [userpermissions, setUserpermissions] = useState([]);
     const columns = [
         { name: 'Id', selector: row => row.chargeuid, sortable: true },
         { name: 'Charge Name', selector: row => row.chargeName, sortable: true },
         {
-            name: 'Action', cell: row => <span><button onClick={() => editCharges(row)} style={{ color: 'orange', border: 'none' }}><MdEdit size={25} /></button>
-                <button onClick={() => deleteCharges(row)} style={{ color: 'red', border: 'none' }} ><AiFillDelete size={25} /></button>
+            name: 'Action', cell: row => <span>
+                {userpermissions?.code.includes('EDIT_CHARGES') ? <button onClick={() => editCharges(row)} style={{ color: 'orange', border: 'none' }}><MdEdit size={25} /></button>
+                    : null}
+                {userpermissions?.code.includes('DELETE_CHARGES') ? <button onClick={() => deleteCharges(row)} style={{ color: 'red', border: 'none' }} ><AiFillDelete size={25} /></button>
+                    : null}
             </span>
         }
     ]
@@ -66,7 +70,9 @@ const Charges = () => {
         setChargesFilter(allCharges)
         setIsLoading(false)
     }, [allCharges])
-
+    useEffect(() => {
+        setUserpermissions(permissions?.find(permission => permission.module === "CHARGES"))
+    }, [])
 
     const formik = useFormik({
         initialValues: initalValues,
@@ -190,7 +196,7 @@ const Charges = () => {
                     title={"Charges"}
                     columns={columns}
                     data={charges}
-                    action={<> <button className='btn btn-primary' onClick={() => handleShow()}><span>  <BiPlus size={25} /></span></button></>}
+                    action={userpermissions?.code.includes('ADD_CHARGES') ? <> <button className='btn btn-primary' onClick={() => handleShow()}><span>  <BiPlus size={25} /></span></button></> : null}
 
                 />
             </div>

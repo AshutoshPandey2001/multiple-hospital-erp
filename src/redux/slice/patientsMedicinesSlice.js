@@ -39,10 +39,13 @@ const patientsmedicinesSlice = createSlice({
         FILL_PATIENTS_MEDICINES: (state, actions) => {
             state.patientsmedicinesList = actions.payload;
         },
+        RESET_PATIENTS_MEDICINES: (state, actions) => {
+            state.patientsmedicinesList = [];
+        },
     }
 });
 
-export const { ADD_PATIENTS_MEDICINES, EDIT_PATIENTS_MEDICINES, DELETE_PATIENTS_MEDICINES, CHANGE_STATUS_PATIENTS_MEDICINES, FILL_PATIENTS_MEDICINES } = patientsmedicinesSlice.actions;
+export const { ADD_PATIENTS_MEDICINES, EDIT_PATIENTS_MEDICINES, DELETE_PATIENTS_MEDICINES, CHANGE_STATUS_PATIENTS_MEDICINES, RESET_PATIENTS_MEDICINES, FILL_PATIENTS_MEDICINES } = patientsmedicinesSlice.actions;
 export const selectAllPatientsMedicines = (state) => state.patientsmedicines.patientsmedicinesList;
 
 export default patientsmedicinesSlice.reducer

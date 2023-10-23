@@ -35,7 +35,23 @@ const Management = () => {
     const [update, setUpdate] = useState(false)
     // const hospitaluid = useSelector(selectUserId)
     const [image, setImage] = useState(null);
-
+    const [permissions, setPermissions] = useState([
+        { module: "PATIENTS", code: ['ADD_PATIENTS', "VIEW_PATIENTS", "EDIT_PATIENTS", "DELETE_PATIENTS", "PRINT_PATIENTS"] },
+        { module: "OPD", code: ['ADD_OPD', "VIEW_OPD", "EDIT_OPD", "DELETE_OPD", "INVOICE_OPD"] },
+        { module: "INDOOR", code: ["ADD_INDOOR", "VIEW_INDOOR", "EDIT_INDOOR", "DELETE_INDOOR", "INVOICE_INDOOR"] },
+        { module: "ROOMS", code: ['ADD_ROOMS', "VIEW_ROOMS", "EDIT_ROOMS", "DELETE_ROOMS", "INVOICE_ROOMS"] },
+        { module: "DISCHARGE", code: ['ADD_DISCHARGE', "VIEW_DISCHARGE", "EDIT_DISCHARGE", "DELETE_DISCHARGE", "PRINT_DISCHARGE"] },
+        { module: "MEDICAL", code: ['ADD_MEDICAL', "VIEW_MEDICAL", "EDIT_MEDICAL", "DELETE_MEDICAL", "INVOICE_MEDICAL"] },
+        { module: "LABORATORY", code: ['ADD_LABORATORY', "VIEW_LABORATORY", "EDIT_LABORATORY", "DELETE_LABORATORY", "PRINT_LABORATORY"] },
+        { module: "CHARGES", code: ['ADD_CHARGES', "VIEW_CHARGES", "EDIT_CHARGES", "DELETE_CHARGES"] },
+        { module: "USERSMASTER", code: ['ADD_USER', "VIEW_USER", "EDIT_USER", "DELETE_USER", "INVOICE_USER"] },
+        { module: "DOCTORS", code: ['ADD_DOCTORS', "VIEW_DOCTORS", "EDIT_DOCTORS", "DELETE_DOCTORS"] },
+        { module: "TAX", code: ['ADD_TAX', "VIEW_TAX", "EDIT_TAX", "DELETE_TAX"] },
+        { module: "HOSPITALPROFILE", code: ['ADD_HOSPITALPROFILE', "VIEW_HOSPITALPROFILE", "EDIT_HOSPITALPROFILE", "DELETE_HOSPITALPROFILE"] },
+        { module: "ROLEMASTER", code: ['ADD_ROLES', "VIEW_ROLES", "EDIT_ROLES", "DELETE_ROLES"] },
+        { module: "DASHBOARD", code: [] },
+        { module: "HOME", code: [] },
+    ])
     const columns = [
         { name: '#', selector: (row, index) => index + 1 },
         {
@@ -137,6 +153,7 @@ const Management = () => {
                         userType: values.userType,
                         userPassword: values.password,
                         hospitaluid: user.uid,
+                        permissions: permissions
                     });
 
                     addDatainsubcollection('HospitalMaster', 'S4fRJIO5ZxE5isoBIbEU', 'hospitalMaster', {
@@ -172,6 +189,8 @@ const Management = () => {
                                     userType: values.userType,
                                     userPassword: values.password,
                                     hospitaluid: values.hospitaluid,
+                                    permissions: permissions
+
                                 })
                                     .then(() => {
                                         console.log('Document successfully updated!');

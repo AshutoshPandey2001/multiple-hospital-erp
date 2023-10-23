@@ -15,8 +15,10 @@ import { selectAllDr } from 'src/redux/slice/doctorsSlice';
 import { admitformSchema } from 'src/schema';
 import { toast } from 'react-toastify';
 import { calculateTotalDaysDifference, ddMMyyyy, ddMMyyyyTHHmm, formatDateyyyymmddUtc, yyyyMMdd, yyyyMMddTHHmm } from 'src/services/dateFormate';
-import { addDatainsubcollection, addSingltObject, deleteDatainSubcollection, getData, deleteSingltObject, filDatainsubcollection, setData, updateDatainSubcollection, updateSingltObject } from 'src/services/firebasedb';
+import { addDatainsubcollection, updateDataincollection, addSingltObject, deleteDatainSubcollection, getData, deleteSingltObject, filDatainsubcollection, setData, updateDatainSubcollection, updateSingltObject, addDataincollection } from 'src/services/firebasedb';
 import moment from 'moment';
+import { selectUserId } from 'src/redux/slice/authSlice';
+import { db } from 'src/firebaseconfig';
 
 const initalValues = {
     pid: '',
@@ -54,21 +56,35 @@ const AdmitModel = ({ show, update, handleClose, data, roomValues, todayDate }) 
     const [bedNo, setBedNo] = useState([])
     const [rooms, setRooms] = useState([])
     const [autofocus, setAutofocus] = useState(false)
-    const [totalnumData, setsetTotalNumData] = useState(0); // Initial value for rows per page
+    const [totalnumData, setTotalNumData] = useState(0); // Initial value for rows per page
+    const hospitaluid = useSelector(selectUserId)
 
     useEffect(() => {
-        setAdmitPatientfilter(allAdmitPatients);
+        // setAdmitPatientfilter(allAdmitPatients);
         setRoom([...roomList]);
         patchData();
-        getData('admitPatients', 'jSqDGnjO21bpPGhb6O2y').then((res) => {
-            // dispatch(FILL_PATIENTS(res.data().count))
-            setsetTotalNumData(res.data().count)
-            // count = res.data().count
-            console.log('res.data().count', res.data().count);
-        }).catch((error) => {
-            console.error("Error updating document: ", error);
-        });
-        console.log('values', data);
+        const unsub = db
+            .collection('AdmitPatientsCount')
+            .where('hospitaluid', '==', hospitaluid)
+            .onSnapshot(async (snapshot) => {
+                if (!snapshot.empty) {
+                    const newData = snapshot.docs[0].data();
+                    const count = newData.count;
+                    setTotalNumData(count);
+                    console.log('res.data().count', count);
+                }
+            });
+        // getData('admitPatients', 'jSqDGnjO21bpPGhb6O2y').then((res) => {
+        //     // dispatch(FILL_PATIENTS(res.data().count))
+        //     setTotalNumData(res.data().count)
+        //     // count = res.data().count
+        //     console.log('res.data().count', res.data().count);
+        // }).catch((error) => {
+        //     console.error("Error updating document: ", error);
+        // });
+        return () => {
+            unsub()
+        }
     }, [allAdmitPatients, roomList, data, update, roomValues, show, todayDate])
 
     const formik = useFormik({
@@ -86,15 +102,9 @@ const AdmitModel = ({ show, update, handleClose, data, roomValues, todayDate }) 
             values.totalDayes = calculateTotalDaysDifference(values.admitDate, values.dischargeDate)
             values.admitDate = formatDateyyyymmddUtc(values.admitDate)
             values.dischargeDate = values.dischargeDate ? formatDateyyyymmddUtc(values.dischargeDate) : values.dischargeDate
-            // const formattedOffset = moment().utcOffset().format('Z').replace(':', '');
-            // values.admitDate = moment(values.admitDate).utcOffset(formattedOffset).format('YYYY-MM-DD[T]HH:mmZ');
-            // values.admitDate = moment.utc(values.admitDate).format(`YYYY-MM-DD[T]HH:mm${utcOffset}`);
-            // values.dischargeDate = values.dischargeDate ? moment.utc(values.dischargeDate).format(`YYYY-MM-DD[T]HH:mm${utcOffset}`) : values.dischargeDate;
+
             console.log(' values.totalDayes', values.totalDayes);
-            // values.admitDate = ddMMyyyy(values.admitDate)
-            // values.admitDate = ddMMyyyyTHHmm(values.admitDate)
-            // values.dischargeDate = values.dischargeDate ? ddMMyyyy(values.dischargeDate) : values.dischargeDate
-            // values.dischargeDate = values.dischargeDate ? ddMMyyyyTHHmm(values.dischargeDate) : values.dischargeDate
+
             values.totalAmount = values.priceperNignt * values.totalDayes;
             let admit1 = [...admitPatientfilter]
             let roomArray = {}
@@ -123,6 +133,8 @@ const AdmitModel = ({ show, update, handleClose, data, roomValues, todayDate }) 
                     // await addSingltObject("admitPatients", 'jSqDGnjO21bpPGhb6O2y', 'admitPatient', Values)
                     await addDatainsubcollection("admitPatients", 'jSqDGnjO21bpPGhb6O2y', 'admitPatient', Values)
                     setData('admitPatients', 'jSqDGnjO21bpPGhb6O2y', 'count', totalnumData + 1)
+                    await updateDataincollection('AdmitPatientsCount', { hospitaluid: values.hospitaluid, count: totalnumData + 1 })
+
                     // dispatch(ADD_ADMIT_PATIENTS(Values))
                     await updateSingltObject('Rooms', '3PvtQ2G1RbG3l5VtiCMI', 'rooms', roomArray, 'roomuid', 'hospitaluid')
                     // await updateDatainSubcollection('Rooms', '3PvtQ2G1RbG3l5VtiCMI', 'rooms', roomArray, 'roomuid', 'hospitaluid')

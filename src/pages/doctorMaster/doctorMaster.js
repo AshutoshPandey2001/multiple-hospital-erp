@@ -16,10 +16,13 @@ import { toast } from 'react-toastify';
 import Loaderspinner from 'src/comman/spinner/Loaderspinner';
 import { ADD_DR, DELETE_DR, EDIT_DR, FILL_DR, selectAllDr } from 'src/redux/slice/doctorsSlice';
 import { ImCross } from 'react-icons/im'
-import { selectUserId } from 'src/redux/slice/authSlice';
+import { selectUserId, selectpermissions } from 'src/redux/slice/authSlice';
 import { TfiReload } from 'react-icons/tfi'
+import { createUserWithEmailAndPassword, setPersistence, browserLocalPersistence } from 'firebase/auth';
+import { auth, db } from 'src/firebaseconfig';
 
 const initalValues = {
+    email: '',
     druid: '',
     drName: '',
     hospitaluid: '',
@@ -43,14 +46,18 @@ const doctorMaster = () => {
     const [update, setUpdate] = useState(false)
     const [isLoading, setIsLoading] = useState(true)
     const hospitaluid = useSelector(selectUserId)
-
+    const permissions = useSelector(selectpermissions)
+    const [userpermissions, setUserpermissions] = useState([]);
     const columns = [
         { name: 'Id', selector: row => row.druid, sortable: true },
         { name: 'Dr Name', selector: row => row.drName, sortable: true },
         { name: 'Consulting Charge', selector: row => row.consultingCharges.map((charge) => '₹' + charge.charge).toString(), sortable: true },
         {
-            name: 'Action', cell: row => <span><button onClick={() => editDoctor(row)} style={{ color: 'orange', border: 'none' }}><MdEdit size={25} /></button>
-                <button onClick={() => deleteDoctor(row)} style={{ color: 'red', border: 'none' }} ><AiFillDelete size={25} /></button>
+            name: 'Action', cell: row => <span>
+                {userpermissions?.code.includes('EDIT_DOCTORS') ? <button onClick={() => editDoctor(row)} style={{ color: 'orange', border: 'none' }}><MdEdit size={25} /></button>
+                    : null}
+                {userpermissions?.code.includes('DELETE_DOCTORS') ? <button onClick={() => deleteDoctor(row)} style={{ color: 'red', border: 'none' }} ><AiFillDelete size={25} /></button>
+                    : null}
             </span>
         }
     ]
@@ -61,25 +68,16 @@ const doctorMaster = () => {
         setUpdate(false)
     }
     const handleShow = () => setShow(true);
-    // useEffect(() => {
-    //     getSubcollectionData('Doctors', 'd3ryEUfqA2FMa0fEyxde', 'doctors', hospitaluid, (data) => {
-    //         // Handle the updated data in the callback function
-    //         dispatch(FILL_DR(data))
-    //         setIsLoading(false)
-    //         console.log('Received real-time data:', data);
-    //     }).catch((error) => {
-    //         setIsLoading(false)
-    //         console.error('Error:', error);
-    //     })
-    // }, [])
+
     useEffect(() => {
         setDrList(allDoctors)
         setDrFilter(allDoctors)
         setIsLoading(false)
-
-
     }, [allDoctors])
 
+    useEffect(() => {
+        setUserpermissions(permissions?.find(permission => permission.module === "DOCTORS"))
+    }, [])
 
     const formik = useFormik({
         initialValues: initalValues,
@@ -94,6 +92,16 @@ const doctorMaster = () => {
                 let doctor = [...drFilter, Values]
                 try {
                     // await setData('Doctors', 'd3ryEUfqA2FMa0fEyxde', 'doctors', doctor)
+                    const userCredential = await createUserWithEmailAndPassword(auth, values.email, "Test@1234");
+                    const user = userCredential.user;
+                    await db.collection('UserList').doc(user.uid).set({
+                        userEmail: values.email,
+                        userName: values.drName,
+                        userType: "Doctor",
+                        userPassword: "Test@1234",
+                        hospitaluid: hospitaluid,
+                        druid: values.druid
+                    });
                     await addSingltObject('Doctors', 'd3ryEUfqA2FMa0fEyxde', 'doctors', values)
                     // await addDatainsubcollection('Doctors', 'd3ryEUfqA2FMa0fEyxde', 'doctors', values)
                     dispatch(ADD_DR(Values))
@@ -149,8 +157,8 @@ const doctorMaster = () => {
         });
     }
     const editDoctor = (item) => {
-        // filDatainsubcollection(allDoctors, 'Doctors', 'd3ryEUfqA2FMa0fEyxde', 'doctors', hospitaluid)
-        // setData('Doctors', 'd3ryEUfqA2FMa0fEyxde', 'doctors', drList)
+        console.log('item', item);
+        values.email = item.email;
         values.drName = item.drName;
         values.druid = item.druid;
         values.hospitaluid = item.hospitaluid
@@ -212,7 +220,7 @@ const doctorMaster = () => {
                     title={"Doctors"}
                     columns={columns}
                     data={drList}
-                    action={<> <button className='btn btn-primary' onClick={handleShow}><span>  <BiPlus size={25} /></span></button></>}
+                    action={userpermissions?.code.includes('ADD_DOCTORS') ? <> <button className='btn btn-primary' onClick={handleShow}><span>  <BiPlus size={25} /></span></button></> : null}
                 />
             </div>
         }
@@ -229,7 +237,11 @@ const doctorMaster = () => {
                             <input className="form-control" placeholder='Enter Dr Name' name='drName' defaultValue={values.drName} onChange={handleChange} />
                             {errors.drName && touched.drName ? (<p style={{ color: 'red' }}>*{errors.drName}</p>) : null}
                         </div>
-
+                        <div className="form-group" style={{ marginTop: '20px' }}>
+                            <label>Email<b style={{ color: 'red' }}>*</b>:</label>
+                            <input type='email' className="form-control" placeholder='Enter doctor email' name='email' readOnly={update} defaultValue={values.email} onChange={handleChange} />
+                            {errors.email && touched.email ? (<p style={{ color: 'red' }}>*{errors.email}</p>) : null}
+                        </div>
                         <div className="form-group" style={{ marginTop: '20px' }}>
                             <label>Consulting Charges<b style={{ color: 'red' }}>*</b>:</label>
                             {/* <input type="number" className="form-control" placeholder="Enter Consulting Charges" name='consultingCharge' value={values.consultingCharge} onChange={handleChange} onBlur={handleBlur} />

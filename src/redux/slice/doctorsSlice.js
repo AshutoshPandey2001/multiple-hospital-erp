@@ -69,11 +69,15 @@ const docotrMsterSlice = createSlice({
             state.lastDoctorData = actions.payload
 
         },
+        RESET_DR: (state, actions) => {
+            state.doctorList = [];
+            state.lastDoctorData = undefined
 
+        },
     }
 });
 
-export const { ADD_DR, EDIT_DR, DELETE_DR, FILL_DR } = docotrMsterSlice.actions;
+export const { ADD_DR, EDIT_DR, DELETE_DR, FILL_DR, RESET_DR } = docotrMsterSlice.actions;
 export const selectAllDr = (state) => state.allDoctors.doctorList;
 export const selectlastDoctorData = (state) => state.allDoctors.lastDoctorData;
 

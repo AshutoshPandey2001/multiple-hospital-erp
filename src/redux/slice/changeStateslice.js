@@ -13,11 +13,13 @@ const changestateSlice = createSlice({
             state.sidebarShow = actions.payload;
         },
 
-
+        RESET_STATE: (state, actions) => {
+            state.sidebarShow = true
+        },
     }
 });
 
-export const { SET_STATE } = changestateSlice.actions;
+export const { SET_STATE, RESET_STATE } = changestateSlice.actions;
 export const selectChangeState = (state) => state.changeState.sidebarShow;
 
 export default changestateSlice.reducer

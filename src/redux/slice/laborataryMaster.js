@@ -31,10 +31,13 @@ const laboratoryMsterSlice = createSlice({
         FILL_PARAMETERS: (state, actions) => {
             state.parametersList = actions.payload;
         },
+        RESET_PARAMETERS: (state, actions) => {
+            state.parametersList = [];
+        },
     }
 });
 
-export const { ADD_PARAMETER, EDIT_PARAMETER, DELETE_PARAMETER, FILL_PARAMETERS } = laboratoryMsterSlice.actions;
+export const { ADD_PARAMETER, EDIT_PARAMETER, DELETE_PARAMETER, FILL_PARAMETERS, RESET_PARAMETERS } = laboratoryMsterSlice.actions;
 export const selectAllparameters = (state) => state.allparameters.parametersList;
 
 export default laboratoryMsterSlice.reducer

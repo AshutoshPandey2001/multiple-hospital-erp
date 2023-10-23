@@ -31,10 +31,13 @@ const returnpatientsmedicinesSlice = createSlice({
         FILL_RETURN_PATIENTS_MEDICINES: (state, actions) => {
             state.returnpatientsmedicinesList = actions.payload;
         },
+        RESET_RETURN_PATIENTS_MEDICINES: (state, actions) => {
+            state.returnpatientsmedicinesList = [];
+        },
     }
 });
 
-export const { ADD_RETURN_PATIENTS_MEDICINES, EDIT_RETURN_PATIENTS_MEDICINES, DELETE_RETURN_PATIENTS_MEDICINES, FILL_RETURN_PATIENTS_MEDICINES } = returnpatientsmedicinesSlice.actions;
+export const { ADD_RETURN_PATIENTS_MEDICINES, EDIT_RETURN_PATIENTS_MEDICINES, DELETE_RETURN_PATIENTS_MEDICINES, FILL_RETURN_PATIENTS_MEDICINES, RESET_RETURN_PATIENTS_MEDICINES } = returnpatientsmedicinesSlice.actions;
 export const selectAllreturnPatientsMedicines = (state) => state.returnpatientsmedicines.returnpatientsmedicinesList;
 
 export default returnpatientsmedicinesSlice.reducer

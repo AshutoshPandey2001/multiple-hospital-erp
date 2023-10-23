@@ -54,36 +54,68 @@ export const getDatawithhospitaluid = (collectionName, collectionuid, arrayName,
         });
 };
 
+// export const addSingltObject = (collectionName, collectionuid, arrayName, data1) => {
+//     // Assuming you have Firebase initialized and a Firestore instance called 'db'
+//     console.log('data1', data1);
+//     // Step 1: Retrieve the document
+//     const documentRef = db.collection(collectionName).doc(collectionuid);
+
+//     documentRef.get()
+//         .then(async (doc) => {
+//             if (doc.exists) {
+//                 // Step 2: Modify the array value within the object
+//                 const data = await doc.data();
+
+//                 await data[arrayName].push(data1); // Example: Push a new item to the array
+//                 console.log('updated', data);
+//                 // Step 3: Update the document with the modified object
+//                 return documentRef.update({
+//                     [arrayName]: data[arrayName]
+//                 });
+//             } else {
+//                 console.log('Document does not exist.');
+//             }
+//         })
+//         .then(() => {
+//             console.log('Document successfully updated!');
+//         })
+//         .catch((error) => {
+//             console.error('Error updating document:', error);
+//         });
+
+// };
+
 export const addSingltObject = (collectionName, collectionuid, arrayName, data1) => {
     // Assuming you have Firebase initialized and a Firestore instance called 'db'
     console.log('data1', data1);
-    // Step 1: Retrieve the document
+
     const documentRef = db.collection(collectionName).doc(collectionuid);
 
-    documentRef.get()
-        .then(async (doc) => {
-            if (doc.exists) {
-                // Step 2: Modify the array value within the object
-                const data = await doc.data();
+    // Use a Firestore transaction to ensure the document is created if it doesn't exist
+    return db.runTransaction(async (transaction) => {
+        const doc = await transaction.get(documentRef);
 
-                await data[arrayName].push(data1); // Example: Push a new item to the array
-                console.log('updated', data);
-                // Step 3: Update the document with the modified object
-                return documentRef.update({
-                    [arrayName]: data[arrayName]
-                });
-            } else {
-                console.log('Document does not exist.');
-            }
-        })
+        if (doc.exists) {
+            // If the document exists, modify the array value within the object
+            const existingData = doc.data();
+            existingData[arrayName].push(data1); // Push a new item to the array
+
+            // Update the document with the modified object
+            transaction.update(documentRef, { [arrayName]: existingData[arrayName] });
+        } else {
+            // If the document doesn't exist, create it and set the data
+            const initialData = { [arrayName]: [data1] };
+            transaction.set(documentRef, initialData);
+        }
+    })
         .then(() => {
-            console.log('Document successfully updated!');
+            console.log('Document successfully updated/created!');
         })
         .catch((error) => {
-            console.error('Error updating document:', error);
+            console.error('Error updating/creating document:', error);
         });
-
 };
+
 
 export const updateSingltObject = (collectionName, collectionuid, arrayName, data1, cond1, cond2) => {
     // Assuming you have Firebase initialized and a Firestore instance called 'db'
@@ -381,26 +413,10 @@ export const uploadArray = (collectionName, collectionuid, arrayName, data1, con
 
 
 
+
+
 // Add Data in Subcollections
 
-// export const addDatainsubcollection = (collectionName, collectionuid, subcollectionName, data) => {
-//     const parentDocRef = db.collection(collectionName).doc(collectionuid);
-
-//     // Access the specific subcollection
-//     const subcollectionRef = parentDocRef.collection(subcollectionName);
-//     const timestamp = new Date();
-//     // Create a new document within the subcollection and set its data
-//     subcollectionRef.add({
-//         timestamp: timestamp,
-//         ...data
-//     })
-//         .then(async (docRef) => {
-//             console.log("Document added to subcollection successfully!", await docRef.get());
-//         })
-//         .catch(function (error) {
-//             console.error("Error adding document to subcollection: ", error);
-//         });
-// }
 
 export const addDatainsubcollection = async (collectionName, collectionuid, subcollectionName, data) => {
     const parentDocRef = db.collection(collectionName).doc(collectionuid);
@@ -462,39 +478,7 @@ export const addDatainsubcollectionmedicalAndPatients = async (collectionName, c
 
 // get sub collection data
 
-// export const getSubcollectionData = (collectionName, collectionuid, subcollectionName, hospitaluid) => {
-//     // Get a reference to the parent document
-//     var parentDocRef = db.collection(collectionName).doc(collectionuid);
 
-//     // Access the specific subcollection
-//     var subcollectionRef = parentDocRef.collection(subcollectionName);
-//     var query = subcollectionRef.where('hospitaluid', '==', hospitaluid);
-
-//     let temp_data = []
-//     // Retrieve all documents from the subcollection
-//     query.onSnapshot((querySnapshot) => {
-//         querySnapshot.forEach((doc) => {
-//             temp_data.push(doc.data())
-//         });
-//     })
-//     return temp_data
-//     // .then(function (querySnapshot) {
-//     //     // 
-//     //     console.log(querySnapshot);
-//     //     // Iterate through the query snapshot to access the documents
-//     //     // querySnapshot.forEach(function (doc) {
-//     //     //     // Access the data of each document
-//     //     //     var data = doc.data();
-//     //     //     temp_data.push(data)
-//     //     // });
-//     //     // console.log('subcollection', temp_data);
-
-//     // })
-//     // .catch(function (error) {
-//     //     console.error("Error getting documents: ", error);
-//     // });
-
-// }
 export const getSubcollectionData = (collectionName, collectionuid, subcollectionName, hospitaluid, callback) => {
     return new Promise((resolve, reject) => {
         // Get a reference to the parent document
@@ -538,76 +522,7 @@ export const getSubcollectionDataWithoutsnapshotopdindoor = async (collectionNam
         throw error;
     }
 };
-// export const getSubcollectionDataWithoutsnapshot = async (collectionName, collectionuid, subcollectionName, hospitaluid, lastData, callback) => {
-//     try {
-//         // Get a reference to the parent document
-//         const parentDocRef = db.collection(collectionName).doc(collectionuid);
-//         // Access the specific subcollection
-//         const subcollectionRef = parentDocRef.collection(subcollectionName);
-//         let query = subcollectionRef.where('hospitaluid', '==', hospitaluid).orderBy('timestamp', 'asc');
 
-//         // If lastData is provided, add a filter to get data after the last timestamp
-//         console.log('last Data', lastData);
-//         if (lastData) {
-//             query = query.startAt(lastData);
-//         }
-
-//         // query = query.orderBy('timestamp', 'asc');
-
-//         const querySnapshot = await query.get();
-//         let temp_data = [];
-//         querySnapshot.forEach((doc) => {
-//             temp_data.push(doc.data());
-//         });
-//         console.log('temp_data', temp_data);
-//         let lastVisibleDoc = querySnapshot.docs[querySnapshot.docs.length - 1].id ? querySnapshot.docs[querySnapshot.docs.length - 1].id : querySnapshot.docs[querySnapshot.docs.length - 1];
-//         if (lastVisibleDoc === undefined) {
-//             lastVisibleDoc = lastData
-//         }
-
-//         callback(temp_data, lastVisibleDoc);
-//         return temp_data;
-//     } catch (error) {
-//         throw error;
-//     }
-// };
-
-// export const getSubcollectionDataWithoutsnapshot = async (collectionName, collectionuid, subcollectionName, hospitaluid, lastData, callback) => {
-//     try {
-//         // Get a reference to the parent document
-//         const parentDocRef = db.collection(collectionName).doc(collectionuid);
-//         // Access the specific subcollection
-//         const subcollectionRef = parentDocRef.collection(subcollectionName);
-//         let query = subcollectionRef.where('hospitaluid', '==', hospitaluid).orderBy('timestamp', 'asc');
-
-//         // If lastData is provided, add a filter to get data after the last timestamp
-//         console.log('last Data', lastData);
-//         if (lastData) {
-//             const docRef = subcollectionRef.doc(lastData);
-//             const docSnapshot = await docRef.get();
-//             console.log('i am inside this', docSnapshot);
-//             query = query.startAfter(docSnapshot);
-//         }
-
-//         const querySnapshot = await query.get();
-//         let temp_data = [];
-//         querySnapshot.forEach((doc) => {
-//             temp_data.push(doc.data());
-//         });
-//         console.log('temp_data', temp_data);
-
-//         // Get the last visible document for pagination
-//         let lastVisibleDoc = querySnapshot.docs[querySnapshot.docs.length - 1];
-
-//         // Pass the ID of the last visible document to the callback function
-//         // This can be used for pagination to get the next set of data
-//         callback(temp_data, lastVisibleDoc ? lastVisibleDoc.id : lastData);
-
-//         return temp_data;
-//     } catch (error) {
-//         throw error;
-//     }
-// };
 export const getSubcollectionDataWithoutsnapshot = async (collectionName, collectionuid, subcollectionName, hospitaluid, lastData, callback) => {
     try {
         // Get a reference to the parent document
@@ -719,12 +634,38 @@ export const updateDatainSubcollection = (collectionName, collectionuid, subcoll
     // Access the specific subcollection
     const subcollectionRef = parentDocRef.collection(subcollectionName);
     const query = subcollectionRef.where(cond2, '==', data[cond2]).where(cond1, '==', data[cond1])
+
+    query.get()
+        .then(querySnapshot => {
+            querySnapshot.forEach(doc => {
+                doc.ref.update({
+                    ...data,
+                })
+                    .then(() => {
+                        console.log('Document successfully updated!');
+                    })
+                    .catch(error => {
+                        console.error('Error updating document: ', error);
+                    });
+            });
+        })
+        .catch(error => {
+            console.log('Error getting documents: ', error);
+        });
+}
+export const updateDatainSubcollectionmedicineinvoice = (collectionName, collectionuid, subcollectionName, data, cond1, cond2) => {
+    const parentDocRef = db.collection(collectionName).doc(collectionuid);
+    const subcollectionRef = parentDocRef.collection(subcollectionName);
+    const query = subcollectionRef.where(cond2, '==', data[cond2]).where(cond1, '==', data[cond1])
+    const timestampWithNanoseconds = data.timestamp.seconds * 1000 + Math.floor(data.timestamp.nanoseconds / 1e6);
+    const dateObject = new Date(timestampWithNanoseconds);
     // const timestamp = new Date();
     query.get()
         .then(querySnapshot => {
             querySnapshot.forEach(doc => {
                 doc.ref.update({
-                    ...data
+                    ...data,
+                    timestamp: dateObject,
                 })
                     .then(() => {
                         console.log('Document successfully updated!');
@@ -1077,147 +1018,7 @@ export const updateHospitalProfile = (collectionName, collectionuid, subcollecti
         });
 }
 
-// get prev billNo
 
-// export const getprevBillNo = (collectionName, collectionuid, subcollectionName, hospitaluid, callback) => {
-//     return new Promise((resolve, reject) => {
-//         // Get a reference to the parent document
-//         const parentDocRef = db.collection(collectionName).doc(collectionuid);
-
-//         // Access the specific subcollection
-//         const subcollectionRef = parentDocRef.collection(subcollectionName);
-//         const query = subcollectionRef.where('hospitaluid', '==', hospitaluid);
-
-//         const unsubscribe = query.onSnapshot((querySnapshot) => {
-//             let temp_data = {};
-//             querySnapshot.forEach((doc) => {
-//                 temp_data = doc.data();
-//             });
-//             console.log('querySnapshot', temp_data);
-//             callback(temp_data)
-//             // Resolve the promise with temp_data
-//             resolve(temp_data);
-//         }, (error) => {
-//             // Reject the promise with the error
-//             reject(error);
-//         });
-//         // Return the unsubscribe function so that the caller can unsubscribe from the snapshot listener if needed
-//         return unsubscribe;
-//     });
-// };
-
-
-// for only  changes  listeners
-
-// export const getOnlyChangesLisitnor = (collectionName, collectionuid, subcollectionName, hospitaluid, callback) => {
-//     return new Promise((resolve, reject) => {
-//         // Get a reference to the parent document
-//         const parentDocRef = db.collection(collectionName).doc(collectionuid);
-
-//         // Access the specific subcollection
-//         const subcollectionRef = parentDocRef.collection(subcollectionName);
-//         const query = subcollectionRef.where('hospitaluid', '==', hospitaluid);
-
-//         // Keep track of the latest document snapshot
-//         let latestSnapshot = null;
-
-//         const unsubscribe = query.onSnapshot((querySnapshot) => {
-//             let temp_data = undefined;
-
-//             // Process only the changes in the subcollection
-//             querySnapshot.docChanges().forEach((change) => {
-//                 if (change.type === 'added') {
-//                     // Add new documents to temp_data
-//                     temp_data = change.doc.data()
-//                     console.log('new object', change.doc.data());
-//                 }
-//                 if (change.type === 'modified') {
-//                     temp_data = change.doc.data()
-//                     // console.log('modified object', change.doc.data());
-//                 }
-//                 if (change.type === 'removed') {
-//                     temp_data = change.doc.data()
-//                     // console.log('removed index', change.doc.data());
-//                 }
-//             });
-
-//             // Update the latest snapshot for subsequent changes
-//             latestSnapshot = querySnapshot;
-
-//             // Pass temp_data to the callback function
-//             callback(temp_data);
-
-//             // Resolve the promise with temp_data
-//             resolve(temp_data);
-//         }, (error) => {
-//             // Reject the promise with the error
-//             reject(error);
-//         });
-
-//         // Return an object with the unsubscribe function and the latestSnapshot
-//         return {
-//             unsubscribe: unsubscribe,
-//             latestSnapshot: latestSnapshot
-//         };
-//     });
-// };
-
-
-// export const getOnlyChangesListener = (collectionName, collectionuid, subcollectionName, hospitaluid, callback) => {
-//     return new Promise((resolve, reject) => {
-//         // Get a reference to the parent document
-//         const parentDocRef = db.collection(collectionName).doc(collectionuid);
-
-//         // Access the specific subcollection
-//         const subcollectionRef = parentDocRef.collection(subcollectionName);
-//         const query = subcollectionRef.where('hospitaluid', '==', hospitaluid);
-
-//         // Keep track of the latest document snapshot
-//         let latestSnapshot = null;
-
-//         // Fetch all initial data
-//         const initialData =[]
-//         query.get().then((initialSnapshot) => {
-//             initialSnapshot.forEach((doc) => {
-//                 const initialData = doc.data();
-//                 // Process the initial data here
-//                 console.log('initial data:', initialData);
-//                 callback(initialData);
-//             });
-
-//             // Update the latest snapshot for subsequent changes
-//             latestSnapshot = initialSnapshot.docs[initialSnapshot.docs.length - 1];
-
-//             // Set up the listener to fetch only changes after the latest snapshot
-//             const unsubscribe = query.startAfter(latestSnapshot).onSnapshot((querySnapshot) => {
-//                 // Process only the changes in the subcollection
-//                 querySnapshot.docChanges().forEach((change) => {
-//                     if (change.type === 'added' || change.type === 'modified' || change.type === 'removed') {
-//                         const changedData = change.doc.data();
-//                         // Process the added, modified, or removed data here
-//                         console.log('changed object:', changedData);
-//                         callback(changedData);
-//                     }
-//                 });
-
-//                 // Update the latest snapshot for subsequent changes
-//                 latestSnapshot = querySnapshot.docs[querySnapshot.docs.length - 1];
-
-//                 // Resolve the promise with the latestSnapshot
-//                 resolve(latestSnapshot);
-//             }, (error) => {
-//                 // Reject the promise with the error
-//                 reject(error);
-//             });
-
-//             // Return an object with the unsubscribe function and the latestSnapshot
-//             return {
-//                 unsubscribe: unsubscribe,
-//                 latestSnapshot: latestSnapshot
-//             };
-//         });
-//     });
-// };
 
 export const getOnlyChangesListener = (collectionName, collectionuid, subcollectionName, hospitaluid, callback) => {
     return new Promise((resolve, reject) => {
@@ -1443,10 +1244,9 @@ export const getOnePatientsData = async (collectionName, collectionuid, subcolle
     }
 }
 
-export const getSelectedFieldData = async (collectionName, collectionuid, subcollectionName, hospitaluid, selectedFields, dischargeDate) => {
+export const getSelectedFieldData = async (collectionName, collectionuid, subcollectionName, hospitaluid, dischargeDate) => {
     try {
 
-        console.log('selectedFields', selectedFields);
         // Get a reference to the parent document
         const parentDocRef = db.collection(collectionName).doc(collectionuid);
 
@@ -1478,3 +1278,72 @@ export const getSelectedFieldData = async (collectionName, collectionuid, subcol
         throw error;
     }
 }
+
+
+export const addDataincollection = async (collectionName, data) => {
+    const parentDocRef = db.collection(collectionName);
+    const timestamp = new Date();
+    try {
+        // Create a new document within the subcollection and set its data
+        const docRef = await parentDocRef.add({
+            timestamp: timestamp,
+            ...data
+        });
+
+        const newDocSnapshot = await docRef.get();
+        // const newDocData = newDocSnapshot.data();
+
+        console.log("Document added to subcollection successfully!", newDocSnapshot);
+
+        // Return the new added value
+        return newDocSnapshot;
+    } catch (error) {
+        console.error("Error adding document to subcollection: ", error);
+        throw error;
+    }
+};
+
+
+
+export const updateDataincollection = async (collectionName, data) => {
+    const parentDocRef = db.collection(collectionName);
+
+    const timestamp = new Date();
+    const query = parentDocRef.where('hospitaluid', '==', data.hospitaluid)
+    query.get()
+        .then(querySnapshot => {
+            querySnapshot.forEach(doc => {
+                doc.ref.update({
+                    ...data,
+                    timestamp: timestamp
+                })
+                    .then(() => {
+                        console.log('Document successfully updated!');
+                    })
+                    .catch(error => {
+                        console.error('Error updating document: ', error);
+                    });
+            });
+        })
+        .catch(error => {
+            console.log('Error getting documents: ', error);
+        });
+    try {
+        // Create a new document within the subcollection and set its data
+        const docRef = await parentDocRef.add({
+            timestamp: timestamp,
+            ...data
+        });
+
+        const newDocSnapshot = await docRef.get();
+        // const newDocData = newDocSnapshot.data();
+
+        console.log("Document added to subcollection successfully!", newDocSnapshot);
+
+        // Return the new added value
+        return newDocSnapshot;
+    } catch (error) {
+        console.error("Error adding document to subcollection: ", error);
+        throw error;
+    }
+};

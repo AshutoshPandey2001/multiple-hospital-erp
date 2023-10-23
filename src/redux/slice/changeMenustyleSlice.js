@@ -13,11 +13,13 @@ const menuStyleSlice = createSlice({
             state.menuStyle = actions.payload;
         },
 
-
+        RESET_MENU_STYLE: (state, actions) => {
+            state.menuStyle = 'sideMenu';
+        },
     }
 });
 
-export const { SET_MENU_STYLE } = menuStyleSlice.actions;
+export const { SET_MENU_STYLE, RESET_MENU_STYLE } = menuStyleSlice.actions;
 export const selectmenuStyle = (state) => state.changeMenustyle.menuStyle;
 
 export default menuStyleSlice.reducer

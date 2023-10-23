@@ -34,11 +34,14 @@ const dischargepatientSlice = createSlice({
             state.dischargepatientsList = actions.payload;
         },
 
+        RESET_DISCHARGE_PATIENTS: (state, actions) => {
+            state.dischargepatientsList = [];
 
+        },
     }
 });
 
-export const { ADD_DISCHARGE_PATIENTS, EDIT_DISCHARGE_PATIENTS, DELETE_DISCHARGE_PATIENTS, FILL_DISCHARGE_PATIENTS } = dischargepatientSlice.actions;
+export const { ADD_DISCHARGE_PATIENTS, EDIT_DISCHARGE_PATIENTS, DELETE_DISCHARGE_PATIENTS, FILL_DISCHARGE_PATIENTS, RESET_DISCHARGE_PATIENTS } = dischargepatientSlice.actions;
 export const selectdischargePatients = (state) => state.dischargePatients.dischargepatientsList;
 
 export default dischargepatientSlice.reducer

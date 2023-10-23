@@ -16,7 +16,7 @@ import CIcon from '@coreui/icons-react'
 import { cilLockLocked, cilUser } from '@coreui/icons'
 import { loginSchema } from 'src/schema'
 import { useFormik } from 'formik';
-import { auth } from 'src/firebaseconfig'
+import { auth, db } from 'src/firebaseconfig'
 import { signInWithEmailAndPassword } from 'firebase/auth'
 import { useDispatch } from 'react-redux'
 import { toast } from 'react-toastify';
@@ -26,6 +26,8 @@ import { CFooter } from '@coreui/react'
 import skybanLogo from 'src/assets/images/skyban-logo.png'
 import background from 'src/assets/images/background_img_Hospitalerp-min.jpg'
 import { AiFillEyeInvisible, AiFillEye } from 'react-icons/ai'
+import { getHospitalProfile } from 'src/services/firebasedb'
+import { SET_ACTIVE_USER } from '../../redux/slice/authSlice'
 
 const initalValues = {
   email: '',
@@ -48,6 +50,33 @@ const Login = () => {
           var user = userCredential.user;
           // dispatch(SET_ACTIVE_USER(user))
           toast.success("Login successful.....");
+          let usertype = '';
+          let mobileno = '';
+          let userName = '';
+          let hospitaluid = '';
+          let druid = undefined;
+          let permissions = undefined;
+          db.collection('UserList').doc(user.uid).get().then((res) => {
+            usertype = !res.exists ? null : res.data().userType;
+            mobileno = !res.exists ? null : res.data().userMobileNo;
+            userName = !res.exists ? null : res.data().userName;
+            hospitaluid = !res.exists ? null : res.data().hospitaluid;
+            druid = !res.exists ? null : res.data().druid
+            permissions = !res.exists ? null : res.data().permissions
+
+
+            dispatch(SET_ACTIVE_USER({
+              email: user.email,
+              userName: userName,
+              userID: hospitaluid,
+              userType: usertype,
+              mobileNo: mobileno,
+              druid: druid,
+              permissions: permissions
+            }))
+          }).catch((error) => {
+            console.error("Error updating document: ", error);
+          });
           navigate('/')
 
         })

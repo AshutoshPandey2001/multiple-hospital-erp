@@ -24,7 +24,7 @@ import { useNavigate } from 'react-router-dom';
 import { setTimeout } from 'core-js';
 import Loaderspinner from '../../comman/spinner/Loaderspinner';
 import CommanTable from 'src/comman/table/CommanTable';
-import { addDatainsubcollection, addSingltObject, deleteDatainSubcollection, deleteSingltObject, filDatainsubcollection, getSubcollectionData, setData, updateDatainSubcollection, updateSingltObject } from 'src/services/firebasedb';
+import { addDatainsubcollection, addSingltObject, addDataincollection, updateDataincollection, getData, getSelectedFieldData, deleteDatainSubcollection, deleteSingltObject, filDatainsubcollection, getSubcollectionData, setData, updateDatainSubcollection, updateSingltObject } from 'src/services/firebasedb';
 import Dropdown from 'react-bootstrap/Dropdown';
 import { confirmAlert } from 'react-confirm-alert';
 import { toast } from 'react-toastify';
@@ -39,9 +39,13 @@ import PrintHeader from 'src/comman/printpageComponents/PrintHeader';
 import PrintFooter from 'src/comman/printpageComponents/PrintFooter';
 import SearchAutocomplete from 'src/comman/searchAutocomplete/SearchAutocomplete';
 import PrintButton from 'src/comman/printpageComponents/PrintButton';
-import { calculateTotalDaysDifference, ddMMyyyy, ddMMyyyyTHHmm, yyyyMMdd, yyyyMMddTHHmm } from 'src/services/dateFormate';
-import { selectUserId } from 'src/redux/slice/authSlice';
+import { calculateTotalDaysDifference, formatDateDDMMYYY, ddMMyyyy, ddMMyyyyTHHmm, formatDateyyyymmddUtc, yyyyMMdd, yyyyMMddTHHmm } from 'src/services/dateFormate';
+import { selectUserId, selectpermissions } from 'src/redux/slice/authSlice';
 import { TfiReload } from 'react-icons/tfi'
+import { db } from 'src/firebaseconfig';
+import { debounce } from 'lodash';
+import DataTable from 'react-data-table-component';
+import moment from 'moment';
 
 const PrintComponent = ({ data }) => {
     const state = data.data1
@@ -70,8 +74,8 @@ const PrintComponent = ({ data }) => {
                 <div style={{ marginTop: '20px' }}>
                     {state.diagnosis ?
                         <div className='row'>
-                            <div className='col-lg-3'><h6>Diagnosis</h6></div>
-                            <div className='col-lg-9'><b>:</b>
+                            <div className='col-lg-3 col-md-3 col-sm-3'><h6>Diagnosis</h6></div>
+                            <div className='col-lg-9 col-md-9 col-sm-9'><b>:</b>
                                 {state.diagnosis.split('\n').map((item, key) => {
                                     return <React.Fragment key={key}> <b>{item}</b><br /></React.Fragment>
                                 })}
@@ -80,8 +84,8 @@ const PrintComponent = ({ data }) => {
                     }
                     {state.history ?
                         <div className='row'>
-                            <div className='col-lg-3'><h6>History and Clinical Summary</h6></div>
-                            <div className='col-lg-9'><b>:</b>
+                            <div className='col-lg-3 col-md-3 col-sm-3'><h6>History and Clinical Summary</h6></div>
+                            <div className='col-lg-9 col-md-9 col-sm-9'><b>:</b>
                                 {state.history.split('\n').map((item, key) => {
                                     return <React.Fragment key={key}> <b>{item}</b><br /></React.Fragment>
                                 })}
@@ -90,8 +94,8 @@ const PrintComponent = ({ data }) => {
                     }
                     {state.medicalRx ?
                         <div className='row'>
-                            <div className='col-lg-3'><h6>Medical RX</h6></div>
-                            <div className='col-lg-9'><b>:</b>
+                            <div className='col-lg-3 col-md-3 col-sm-3'><h6>Medical RX</h6></div>
+                            <div className='col-lg-9 col-md-9 col-sm-9'><b>:</b>
                                 {state.medicalRx.split('\n').map((item, key) => {
                                     return <React.Fragment key={key}>{item}<br /></React.Fragment>
                                 })}
@@ -100,8 +104,8 @@ const PrintComponent = ({ data }) => {
                     }
                     {state.surgeryName ?
                         <div className='row'>
-                            <div className='col-lg-3'><h6>Surgery/Procedure Name</h6></div>
-                            <div className='col-lg-9'><b>:</b>
+                            <div className='col-lg-3 col-md-3 col-sm-3'><h6>Surgery/Procedure Name</h6></div>
+                            <div className='col-lg-9 col-md-9 col-sm-9'><b>:</b>
                                 {state.surgeryName.split('\n').map((item, key) => {
                                     return <React.Fragment key={key}> <b>{item}</b><br /></React.Fragment>
                                 })}
@@ -110,8 +114,8 @@ const PrintComponent = ({ data }) => {
                     }
                     {state.investigation ?
                         <div className='row'>
-                            <div className='col-lg-3'><h6>Investigations</h6></div>
-                            <div className='col-lg-9'><b>:</b>
+                            <div className='col-lg-3 col-md-3 col-sm-3'><h6>Investigations</h6></div>
+                            <div className='col-lg-9 col-md-9 col-sm-9'><b>:</b>
                                 {state.investigation.split('\n').map((item, key) => {
                                     return <React.Fragment key={key}> <b>{item}</b><br /></React.Fragment>
                                 })}
@@ -120,8 +124,8 @@ const PrintComponent = ({ data }) => {
                     }
                     {state.surgeryNote ?
                         <div className='row'>
-                            <div className='col-lg-3'><h6>Surgery Note</h6></div>
-                            <div className='col-lg-9'><b>:</b>
+                            <div className='col-lg-3 col-md-3 col-sm-3'><h6>Surgery Note</h6></div>
+                            <div className='col-lg-9 col-md-9 col-sm-9'><b>:</b>
                                 {state.surgeryNote.split('\n').map((item, key) => {
                                     return <React.Fragment key={key}> <b>{item}</b><br /></React.Fragment>
                                 })}
@@ -131,41 +135,46 @@ const PrintComponent = ({ data }) => {
 
                     {state.histopathologyReport ?
                         <div className='row'>
-                            <div className='col-lg-3'><h6>Histopathology Report</h6></div>
-                            <div className='col-lg-9'><b>:</b> {state.histopathologyReport}</div>
+                            <div className='col-lg-3 col-md-3 col-sm-3'><h6>Histopathology Report</h6></div>
+                            <div className='col-lg-9 col-md-9 col-sm-9'><b>:</b> {state.histopathologyReport}</div>
                         </div> : null
                     }
                     {state.radiologyInvstigation ?
                         <div className='row'>
-                            <div className='col-lg-3'><h6>Radiology Investigation</h6></div>
+                            <div className='col-lg-3 col-md-3 col-sm-3'><h6>Radiology Investigation</h6></div>
                             <div className='col-lg-9'><b>:</b> {state.radiologyInvstigation}</div>
                         </div> : null
                     }
                     {state.adviceonDischarge ?
                         <div className='row'>
-                            <div className='col-lg-3'><h6>Advice on Discharge/Urgent Care</h6></div>
-                            <div className='col-lg-9'><b>:</b> {state.adviceonDischarge}</div>
+                            <div className='col-lg-3 col-md-3 col-sm-3'><h6>Advice on Discharge/Urgent Care</h6></div>
+                            <div className='col-lg-9 col-md-9 col-sm-9'><b>:</b> {state.adviceonDischarge}</div>
                         </div> : null
                     }
 
                     {state.conditionOnDischarge ?
                         <div className='row'>
-                            <div className='col-lg-3'><h6>Condition On Discharge</h6></div>
-                            <div className='col-lg-9'><b>:</b> {state.conditionOnDischarge}</div>
+                            <div className='col-lg-3 col-md-3 col-sm-3'><h6>Condition On Discharge</h6></div>
+                            <div className='col-lg-9 col-md-9 col-sm-9'><b>:</b> {state.conditionOnDischarge}</div>
                         </div> : null
                     }
 
                     {state.followUpDetails ?
                         <div className='row'>
-                            <div className='col-lg-3'><h6>Follow Up</h6></div>
-                            <div className='col-lg-9'><b>:</b> {state.followUpDetails}</div>
+                            <div className='col-lg-3 col-md-3 col-sm-3'><h6>Follow Up</h6></div>
+                            <div className='col-lg-9 col-md-9 col-sm-9'><b>:</b> {new Date(state.followUpDetails).toLocaleDateString(undefined, {
+                                weekday: 'short',
+                                month: 'short',
+                                day: 'numeric',
+                                year: 'numeric'
+                            })}</div>
                         </div> : null
                     }
                     {state.advices ?
                         <div className='card' style={{ padding: '3px' }}>
                             <div className='row'>
-                                <div className='col-lg-3'><h6>RX(Advice on Discharge)</h6></div>
-                                <div className='col-lg-9'>
+                                <div className='col-lg-3 col-md-3 col-sm-3'><h6>RX(Advice on Discharge)</h6></div>
+                                <div className='col-lg-9 col-md-9 col-sm-9'>
                                     <b>:</b>{state.advices?.map((item, i) => {
                                         return <React.Fragment key={i}> <b>{item}</b><br /></React.Fragment>
                                     })}</div>
@@ -233,18 +242,35 @@ const Discharge = () => {
     const [advice, setAdvice] = useState('')
     const [advices, setAdvices] = useState([])
     const hospitaluid = useSelector(selectUserId)
-
+    const [totalnumData, setTotalNumData] = useState(0); // Initial value for rows per page
+    const [lastVisible, setLastVisible] = useState(null);
+    const [perPageRows, setPerPageRows] = useState(10);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [firstVisible, setFirstVisible] = useState(null);
+    const [prev, setPrev] = useState(false);
+    const [searchBy, setSearchBy] = useState('');
+    const [searchString, setSearchString] = useState('');
+    const parentDocRef = db.collection('DischargePatients').doc('cki4rIGKtNwyXr27cZBY');
+    const subcollectionRef = parentDocRef.collection('dischargePatients').where('hospitaluid', '==', hospitaluid).where('deleted', '==', 0);
+    let unsubscribe = undefined
+    let unsub = undefined
+    const permissions = useSelector(selectpermissions)
+    const [userpermissions, setUserpermissions] = useState([]);
     const columns = [
         // { name: 'Admit ID', selector: row => row.admituid, sortable: true },
         // { name: 'Patient ID', selector: row => row.pid, sortable: true },
-        { name: 'Admit Date', selector: row => row.admitDate, sortable: true },
-        { name: 'Discharge Date', selector: row => row.dischargeDate },
+        { name: 'Admit Date', selector: row => <div style={{ textAlign: 'center' }}>{formatDateDDMMYYY(row.admitDate)}</div>, sortable: true },
+        { name: 'Discharge Date', selector: row => <div style={{ textAlign: 'center' }}>{formatDateDDMMYYY(row.dischargeDate)}</div> },
         { name: 'Patient Name', selector: row => row.pName, sortable: true },
         { name: 'Mobile No', selector: row => row.pMobileNo },
         {
-            name: 'Action', cell: row => <span style={{ display: 'flex', justifyContent: 'center' }}><button onClick={() => editPatientDetails(row)} style={{ color: 'orange', border: 'none' }}><MdEdit size={22} /></button>
-                <button onClick={() => deletePatientsDetails(row)} style={{ color: 'red', border: 'none' }} ><AiFillDelete size={22} /></button>
-                <button onClick={() => printDischargesummary(row)} style={{ color: 'skyblue', border: 'none' }} ><AiFillPrinter size={22} /></button>
+            name: 'Action', cell: row => <span style={{ display: 'flex', justifyContent: 'center' }}>
+                {userpermissions?.code.includes('EDIT_DISCHARGE') ? <button onClick={() => editPatientDetails(row)} style={{ color: 'orange', border: 'none' }}><MdEdit size={22} /></button> : null}
+                {userpermissions?.code.includes('DELETE_DISCHARGE') ? <button onClick={() => deletePatientsDetails(row)} style={{ color: 'red', border: 'none' }} ><AiFillDelete size={22} /></button>
+                    : null}
+                {userpermissions?.code.includes('PRINT_DISCHARGE') ? <button onClick={() => printDischargesummary(row)} style={{ color: 'skyblue', border: 'none' }} ><AiFillPrinter size={22} /></button> : null}
+
+
             </span>
 
         }
@@ -257,68 +283,174 @@ const Discharge = () => {
         setPrint(false);
 
     }
-    // useEffect(() => {
-    //     getSubcollectionData('DischargePatients', 'cki4rIGKtNwyXr27cZBY', 'dischargePatients', hospitaluid, (data) => {
-    //         // Handle the updated data in the callback function
-    //         dispatch(FILL_DISCHARGE_PATIENTS(data))
-    //         setIsLoading(false)
-    //         console.log('Received real-time data:', data);
-    //     }).catch((error) => {
-    //         setIsLoading(false)
-    //         console.error('Error:', error);
-    //     })
-    // }, [])
 
     useEffect(() => {
-        setDischargePatient([...allDischargePatients].reverse())
-        setDischargePatientfilter(allDischargePatients)
-        setAdmitPatients(allAdmitPatients)
-        setRoom([...roomList])
+        setIsLoading(true)
+        let query = subcollectionRef
+            .orderBy('timestamp', 'desc')
+            .limit(perPageRows)
+        debouncedRetrieveData(query)
+        fetchData()
+        totalNumberofData()
+        setUserpermissions(permissions?.find(permission => permission.module === "DISCHARGE"))
+
         setIsLoading(false)
-    }, [allAdmitPatients, roomList, allDischargePatients])
+        return () => {
+            unsub()
+            unsubscribe();
+        };
+    }, [])
 
 
+    useEffect(() => {
+
+        setRoom([...roomList])
+        setIsLoading(false);
+
+
+    }, [roomList])
+    const fetchData = async () => {
+        const indoorData = await getSelectedFieldData('admitPatients', 'jSqDGnjO21bpPGhb6O2y', 'admitPatient', hospitaluid, 'dischargeDate')
+        setAdmitPatients(indoorData)
+    }
+
+    const totalNumberofData = async () => {
+        // try {
+        //     let count = 0
+        //     unsub = db.collection('DischargePatientsCount').where('hospitaluid', '==', hospitaluid).onSnapshot((snapshot) => {
+        //         const newData = [];
+        //         snapshot.forEach((doc) => {
+        //             newData.push(doc.data());
+        //         });
+        //         setTotalNumData(newData[0].count);
+        //         count = newData[0].count
+        //         console.log('res.data().count', newData[0].count);
+
+        //     })
+        //     // await getData('DischargePatients', 'cki4rIGKtNwyXr27cZBY').then((res) => {
+        //     //     // dispatch(FILL_PATIENTS(res.data().count))
+        //     //     count = res.data().count
+        //     //     console.log('res.data().count', res.data().count);
+        //     // }).catch((error) => {
+        //     //     console.error("Error updating document: ", error);
+        //     // });
+        //     // const parentDocRef = db.collection('opdPatients').doc('m5JHl3l4zhaBCa8Vihcb');
+        //     // const subcollectionRef = parentDocRef.collection('opdPatient');
+        //     if (count === 0 || count === undefined) {
+        //         const snapshot = await subcollectionRef.get();
+        //         const totalDataCount = snapshot.size;
+        //         setTotalNumData(totalDataCount);
+        //         await addDataincollection('DischargePatientsCount', { hospitaluid: hospitaluid, count: totalDataCount })
+        //         // await setData('DischargePatients', 'cki4rIGKtNwyXr27cZBY', 'count', totalDataCount)
+        //         console.log('Total data count:', totalDataCount);
+        //     } else {
+        //         setTotalNumData(count);
+        //     }
+
+        // } catch (error) {
+        //     console.error('Error fetching data:', error);
+        // }
+
+
+        try {
+            let count = 0;
+
+            unsub = db
+                .collection('DischargePatientsCount')
+                .where('hospitaluid', '==', hospitaluid)
+                .onSnapshot(async (snapshot) => {
+                    if (!snapshot.empty) {
+                        const newData = snapshot.docs[0].data();
+                        count = newData.count;
+                        setTotalNumData(count);
+                        console.log('res.data().count', count);
+                    } else {
+                        const snapshot = await subcollectionRef.get();
+                        const totalDataCount = snapshot.size;
+                        await addDataincollection('DischargePatientsCount', { hospitaluid: hospitaluid, count: totalDataCount })
+                        console.log('No documents found in the snapshot.');
+                    }
+                });
+
+            // You can save the unsubscribe function if needed to stop listening later
+            // unsub();
+
+            // Optionally, you can use the unsubscribe function to stop listening to changes
+            // when you no longer need it, e.g., when the component unmounts.
+            // useEffect(() => {
+            //   return () => unsubscribe();
+            // }, []);
+
+        } catch (error) {
+            console.error('Error fetching data:', error);
+        }
+    };
+    const retrieveData = (query) => {
+        try {
+            // let initialSnapshot = true;
+            console.log('i am a lisitnor who alwas call');
+            setIsLoading(true)
+            unsubscribe = query.onSnapshot((snapshot) => {
+                const newData = [];
+                snapshot.forEach((doc) => {
+                    newData.push(doc.data());
+                });
+                // if (initialSnapshot && snapshot.metadata.hasPendingWrites) {
+                //     // Skip the initial snapshot with local, unsaved changes
+                //     initialSnapshot = false;
+                //     return;
+                // }
+                setDischargePatient(newData);
+                console.log('newData-------------------------------------', newData);
+                if (snapshot.size > 0) {
+                    const lastVisibleDoc = snapshot.docs[snapshot.docs.length - 1];
+                    // console.log('lastVisibleDoc', lastVisibleDoc.data());
+                    setLastVisible(lastVisibleDoc);
+                    setFirstVisible(snapshot.docs[0]);
+                    // setTotalNumData(snapshot.size)
+                    setIsLoading(false)
+
+                    // console.log('setFirstVisible', snapshot.docs[0].data());
+                } else {
+                    setIsLoading(false)
+
+                    setLastVisible(null);
+                    setFirstVisible(null);
+                }
+            });
+
+            return () => {
+                unsubscribe();
+            };
+        } catch (error) {
+            setIsLoading(false)
+
+            console.error('Error retrieving data:', error);
+        }
+    };
+    const debouncedRetrieveData = debounce(retrieveData, 500);
     const formik = useFormik({
         initialValues: initalValues,
         validationSchema: dischargeSchema,
         onSubmit: async (Values, { resetForm }) => {
-            //  let totalDayes = undefined
-            // let time_differ = (new Date(values.dischargeDate) - new Date(values.admitDate));
-            // if (time_differ === 0) {
-            //     totalDayes = 1;
-            // } else {
-            //     totalDayes = time_differ / (1000 * 60 * 60 * 24) + 1;
-            // }
-            const totalDayes = calculateTotalDaysDifference(values.admitDate, values.dischargeDate)
 
-            // const date = new Date(values.admitDate); // Convert input value to Date object
-            // const formattedDate = date.toLocaleDateString("en-GB").split('/').join('-');
-            // values.admitDate = ddMMyyyyTHHmm(values.admitDate)
-            // values.admitDate = ddMMyyyy(values.admitDate)
-            // const date1 = new Date(values.dischargeDate); // Convert input value to Date object
-            // const formattedDate1 = date1.toLocaleDateString("en-GB").split('/').join('-');
-            // values.dischargeDate = values.dischargeDate ? ddMMyyyyTHHmm(values.dischargeDate) : values.dischargeDate
-            // values.dischargeDate = values.dischargeDate ? ddMMyyyy(values.dischargeDate) : values.dischargeDate
-            // let totalDayes = time_differ / (1000 * 60 * 60 * 24);
+            values.totalDayes = calculateTotalDaysDifference(values.admitDate, values.dischargeDate)
+            values.admitDate = formatDateyyyymmddUtc(values.admitDate)
+            values.dischargeDate = values.dischargeDate ? formatDateyyyymmddUtc(values.dischargeDate) : values.dischargeDate
+
+            console.log(' values.totalDayes', values.totalDayes);
+
+            values.totalAmount = values.priceperNignt * values.totalDayes;
+
             let discharge1 = [...dischargePtientfilter]
             let admit = [...admitPatients]
             let roomArray = {};
             let findRoomindex = room.findIndex((item) => item.roomType === values.roomType)
             let finRoomNoIndex = room[findRoomindex].rooms.findIndex((item3) => item3.roomNo === values.roomNo)
             let findAmitIndex = admit.findIndex((item) => item.admituid === values.admituid)
-            let newObj = { ...admit[findAmitIndex], dischargeDate: values.dischargeDate, totalDayes: totalDayes, totalAmount: admit[findAmitIndex].priceperNignt * totalDayes }
+            let newObj = { ...admit[findAmitIndex], dischargeDate: values.dischargeDate, totalDayes: values.totalDayes, totalAmount: values.totalAmount }
             // admit[findAmitIndex] = newObj;
-            // if (values.dischargeDate) {
-            //     let newArray = room[findRoomindex].rooms[finRoomNoIndex].BEDS.map((item3) => (item3.bedNo === values.bedNo ? { ...item3, occupied: false } : item3))
-            //     let newArray1 = room[findRoomindex].rooms.map((item3) => (item3.roomNo === values.roomNo ? { ...item3, BEDS: newArray } : item3))
-            //     roomArray = room.map((item) => (item.roomType === values.roomType ? { ...item, rooms: newArray1 } : item))
 
-            // } else {
-            //     let newArray = room[findRoomindex].rooms[finRoomNoIndex].BEDS.map((item3) => (item3.bedNo === values.bedNo ? { ...item3, occupied: true } : item3))
-            //     let newArray1 = room[findRoomindex].rooms.map((item3) => (item3.roomNo === values.roomNo ? { ...item3, BEDS: newArray } : item3))
-            //     roomArray = room.map((item) => (item.roomType === values.roomType ? { ...item, rooms: newArray1 } : item))
-
-            // }
             if (values.dischargeDate) {
                 let newArray = room[findRoomindex].rooms[finRoomNoIndex].BEDS.map((item3) => (item3.bedNo === values.bedNo ? { ...item3, occupied: false } : item3))
                 let newArray1 = room[findRoomindex].rooms.map((item3) => (item3.roomNo === values.roomNo ? { ...item3, BEDS: newArray } : item3))
@@ -344,10 +476,13 @@ const Discharge = () => {
                     // dispatch(EDIT_ADMIT_PATIENTS(newObj))
                     // await addSingltObject("DischargePatients", 'cki4rIGKtNwyXr27cZBY', 'dischargePatients', Values)
                     await addDatainsubcollection("DischargePatients", 'cki4rIGKtNwyXr27cZBY', 'dischargePatients', Values)
+                    await updateDataincollection('DischargePatientsCount', { hospitaluid: hospitaluid, count: totalnumData + 1 })
+                    // setData("DischargePatients", 'cki4rIGKtNwyXr27cZBY', 'count', totalnumData + 1)
+
                     // await setData("DischargePatients", 'cki4rIGKtNwyXr27cZBY', 'dischargePatients', discharge)
                     // dispatch(ADD_DISCHARGE_PATIENTS(Values))
                     // await updateSingltObject('Rooms', '3PvtQ2G1RbG3l5VtiCMI', 'rooms', roomArray, 'roomuid', 'hospitaluid')
-                    await updateDatainSubcollection('Rooms', '3PvtQ2G1RbG3l5VtiCMI', 'rooms', roomArray, 'roomuid', 'hospitaluid')
+                    await updateSingltObject('Rooms', '3PvtQ2G1RbG3l5VtiCMI', 'rooms', roomArray, 'roomuid', 'hospitaluid')
 
                     // await setData('Rooms', '3PvtQ2G1RbG3l5VtiCMI', 'rooms', roomArray)
                     // dispatch(EDIT_ROOM(roomArray))
@@ -379,7 +514,7 @@ const Discharge = () => {
                     await updateDatainSubcollection("DischargePatients", 'cki4rIGKtNwyXr27cZBY', 'dischargePatients', Values, 'admituid', 'hospitaluid')
                     // dispatch(EDIT_DISCHARGE_PATIENTS(Values))
                     // await updateSingltObject('Rooms', '3PvtQ2G1RbG3l5VtiCMI', 'rooms', roomArray, 'roomuid', 'hospitaluid')
-                    await updateDatainSubcollection('Rooms', '3PvtQ2G1RbG3l5VtiCMI', 'rooms', roomArray, 'roomuid', 'hospitaluid')
+                    await updateSingltObject('Rooms', '3PvtQ2G1RbG3l5VtiCMI', 'rooms', roomArray, 'roomuid', 'hospitaluid')
                     // dispatch(EDIT_ROOM(roomArray))
                     resetForm({ values: '' })
                     clearForm()
@@ -474,14 +609,9 @@ const Discharge = () => {
     }
     const editPatientDetails = (item) => {
         const { pid, pName, page, pMobileNo, admitDate, dischargeDate, hospitaluid, drName, roomType, roomNo, bedNo, admituid, diagnosis, history, medicalRx, surgeryName, investigation, surgeryNote, histopathologyReport, radiologyInvstigation, adviceonDischarge, conditionOnDischarge, dischargeType, followUpDetails, advices } = item;
-        // const dateStr = admitDate; // Original date string in "dd-mm-yyyy" format
-        // const dateParts = dateStr.split("-"); // Split date string into day, month, year components
-        // const yyyy_mm_ddadmit = `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`; // Join components in "yyyy-mm-dd" format
-        // const dateStr1 = dischargeDate; // Original date string in "dd-mm-yyyy" format
-        // const dateParts1 = dateStr1.split("-"); // Split date string into day, month, year components
-        // const yyyy_mm_dd_discharge = `${dateParts1[2]}-${dateParts1[1]}-${dateParts1[0]}`; // Join components in "yyyy-mm-dd" format
+
         formik.setValues({
-            pid, pName, page, pMobileNo, admitDate: admitDate, dischargeDate: dischargeDate, hospitaluid, drName, roomType, roomNo, bedNo, admituid, diagnosis, history, medicalRx, surgeryName, investigation, surgeryNote, histopathologyReport, radiologyInvstigation, adviceonDischarge, conditionOnDischarge, dischargeType, followUpDetails, advices
+            pid, pName, page, pMobileNo, admitDate: moment(admitDate).utc().format('YYYY-MM-DDTHH:mm'), dischargeDate: moment(dischargeDate).utc().format('YYYY-MM-DDTHH:mm'), hospitaluid, drName, roomType, roomNo, bedNo, admituid, diagnosis, history, medicalRx, surgeryName, investigation, surgeryNote, histopathologyReport, radiologyInvstigation, adviceonDischarge, conditionOnDischarge, dischargeType, followUpDetails, advices
         });
 
         setAdvices(advices);
@@ -500,11 +630,10 @@ const Discharge = () => {
                     onClick: async () => {
                         let discharge = dischargePtientfilter.filter((item) => item.admituid !== item1.admituid);
                         try {
-                            // await deleteSingltObject("DischargePatients", 'cki4rIGKtNwyXr27cZBY', 'dischargePatients', item1, 'druid', 'hospitaluid')
-                            await deleteDatainSubcollection("DischargePatients", 'cki4rIGKtNwyXr27cZBY', 'dischargePatients', item1, 'admituid', 'hospitaluid')
-                            // await setData("DischargePatients", 'cki4rIGKtNwyXr27cZBY', 'dischargePatients', discharge)
-                            // setDischargePatient(dischargePatient.filter((item) => item.admituid !== item1.admituid))
-                            // dispatch(DELETE_DISCHARGE_PATIENTS(item1))
+                            await deleteDatainSubcollection("DischargePatients", 'cki4rIGKtNwyXr27cZBY', 'dischargePatients', item1, 'admituid', 'hospitaluid');
+                            await updateDataincollection('DischargePatientsCount', { hospitaluid: hospitaluid, count: totalnumData - 1 })
+
+                            // setData('opdPatients', 'm5JHl3l4zhaBCa8Vihcb', 'count', totalnumData - 1)
                             toast.error("Deleted successful.....");
 
                         } catch (error) {
@@ -536,20 +665,20 @@ const Discharge = () => {
         // setShow(true)
         // setPrint(true)
     }
-    const requestSearch = (searchvalue) => {
+    // const requestSearch = (searchvalue) => {
 
-        const filteredRows = dischargePtientfilter.filter((row) => {
-            return row.pid.toString().includes(searchvalue.toLowerCase()) || row.pName.toLowerCase().includes(searchvalue.toLowerCase()) || row.pMobileNo.includes(searchvalue);
-        });
-        if (searchvalue.length < 1) {
+    //     const filteredRows = dischargePtientfilter.filter((row) => {
+    //         return row.pid.toString().includes(searchvalue.toLowerCase()) || row.pName.toLowerCase().includes(searchvalue.toLowerCase()) || row.pMobileNo.includes(searchvalue);
+    //     });
+    //     if (searchvalue.length < 1) {
 
-            setDischargePatient([...allDischargePatients].reverse())
-        }
-        else {
+    //         setDischargePatient([...allDischargePatients].reverse())
+    //     }
+    //     else {
 
-            setDischargePatient(filteredRows)
-        }
-    }
+    //         setDischargePatient(filteredRows)
+    //     }
+    // }
     const handleOnSelect = (item) => {
         formik.setFieldValue('pid', item.pid);
         formik.setFieldValue('pName', item.pName);
@@ -558,7 +687,7 @@ const Discharge = () => {
         // const dateStr = item.admitDate; // Original date string in "dd-mm-yyyy" format
         // const dateParts = dateStr.split("-"); // Split date string into day, month, year components
         // const yyyy_mm_ddadmit = `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`; // Join components in "yyyy-mm-dd" forma
-        formik.setFieldValue('admitDate', item.admitDate);
+        formik.setFieldValue('admitDate', moment(item.admitDate).utc().format('YYYY-MM-DDTHH:mm'));
         formik.setFieldValue('drName', item.drName);
         formik.setFieldValue('roomType', item.roomType);
         formik.setFieldValue('roomNo', item.roomNo);
@@ -659,18 +788,144 @@ const Discharge = () => {
             console.error('Error:', error);
         })
     }
+
+    const handlePageChange = async (page) => {
+        if (page < currentPage) {
+            setPrev(true)
+            prevPage()
+            // const one = true
+            // console.log('i am here');
+            // retrieveData(one)
+            setCurrentPage(page);
+        } else {
+            setPrev(false)
+            nextPage()
+            // const one = false
+            // retrieveData(one)
+            setCurrentPage(page);
+        }
+        console.log('page', page);
+
+        // Perform any additional logic or actions based on the page change
+    };
+    const requestSearch = () => {
+        // const searchString = searchvalue.toLowerCase();
+        // console.log(searchString, 'searchString');
+        if (searchString.length) {
+            var query = subcollectionRef
+
+            // query = query
+            //     .where('hospitaluid', '==', hospitaluid)
+            if (searchBy === 'Name') {
+                query = query
+                    .where('pName', '>=', searchString).
+                    where('pName', '<=', searchString + "\uf8ff")
+            } else if (searchBy === 'MobileNo') {
+                query = query
+                    .where('pMobileNo', '>=', searchString)
+                    .where('pMobileNo', '<=', searchString + "\uf8ff");
+            }
+
+
+            query = query.limit(perPageRows);
+            retrieveData(query)
+            query.get().then(snapshot => {
+                // console.log(snapshot);
+                const totalDataCount = snapshot.size;
+                setTotalNumData(totalDataCount)
+                console.log('Total data count:', totalDataCount);
+            }).catch(error => {
+                console.error('Error retrieving data:', error);
+            });
+        }
+
+
+
+        // if (searchvalue.length < 1) {
+        //     setOpdPatientList([...allopdPatientList].reverse())
+        //     return
+        // }
+
+        // const filteredRows = opdPatientfilter.filter((row) => {
+        //     const searchString = searchvalue.toLowerCase()
+        //     return row.pid.toString().includes(searchString) ||
+        //         row.pName.toLowerCase().includes(searchString) ||
+        //         row.pMobileNo.includes(searchString);
+        // });
+
+        // setOpdPatientList(filteredRows)
+    }
+
+    const onSearchInput = (value) => {
+        setSearchString(value)
+        if (!value.length) {
+            setIsLoading(true)
+            setSearchString('')
+
+            let query = subcollectionRef
+                .orderBy('timestamp', 'desc')
+                .limit(perPageRows)
+            retrieveData(query)
+            setIsLoading(false)
+            totalNumberofData()
+        }
+    }
+    const nextPage = async () => {
+        setIsLoading(true)
+        let query = subcollectionRef
+            .orderBy('timestamp', 'desc')
+            .limit(perPageRows).startAfter(lastVisible);
+        retrieveData(query)
+        setIsLoading(false)
+
+    };
+    const prevPage = async () => {
+        setIsLoading(true)
+        let query = subcollectionRef
+            .orderBy('timestamp', 'desc')
+            .limit(perPageRows)
+            .endBefore(firstVisible).limitToLast(perPageRows);
+        retrieveData(query)
+        setIsLoading(false)
+
+    }
     return <>
         {isLoading ? <Loaderspinner /> : <>
             <div style={{ display: 'none' }}>  {printContent && <PrintButton content={printContent} />}</div>
 
             <div>
-                <CommanTable
+                {/* <CommanTable
                     title={"Discharge Summary"}
                     columns={columns}
                     data={dischargePatient}
                     action={<button className='btn btn-primary' onClick={handleShow}><span>  <BiPlus size={25} /></span></button>}
                     subHeaderComponent={<>
                         <input type='search' placeholder='search' className='w-25 form-control' onChange={(e) => requestSearch(e.target.value)} /></>}
+                /> */}
+
+                <DataTable
+                    title={"Discharge Summary"}
+                    columns={columns}
+                    data={dischargePatient}
+                    pagination={true}
+                    fixedHeader={true}
+                    noHeader={false}
+                    persistTableHead
+                    actions={userpermissions?.code.includes('ADD_DISCHARGE') ? <button className='btn btn-primary' onClick={() => handleShow()}><span>  <BiPlus size={25} /></span></button> : null}
+                    highlightOnHover
+                    paginationServer={true}
+                    subHeader={<div className='d-flex' style={{ justifyContent: 'space-between' }}></div>}
+                    subHeaderComponent={<span className='d-flex w-100 justify-content-end'>
+                        <select className="form-control mr-2" style={{ height: '40px', fontSize: '18px', width: '15%', marginRight: 10 }} name='searchBy' value={searchBy} onChange={(e) => setSearchBy(e.target.value)}>
+                            <option selected >Search by</option>
+                            <option value='Name' selected>Patient Name</option>
+                            <option value='MobileNo' selected>Mobile No</option>
+                        </select>
+                        <input type='search' placeholder='search' className='w-25 form-control' value={searchString} onChange={(e) => { onSearchInput(e.target.value) }} />
+                        <button className='btn btn-primary' style={{ width: '10%', marginLeft: 10 }} disabled={!searchBy || !searchString} onClick={requestSearch}>Search</button>
+                    </span>}
+                    paginationTotalRows={totalnumData}
+                    onChangePage={(e) => handlePageChange(e)}
                 />
             </div >
         </>
@@ -695,7 +950,7 @@ const Discharge = () => {
                                         <div className="form-group" style={{ marginTop: '20px' }}>
                                             <label>Admit Uid:</label>
                                             <SearchAutocomplete
-                                                allPatients={allAdmitPatients?.filter((item) => !item.dischargeDate)}
+                                                allPatients={admitPatients}
                                                 handleOnSelect={handleOnSelect}
                                                 inputsearch={values.admituid}
                                                 placeholder={'Enter admit uid'}
@@ -716,7 +971,7 @@ const Discharge = () => {
                                     <div className="form-group" style={{ marginTop: '20px' }}>
                                         <label>Patient id<b style={{ color: 'red' }}>*</b>:</label>
                                         <SearchAutocomplete
-                                            allPatients={allAdmitPatients?.filter((item) => !item.dischargeDate)}
+                                            allPatients={admitPatients}
                                             handleOnSelect={handleOnSelect}
                                             inputsearch={values.pid}
                                             placeholder={'Enter Patients id'}
@@ -787,7 +1042,7 @@ const Discharge = () => {
                                 <div className="form-group" style={{ marginTop: '20px' }}>
                                     <label>Mobile No<b style={{ color: 'red' }}>*</b>: </label>
                                     <SearchAutocomplete
-                                        allPatients={allAdmitPatients?.filter((item) => !item.dischargeDate)}
+                                        allPatients={admitPatients}
                                         handleOnSelect={handleOnSelect}
                                         inputsearch={values.pMobileNo}
                                         placeholder={'Enter Mobile No'}
@@ -863,7 +1118,7 @@ const Discharge = () => {
                                 <div className="form-group" style={{ marginTop: '20px' }}>
                                     <label >Patient Name<b style={{ color: 'red' }}>*</b>:</label>
                                     <SearchAutocomplete
-                                        allPatients={allAdmitPatients?.filter((item) => !item.dischargeDate)}
+                                        allPatients={admitPatients}
                                         handleOnSelect={handleOnSelect}
                                         inputsearch={values.pName}
                                         placeholder={'Enter Patient Name'}
@@ -1161,8 +1416,7 @@ const Discharge = () => {
                                         <label >Follow Up:</label>
                                         <input name='followUpDetails'
                                             placeholder="Enter Follow up Details."
-                                            type="text" className="form-control" onChange={handleChange} defaultValue={values.followUpDetails} />
-
+                                            type="date" className="form-control" onChange={handleChange} defaultValue={values.followUpDetails} />
                                     </div>
                                 </div>
                             </div>

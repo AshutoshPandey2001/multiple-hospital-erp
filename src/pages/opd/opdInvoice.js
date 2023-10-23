@@ -469,9 +469,7 @@ const opdInvoice = () => {
             invoiceuid
         };
 
-        // const newLabReportsarray = patientsLabReports.map((item) =>
-        //     item.pid === state.pid ? { ...item, paymentStatus: 'Completed' } : item
-        // );
+   
         const newLabobj ={paymentStatus: 'Completed'}
       
         //  const newArray = await patients.map((item) => (item.pid === state.pid && item.paymentStatus === "Pending" ? { ...item, ...newObj } : item))
@@ -860,148 +858,8 @@ const opdInvoice = () => {
                                 </div>
                             </div>
                         </div>
-                        <div className='d-flex justify-content-center mt-5'>
-                            {/* <PrintButton content={<div >
-                                <div style={{ width: '800px' }} >
-                                    <div className='row text-center' style={{ backgroundColor: 'gainsboro', borderRadius: '8px', marginLeft: '1px', marginRight: '1px' }}><h4>INVOICE</h4></div>
-                                    <div className='card' style={{ border: "2px solid black", padding: '20px' }}>
-                                        <div className='row'>
-                                            <div className='col-lg-6 col-md-6 col-sm-6'>
-                                                <span><div><b>Patient UID :{state.pid}</b></div></span>
-                                                <span><div>Name: {state.pName} ({state.pGender})</div></span>
-                                                <span><div>Age: {state.page}</div></span>
-                                                <span><div>Address: {state.pAddress}</div></span>
-                                            </div>
-                                            <div className='col-lg-6 col-md-6 col-sm-6 d-flex justify-content-end'>
-                                                <div>
-                                                    <span><div><b>OPD UID: {state.opduid}</b></div></span>
-                                                    <span><div>Date: {formatDateDDMMYYY(state.consultingDate)} </div></span>
-                                                    <span><div>Consulting Dr.: {state.drName}</div></span>
-                                                    <span><div>Mobile No: {state.pMobileNo}</div></span>
-
-                                                </div>
-
-                                            </div>
-                                        </div>
-                                      
-                                        <b><hr></hr></b>
-                                        <div className='row text-center'> <h3>Bill Summary</h3></div>
-                                        <b><hr></hr></b>
-
-                                        <div className='row'>
-                                            <Table striped bordered>
-                                                <thead>
-                                                    <tr>
-                                                        <th>Particular</th>
-                                                        <th>Rate</th>
-                                                        <th>Total</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    <tr>
-                                                        <td>Consulting Charge(Dr.)</td>
-                                                        <td>{state.consultingCharge.toFixed(2)}</td>
-                                                        <td>{state.consultingCharge.toFixed(2)}</td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td>Consulting Charge(Hos.)</td>
-                                                        <td>{state.consultingChargesHospital.toFixed(2)}</td>
-                                                        <td>{state.consultingChargesHospital.toFixed(2)}</td>
-                                                    </tr>
-                                                    {state.reportDetails?.map((item, i) => {
-                                                        return (<tr key={i}>
-                                                            <td>{item.reportName}</td>
-                                                            <td>{Number(item.reportPrice).toFixed(2)}</td>
-                                                            <td>{Number(item.reportPrice).toFixed(2)}</td>
-                                                        </tr>)
-                                                    })}
-                                                    {!state.medicineDetails.length ? null :
-                                                        <tr>
-                                                            <td colSpan={2}>
-                                                                <Table bordered hover>
-                                                                    <thead>
-                                                                        <tr>
-
-                                                                            <th>Medicine</th>
-                                                                            <th>Qty * Price</th>
-                                                                            <th>Total</th>
-                                                                        </tr>
-                                                                    </thead>
-                                                                    <tbody>
-                                                                        {state.medicineDetails?.map((item, index) => {
-                                                                            return <>
-                                                                                <tr key={index}>
-
-                                                                                    <td>{item.medname}</td>
-                                                                                    <td>{item.medQty} * {item.medPrice.toFixed(2)}</td>
-                                                                                    <td>{item.totalmedPrice.toFixed(2)}</td>
-                                                                                </tr>
-                                                                            </>;
-                                                                        })}
-
-                                                                    </tbody>
-                                                                </Table></td>
-                                                            <td>{state.totalAmountofMedicines.toFixed(2)}</td>
-                                                        </tr>
-                                                    }
-                                                    <tr>
-                                                        <td colSpan={2}>Sub Total</td>
-                                                        <td>{state.subTotalamount.toFixed(2)}</td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td>CGST%</td>
-                                                        <td>{state.cgstValue}%</td>
-                                                        <td>{state.cgstAmount.toFixed(2)}</td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td >SGST%</td>
-                                                        <td>{state.sgstValue}%</td>
-                                                        <td>{state.sgstAmount.toFixed(2)}</td>
-                                                    </tr>
-                                                </tbody>
-                                            </Table>
-                                        </div>
-
-                                        <div className='row'>
-                                            <div className=' col-lg-6 col-md-6 col-sm-6 d-flex justify-content-start'>
-                                                <div>
-                                                    <span>Payment Type <b>:{state.paymentType}</b></span>
-                                                    <div><b>Enter By :{userName}</b></div>
-                                                </div>
-
-
-                                            </div>
-                                            <div className=' col-lg-6 col-md-6 col-sm-6 d-flex justify-content-end'>
-                                                <div className='row' style={{ width: '200px', marginRight: '70px' }}>
-                                                    <div className='col-lg-6 '><div>Total</div>
-                                                        <span>Recived</span></div>
-                                                    <div className='col-lg-6'><div>:{state.payAbleAmount.toFixed(2)}</div>
-                                                        <h6>:{state.payAbleAmount.toFixed(2)}</h6></div>
-                                                </div>
-
-                                            </div>
-                                            <b><hr></hr></b>
-                                            {state.advices ? <div className='row'>
-
-                                                <span className='row text-center'> <h3>Advice</h3></span>
-
-                                                <div className='row'>
-                                                    {
-                                                        state.advices?.map((advice, i) => {
-                                                            return <>
-                                                                <span key={i}>{advice}</span>
-                                                            </>
-                                                        })
-                                                    }
-                                                </div> </div> : null}
-
-                                        </div>
-                                    </div>
-
-                                </div>
-                            </div>} /> */}
+                        <div className='d-flex justify-content-center mt-5'>                         
                             <button className='btn btn-primary mx-2' onClick={() => printInvoice(state)}>Print</button>
-
                         </div>
                     </> :
                     <>

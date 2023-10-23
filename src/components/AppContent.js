@@ -7,8 +7,15 @@ import { CSpinner } from '@coreui/react'
 import routes from '../routes'
 import Dashboard from 'src/dashboard/Dashboard'
 import Home from 'src/pages/home/Home'
+import { useSelector } from 'react-redux'
+import { selectUsertype } from 'src/redux/slice/authSlice'
+import Opd from 'src/pages/opd/Opd'
+import Medicine from 'src/pages/medical/medicine/Medicine'
+import Labreport from 'src/pages/laboratory/Labreport'
+import Addpatients from 'src/pages/patients master/addPatient/Addpatients'
 
-const AppContent = (usertype) => {
+const AppContent = () => {
+  const userType = useSelector(selectUsertype)
 
   return (
     <div>
@@ -27,8 +34,7 @@ const AppContent = (usertype) => {
               )
             )
           })}
-          <Route path="/" element={<Home />} />
-
+          <Route path="/" element={<Addpatients />} />
         </Routes>
       </Suspense>
     </div>

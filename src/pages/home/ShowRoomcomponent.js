@@ -25,7 +25,7 @@ const ShowRoomcomponent = ({ roomType, selectedRoomDetails }) => {
         fetchData()
     }, [])
     const fetchData = async () => {
-        const indoorData = await getSelectedFieldData('admitPatients', 'jSqDGnjO21bpPGhb6O2y', 'admitPatient', hospitaluid, ['admitDate', 'pName', 'dischargeDate', 'roomType', 'roomNo', 'bedNo'], 'dischargeDate')
+        const indoorData = await getSelectedFieldData('admitPatients', 'jSqDGnjO21bpPGhb6O2y', 'admitPatient', hospitaluid, 'dischargeDate')
         setAdmitPatients([...indoorData])
     }
     const showPatientName = (item, index) => {
