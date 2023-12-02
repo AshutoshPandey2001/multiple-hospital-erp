@@ -18,6 +18,8 @@ const initalValues = {
     pid: '',
     pName: '',
     page: '',
+    age:'',
+    duration:'Year',
     pGender: '',
     pAddress: '',
     pMobileNo: '',
@@ -35,6 +37,7 @@ const Addpatientscommanmodel = ({ show, handleClose, update, data }) => {
     const lastPatientData = useSelector(selectlastPatientData)
     const parentDocRef = db.collection('Patients').doc('fBoxFLrzXexT8WNBzGGh');
     const subcollectionRef = parentDocRef.collection('patients').where('hospitaluid', '==', hospitaluid)
+    const [duration,setDuration]=useState('Year')
     let unsubscribe = undefined
     // useEffect(() => {
     //     console.log('change last p Data', lastPatientData);
@@ -90,7 +93,8 @@ const Addpatientscommanmodel = ({ show, handleClose, update, data }) => {
         onSubmit: async (Values, action) => {
             let timestamp = new Date().getTime();
             let patient1 = [...patientsFilter]
-            console.log('values', values);
+            values.page =values.age+" "+ values.duration
+           
             if (!update) {
                 values.pid = Math.floor(Math.random() + timestamp)
                 values.hospitaluid = hospitaluid
@@ -146,16 +150,18 @@ const Addpatientscommanmodel = ({ show, handleClose, update, data }) => {
     const { values, errors, touched, handleBlur, handleChange, handleSubmit } = formik
     const patchData = () => {
         if (update) {
+            console.log(data,'data');
             formik.setFieldValue('pid', data.pid);
             formik.setFieldValue('pName', data.pName);
             formik.setFieldValue('pMobileNo', data.pMobileNo);
             formik.setFieldValue('pGender', data.pGender);
             formik.setFieldValue('page', data.page);
+            formik.setFieldValue('age', data.age ?data.age:data.page);
+            formik.setFieldValue('duration', data.duration?data.duration:'Year');
             formik.setFieldValue('pAddress', data.pAddress);
             formik.setFieldValue('drName', data.drName);
             formik.setFieldValue('hospitaluid', data.hospitaluid);
         }
-
     }
     const handelClear = () => {
         formik.setValues({
@@ -166,7 +172,9 @@ const Addpatientscommanmodel = ({ show, handleClose, update, data }) => {
             pAddress: '',
             drName: '',
             pMobileNo: '',
-            hospitaluid: ''
+            hospitaluid: '',
+            age:'',
+            duration:'Year',
         })
         formik.resetForm();
         handleClose()
@@ -184,6 +192,9 @@ const Addpatientscommanmodel = ({ show, handleClose, update, data }) => {
                             <input type="text" className="form-control" placeholder="Enter patient name" name='pName' value={values.pName} onChange={handleChange} onBlur={handleBlur} />
                             {errors.pName && touched.pName ? (<p style={{ color: 'red' }}>*{errors.pName}</p>) : null}
                         </div>
+                        <div className='row'>
+                            <div className='col-lg-6'>
+
                         <div className="form-group" style={{ marginTop: '20px' }}>
                             <label>Age<b style={{ color: 'red' }}>*</b>:</label>
                             <input type="text" className="form-control" placeholder="Enter patient age"
@@ -196,17 +207,28 @@ const Addpatientscommanmodel = ({ show, handleClose, update, data }) => {
                                             e.keyCode === 8 || // Backspace
                                             e.keyCode === 9 || // Tab
                                             e.keyCode === 37 || // Left arrow
-                                            e.keyCode === 39 || // Right arrow
-                                            e.keyCode === 190 || // Period (.)
-                                            e.keyCode === 110 // Numpad period (.)
+                                            e.keyCode === 39  // Right arrow                                         
                                         )
                                     ) {
                                         e.preventDefault();
                                     }
                                 }}
 
-                                name='page' value={values.page} onChange={handleChange} onBlur={handleBlur} />
-                            {errors.page && touched.page ? (<p style={{ color: 'red' }}>*{errors.page}</p>) : null}
+                                name='age' value={values.age} onChange={handleChange} onBlur={handleBlur} />
+                            {errors.age && touched.age ? (<p style={{ color: 'red' }}>*{errors.age}</p>) : null}
+                        </div>
+                            </div>
+                            <div className='col-lg-6'>
+
+                        <div className="form-group" style={{ marginTop: '20px' }}>
+                            <label>Duration<b style={{ color: 'red' }}>*</b>:</label>
+                            <select className="form-control" style={{ height: '40px', fontSize: '18px' }} name='duration' defaultValue={values.duration} onChange={handleChange}>
+                                        <option value='Year'>Year</option>
+                                        <option value='Month'>Month</option>
+                                        <option value='Days'>Days</option>
+                                    </select>
+                        </div>
+                            </div>
                         </div>
                         <div className="form-group" style={{ marginTop: '20px' }}>
                             <label>Gender<b style={{ color: 'red' }}>*</b>:</label>

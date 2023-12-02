@@ -24,7 +24,7 @@ export const registerpatientsSchema = Yup.object({
 
 export const addpatientsSchema = Yup.object({
     pName: Yup.string().required("Patient Name is Required"),
-    page: Yup.string().required("Patient Age is Required"),
+    age: Yup.string().required("Patient Age is Required"),
     pGender: Yup.string().required("Gendre is Required"),
     pAddress: Yup.string().required("Address is Required"),
     // pMobileNo: Yup.string().required("Patient Mobile No is Required").matches(/^[0-9]{10}$/, 'Mobile number must be 10 digits'),
