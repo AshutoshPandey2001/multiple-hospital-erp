@@ -193,7 +193,7 @@ const TodaydoctorAppoinmentPatients = () => {
                 persistTableHead
                 highlightOnHover
                 paginationServer={true}
-                subHeader={<div className='d-flex' style={{ justifyContent: 'space-between' }}></div>}
+                // subHeader={<div className='d-flex' style={{ justifyContent: 'space-between' }}></div>}
                 paginationTotalRows={todayPatients.length}
             />
         </div>

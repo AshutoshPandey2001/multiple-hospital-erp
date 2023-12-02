@@ -111,8 +111,8 @@ const Login = () => {
                 <div className="row justify-content-center" style={{ marginBottom: '30px' }}>
                   <div className=" col-md-12 align-content-center">
                     <div className='d-flex justify-content-center'>
-                      <img src={hospitalimg} className="sidebar-brand-full" width="100px" height="100px" alt='Hosptal_logo' />
-                      <h4 style={{ marginTop: '35px', marginLeft: '15px' }}>SHIVKRUPA HOSPITAL</h4>
+                      <img src={hospitalimg} className="sidebar-brand-full" style={{ width: '50%', height: '20%' }} alt='Hosptal_logo' />
+                      {/* <h4 style={{ marginTop: '35px', marginLeft: '15px' }}>SHIVKRUPA HOSPITAL</h4> */}
                     </div>
                   </div>
                 </div>

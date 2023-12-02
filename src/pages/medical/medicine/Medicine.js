@@ -88,16 +88,25 @@ const PrintComponent = ({ data }) => {
                             <td colSpan={4}>Sub Total</td>
                             <td>{state.allMedTotalprice.toFixed(2)}</td>
                         </tr>
-                        <tr>
-                            <td colSpan={3}>CGST%</td>
-                            <td>{state.cgstValue}%</td>
-                            <td>{state.cgstAmount.toFixed(2)}</td>
-                        </tr>
-                        <tr>
-                            <td colSpan={3}>SGST%</td>
-                            <td>{state.sgstValue}%</td>
-                            <td>{state.sgstAmount.toFixed(2)}</td>
-                        </tr>
+                        {
+                            state.cgstValue === 0 ?
+                                null
+                                : <tr>
+                                    <td colSpan={3}>CGST%</td>
+                                    <td>{state.cgstValue}%</td>
+                                    <td>{state.cgstAmount.toFixed(2)}</td>
+                                </tr>
+                        }
+
+                        {
+                            state.sgstValue === 0 ?
+                                null
+                                : <tr>
+                                    <td colSpan={3}>SGST%</td>
+                                    <td>{state.sgstValue}%</td>
+                                    <td>{state.sgstAmount.toFixed(2)}</td>
+                                </tr>
+                        }
 
                     </tbody>
                 </Table>
@@ -223,48 +232,115 @@ const Medicine = () => {
     }, [medicineList])
 
 
+    // useEffect(() => {
+    //     let query = subcollectionRefMedicineStock
+    //     retrieveData(query)
+    //     let query1 = subcollectionRefMedicineInvoice
+    //         .orderBy('timestamp', 'desc')
+    //         .limit(perPageRows)
+    //     debouncedRetrieveData(query1)
+    //     totalNumberofData()
+    //     return () => {
+    //         unsubscribe();
+    //         unsub()
+    //     };
+    // }, [])
+
+    // const totalNumberofData = async () => {
+    //     try {
+    //         let count = 0;
+
+    //         unsub = db
+    //             .collection('MedicinePatientsCount')
+    //             .where('hospitaluid', '==', hospitaluid)
+    //             .onSnapshot(async (snapshot) => {
+    //                 if (!snapshot.empty) {
+    //                     const newData = snapshot.docs[0].data();
+    //                     count = newData.count;
+    //                     setTotalNumData(count);
+    //                     console.log('res.data().count', count);
+    //                 } else {
+    //                     const snapshot = await subcollectionRefMedicineInvoice.get();
+    //                     const totalDataCount = snapshot.size;
+    //                     await addDataincollection('MedicinePatientsCount', { hospitaluid: hospitaluid, count: totalDataCount })
+    //                     console.log('No documents found in the snapshot.');
+    //                 }
+    //             });
+
+    //         // You can save the unsubscribe function if needed to stop listening later
+    //         // unsub();
+
+    //         // Optionally, you can use the unsubscribe function to stop listening to changes
+    //         // when you no longer need it, e.g., when the component unmounts.
+    //         // useEffect(() => {
+    //         //   return () => unsubscribe();
+    //         // }, []);
+
+    //     } catch (error) {
+    //         console.error('Error fetching data:', error);
+    //     }
+    // };
+    // const retrieveDataMedcineInvoice = (query) => {
+    //     try {
+    //         setIsLoading(true);
+    //         unsub = query.onSnapshot((snapshot) => {
+    //             // totalNumberofData();
+
+    //             const newData = snapshot.docs.map((doc) => doc.data());
+    //             setPatientsMedicineList(newData);
+
+    //             if (snapshot.size > 0) {
+    //                 const lastVisibleDoc = snapshot.docs[snapshot.docs.length - 1];
+    //                 setLastVisible(lastVisibleDoc);
+    //                 setFirstVisible(snapshot.docs[0]);
+    //             } else {
+    //                 setLastVisible(null);
+    //                 setFirstVisible(null);
+    //             }
+
+    //             setIsLoading(false);
+    //         });
+
+    //         return () => {
+    //             unsub();
+    //         };
+    //     } catch (error) {
+    //         setIsLoading(false);
+    //         console.error('Error retrieving data:', error);
+    //     }
+    // };
+
     useEffect(() => {
-        let query = subcollectionRefMedicineStock
-        retrieveData(query)
-        let query1 = subcollectionRefMedicineInvoice
-            .orderBy('timestamp', 'desc')
-            .limit(perPageRows)
-        debouncedRetrieveData(query1)
+        const retrieveMedicineStock = async () => {
+            const stockQuery = subcollectionRefMedicineStock;
+            retrieveData(stockQuery);
+        };
+
+        const retrieveMedicineInvoices = async () => {
+            const invoiceQuery = subcollectionRefMedicineInvoice
+                .orderBy('timestamp', 'desc')
+                .limit(perPageRows);
+            debouncedRetrieveData(invoiceQuery);
+        };
+
+        const fetchDataAndUpdateTotal = async () => {
+            retrieveMedicineStock();
+            retrieveMedicineInvoices();
+            totalNumberOfData();
+        };
+
+        fetchDataAndUpdateTotal();
+
         return () => {
             unsubscribe();
-            unsub()
+            unsub();
         };
-    }, [])
+    }, []);
 
-    const totalNumberofData = async () => {
-        // try {
-        //     let count = 0
-        //     await getData('PatientsMedicines', 'GoKwC6l5NRWSonfUAal0').then((res) => {
-        //         // dispatch(FILL_PATIENTS(res.data().count))
-        //         count = res.data().count
-        //         console.log('res.data().count', res.data().count);
-        //     }).catch((error) => {
-        //         console.error("Error updating document: ", error);
-        //     });
-        //     // const parentDocRef = db.collection('opdPatients').doc('m5JHl3l4zhaBCa8Vihcb');
-        //     // const subcollectionRef = parentDocRef.collection('opdPatient');
-        //     if (count === 0) {
-        //         const snapshot = await subcollectionRefMedicineInvoice.get();
-        //         const totalDataCount = snapshot.size;
-        //         setTotalNumData(totalDataCount);
-        //         await setData('PatientsMedicines', 'GoKwC6l5NRWSonfUAal0', 'count', totalDataCount)
-        //         console.log('Total data count:', totalDataCount);
-        //     } else {
-        //         setTotalNumData(count);
-        //     }
 
-        // } catch (error) {
-        //     console.error('Error fetching data:', error);
-        // }
-
+    const totalNumberOfData = async () => {
         try {
             let count = 0;
-
             unsub = db
                 .collection('MedicinePatientsCount')
                 .where('hospitaluid', '==', hospitaluid)
@@ -277,30 +353,18 @@ const Medicine = () => {
                     } else {
                         const snapshot = await subcollectionRefMedicineInvoice.get();
                         const totalDataCount = snapshot.size;
-                        await addDataincollection('MedicinePatientsCount', { hospitaluid: hospitaluid, count: totalDataCount })
+                        await addDataincollection('MedicinePatientsCount', { hospitaluid: hospitaluid, count: totalDataCount });
                         console.log('No documents found in the snapshot.');
                     }
                 });
-
-            // You can save the unsubscribe function if needed to stop listening later
-            // unsub();
-
-            // Optionally, you can use the unsubscribe function to stop listening to changes
-            // when you no longer need it, e.g., when the component unmounts.
-            // useEffect(() => {
-            //   return () => unsubscribe();
-            // }, []);
-
         } catch (error) {
             console.error('Error fetching data:', error);
         }
     };
-    const retrieveDataMedcineInvoice = (query) => {
+    const retrieveDataMedicineInvoice = (query) => {
         try {
             setIsLoading(true);
             unsub = query.onSnapshot((snapshot) => {
-                // totalNumberofData();
-
                 const newData = snapshot.docs.map((doc) => doc.data());
                 setPatientsMedicineList(newData);
 
@@ -324,8 +388,7 @@ const Medicine = () => {
             console.error('Error retrieving data:', error);
         }
     };
-
-    const debouncedRetrieveData = debounce(retrieveDataMedcineInvoice, 500);
+    const debouncedRetrieveData = debounce(retrieveDataMedicineInvoice, 500);
 
     const retrieveData = (query) => {
         try {
@@ -367,14 +430,6 @@ const Medicine = () => {
                 try {
                     await addDatainsubcollection("PatientsMedicines", 'GoKwC6l5NRWSonfUAal0', 'patientsMedicines', values)
                     await updateDataincollection('MedicinePatientsCount', { hospitaluid: hospitaluid, count: totalnumData + 1 })
-
-                    // await setData('PatientsMedicines', 'GoKwC6l5NRWSonfUAal0', 'count', totalnumData + 1)
-                    // setTotalNumData(totalnumData + 1)
-                    // await setData("PatientsMedicines", 'GoKwC6l5NRWSonfUAal0', 'patientsMedicines', med)
-                    // dispatch(ADD_PATIENTS_MEDICINES(Values))
-                    // await uploadArray("Medicines", 'dHFKEhdhbOM4v6WRMb6z', 'medicines', medList, 'medicineuid', 'hospitaluid')
-                    // await setData("Medicines", 'dHFKEhdhbOM4v6WRMb6z', 'medicines', medList)
-                    // dispatch(UPDATE_MEDICINES(medList))
                     action.resetForm()
                     clearForm()
                     setShow(false)
@@ -385,26 +440,18 @@ const Medicine = () => {
                 }
 
             } else {
-                // await Values.medicines.map((item) => updateStock(item))
-                // console.log('before medicine List', medList);
+
                 let findindex = await medd.findIndex((item) => item.pmeduid === Values.pmeduid);
                 await medd[findindex].medicines.map((item) => updateStockonUpdate(item))
                 medd[findindex] = Values;
 
                 try {
-                    // await setTimeout(() => {
                     await updateDatainSubcollection("PatientsMedicines", 'GoKwC6l5NRWSonfUAal0', 'patientsMedicines', Values, 'pmeduid', 'hospitaluid')
-                    // setData("PatientsMedicines", 'GoKwC6l5NRWSonfUAal0', 'patientsMedicines', medd)
-                    // dispatch(EDIT_PATIENTS_MEDICINES(Values))
-                    // await uploadArray("Medicines", 'dHFKEhdhbOM4v6WRMb6z', 'medicines', medList, 'medicineuid', 'hospitaluid')
-                    // setData("Medicines", 'dHFKEhdhbOM4v6WRMb6z', 'medicines', medList)
-                    // dispatch(UPDATE_MEDICINES(medList))
                     action.resetForm()
                     clearForm()
                     setShow(false)
                     setUpdate(false)
                     toast.success("Updated Successfully.......");
-                    // }, 1000)
                 } catch (error) {
                     toast.error(error.message)
                     console.error(error.message);
@@ -693,7 +740,7 @@ const Medicine = () => {
                 .limit(perPageRows)
             debouncedRetrieveData(query)
             setIsLoading(false)
-            totalNumberofData()
+            totalNumberOfData()
         }
     }
     const nextPage = async () => {
@@ -728,19 +775,21 @@ const Medicine = () => {
                     fixedHeader={true}
                     noHeader={false}
                     persistTableHead
-                    actions={<button className='btn btn-primary' onClick={() => handleShow()}><span>  <BiPlus size={25} /></span></button>}
+                    actions={<>
+                        <span className='d-flex w-100 justify-content-end'>
+                            <select className="form-control mr-2" style={{ height: '40px', fontSize: '18px', width: '15%', marginRight: 10 }} name='searchBy' value={searchBy} onChange={(e) => setSearchBy(e.target.value)}>
+                                <option selected >Search by</option>
+                                <option value='Name' selected>Patient Name</option>
+                                <option value='MobileNo' selected>Mobile No</option>
+                            </select>
+                            <input type='search' placeholder='search' className='w-25 form-control' value={searchString} onChange={(e) => { onSearchInput(e.target.value) }} />
+                            <button className='btn btn-primary' style={{ width: '10%', marginLeft: 10 }} disabled={!searchBy || !searchString} onClick={requestSearch}>Search</button>
+                        </span>
+                        <button className='btn btn-primary' onClick={() => handleShow()}><span>  <BiPlus size={25} /></span></button>
+                    </>
+                    }
                     highlightOnHover
                     paginationServer={true}
-                    subHeader={<div className='d-flex' style={{ justifyContent: 'space-between' }}></div>}
-                    subHeaderComponent={<span className='d-flex w-100 justify-content-end'>
-                        <select className="form-control mr-2" style={{ height: '40px', fontSize: '18px', width: '15%', marginRight: 10 }} name='searchBy' value={searchBy} onChange={(e) => setSearchBy(e.target.value)}>
-                            <option selected >Search by</option>
-                            <option value='Name' selected>Patient Name</option>
-                            <option value='MobileNo' selected>Mobile No</option>
-                        </select>
-                        <input type='search' placeholder='search' className='w-25 form-control' value={searchString} onChange={(e) => { onSearchInput(e.target.value) }} />
-                        <button className='btn btn-primary' style={{ width: '10%', marginLeft: 10 }} disabled={!searchBy || !searchString} onClick={requestSearch}>Search</button>
-                    </span>}
                     paginationTotalRows={totalnumData}
                     onChangePage={(e) => handlePageChange(e)}
                 />

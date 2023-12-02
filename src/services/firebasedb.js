@@ -734,23 +734,23 @@ export const updateDatainSubcollectionPatients = async (collectionName, collecti
 //             console.log('Error getting documents: ', error);
 //         });
 // }
-// export const deleteDatainSubcollection = async (collectionName, collectionuid, subcollectionName, data, cond1, cond2) => {
-//     try {
-//         const parentDocRef = db.collection(collectionName).doc(collectionuid);
-//         const subcollectionRef = parentDocRef.collection(subcollectionName);
-//         const query = subcollectionRef.where(cond2, '==', data[cond2]).where(cond1, '==', data[cond1]);
+export const deleteDatainSubcollectionLabparameter = async (collectionName, collectionuid, subcollectionName, data, cond1, cond2) => {
+    try {
+        const parentDocRef = db.collection(collectionName).doc(collectionuid);
+        const subcollectionRef = parentDocRef.collection(subcollectionName);
+        const query = subcollectionRef.where(cond2, '==', data[cond2]).where(cond1, '==', data[cond1]);
 
-//         const querySnapshot = await query.get();
+        const querySnapshot = await query.get();
 
-//         const deletePromises = querySnapshot.docs.map(doc => doc.ref.delete());
+        const deletePromises = querySnapshot.docs.map(doc => doc.ref.delete());
 
-//         await Promise.all(deletePromises);
+        await Promise.all(deletePromises);
 
-//         console.log('Documents successfully deleted!');
-//     } catch (error) {
-//         console.error('Error deleting documents: ', error);
-//     }
-// };
+        console.log('Documents successfully deleted!');
+    } catch (error) {
+        console.error('Error deleting documents: ', error);
+    }
+};
 
 export const deleteDatainSubcollection = (collectionName, collectionuid, subcollectionName, data, cond1, cond2) => {
     const parentDocRef = db.collection(collectionName).doc(collectionuid);
@@ -1328,22 +1328,5 @@ export const updateDataincollection = async (collectionName, data) => {
         .catch(error => {
             console.log('Error getting documents: ', error);
         });
-    try {
-        // Create a new document within the subcollection and set its data
-        const docRef = await parentDocRef.add({
-            timestamp: timestamp,
-            ...data
-        });
 
-        const newDocSnapshot = await docRef.get();
-        // const newDocData = newDocSnapshot.data();
-
-        console.log("Document added to subcollection successfully!", newDocSnapshot);
-
-        // Return the new added value
-        return newDocSnapshot;
-    } catch (error) {
-        console.error("Error adding document to subcollection: ", error);
-        throw error;
-    }
 };

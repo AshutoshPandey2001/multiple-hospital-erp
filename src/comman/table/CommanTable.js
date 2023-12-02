@@ -24,12 +24,11 @@ const CommanTable = ({ title, columns, data, action, subHeaderComponent, retriev
             persistTableHead
             actions={action}
             highlightOnHover
-            subHeader={<div className='d-flex' style={{ justifyContent: 'space-between' }}></div>}
+            // subHeader={<div className='d-flex' style={{ justifyContent: 'space-between' }}></div>}
             subHeaderComponent={subHeaderComponent}
             customStyles={customStyles}
             onChangeRowsPerPage={handlePerPageRowsChange}
-        // paginationTotalRows={paginationTotalRows}
-        // onChangePage={() => retrieveData()}
+
         />
     </>
     )

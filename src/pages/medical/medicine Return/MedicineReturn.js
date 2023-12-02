@@ -202,76 +202,48 @@ const MedicineReturn = () => {
     }, [medicineList])
 
     useEffect(() => {
-        let query = subcollectionRefMedicineStock
-        retrieveData(query)
-        let query1 = subcollectionRefMedicineInvoice
-            .orderBy('timestamp', 'desc')
-            .limit(perPageRows)
-        debouncedRetrieveData(query1)
+        const fetchData = async () => {
+            retrieveData(subcollectionRefMedicineStock);
+            const invoiceQuery = subcollectionRefMedicineInvoice
+                .orderBy('timestamp', 'desc')
+                .limit(perPageRows);
+            debouncedRetrieveData(invoiceQuery);
+            totalNumberOfData()
+        };
+
+        fetchData();
+
         return () => {
             unsubscribe();
-            unsub()
+            unsub();
         };
-    }, [])
+    }, []);
 
-    const totalNumberofData = async () => {
-        // try {
-        //     let count = 0
-        //     await getData('ReturnMedicine', 'lGxMW7T2f7Dsb93A19qa').then((res) => {
-        //         // dispatch(FILL_PATIENTS(res.data().count))
-        //         count = res.data().count
-        //         console.log('res.data().count', res.data().count);
-        //     }).catch((error) => {
-        //         console.error("Error updating document: ", error);
-        //     });
-        //     // const parentDocRef = db.collection('opdPatients').doc('m5JHl3l4zhaBCa8Vihcb');
-        //     // const subcollectionRef = parentDocRef.collection('opdPatient');
-        //     if (count === 0) {
-        //         const snapshot = await subcollectionRefMedicineInvoice.get();
-        //         const totalDataCount = snapshot.size;
-        //         setTotalNumData(totalDataCount);
-        //         await setData('ReturnMedicine', 'lGxMW7T2f7Dsb93A19qa', 'count', totalDataCount)
-        //         console.log('Total data count:', totalDataCount);
-        //     } else {
-        //         setTotalNumData(count);
-        //     }
-
-        // } catch (error) {
-        //     console.error('Error fetching data:', error);
-        // }
+    const totalNumberOfData = async () => {
         try {
-            let count = 0;
-
             unsub = db
                 .collection('ReturnMedicinePatientsCount')
                 .where('hospitaluid', '==', hospitaluid)
                 .onSnapshot(async (snapshot) => {
+                    let count = 0;
+
                     if (!snapshot.empty) {
                         const newData = snapshot.docs[0].data();
                         count = newData.count;
                         setTotalNumData(count);
                         console.log('res.data().count', count);
                     } else {
-                        const snapshot = await subcollectionRefMedicineInvoice.get();
-                        const totalDataCount = snapshot.size;
-                        await addDataincollection('ReturnMedicinePatientsCount', { hospitaluid: hospitaluid, count: totalDataCount })
+                        const invoiceSnapshot = await subcollectionRefMedicineInvoice.get();
+                        const totalDataCount = invoiceSnapshot.size;
+                        await addDataincollection('ReturnMedicinePatientsCount', { hospitaluid: hospitaluid, count: totalDataCount });
                         console.log('No documents found in the snapshot.');
                     }
                 });
-
-            // You can save the unsubscribe function if needed to stop listening later
-            // unsub();
-
-            // Optionally, you can use the unsubscribe function to stop listening to changes
-            // when you no longer need it, e.g., when the component unmounts.
-            // useEffect(() => {
-            //   return () => unsubscribe();
-            // }, []);
-
         } catch (error) {
             console.error('Error fetching data:', error);
         }
     };
+
     const retrieveDataMedcineInvoice = (query) => {
         try {
             setIsLoading(true);
@@ -362,12 +334,8 @@ const MedicineReturn = () => {
                 medd[findindex] = Values;
 
                 try {
-                    // await setTimeout(() => {
-                    // await updateSingltObject('ReturnMedicine', 'lGxMW7T2f7Dsb93A19qa', 'returnMedicine', Values, 'returnuid', 'hospitaluid')
                     await updateDatainSubcollection('ReturnMedicine', 'lGxMW7T2f7Dsb93A19qa', 'returnMedicine', Values, 'returnuid', 'hospitaluid')
 
-                    // setData('ReturnMedicine', 'lGxMW7T2f7Dsb93A19qa', 'returnMedicine', medd)
-                    // dispatch(EDIT_RETURN_PATIENTS_MEDICINES(Values))
                     action.resetForm()
                     clearForm()
                     setShow(false)
@@ -494,13 +462,7 @@ const MedicineReturn = () => {
 
     }
     const handleOnSelect = (item) => {
-        // values.pid = item.pid;
-        // values.pName = item.pName;
-        // values.pMobileNo = item.pMobileNo;
-        // values.pGender = item.pGender;
-        // values.page = item.page;
-        // values.pAddress = item.pAddress;
-        // setAutofocus(!autofocus)
+
         formik.setFieldValue('pid', item.pid);
         formik.setFieldValue('pName', item.pName);
         formik.setFieldValue('pMobileNo', item.pMobileNo);
@@ -608,7 +570,7 @@ const MedicineReturn = () => {
                 .limit(perPageRows)
             debouncedRetrieveData(query)
             setIsLoading(false)
-            totalNumberofData()
+            totalNumberOfData()
         }
     }
     const nextPage = async () => {
@@ -644,19 +606,22 @@ const MedicineReturn = () => {
                     fixedHeader={true}
                     noHeader={false}
                     persistTableHead
-                    actions={<button className='btn btn-primary' onClick={() => handleShow()}><span>  <BiPlus size={25} /></span></button>}
+                    actions={
+                        <>
+                            <span className='d-flex w-100 justify-content-end'>
+                                <select className="form-control mr-2" style={{ height: '40px', fontSize: '18px', width: '15%', marginRight: 10 }} name='searchBy' value={searchBy} onChange={(e) => setSearchBy(e.target.value)}>
+                                    <option selected >Search by</option>
+                                    <option value='Name' selected>Patient Name</option>
+                                    <option value='MobileNo' selected>Mobile No</option>
+                                </select>
+                                <input type='search' placeholder='search' className='w-25 form-control' value={searchString} onChange={(e) => { onSearchInput(e.target.value) }} />
+                                <button className='btn btn-primary' style={{ width: '10%', marginLeft: 10 }} disabled={!searchBy || !searchString} onClick={requestSearch}>Search</button>
+                            </span>
+                            <button className='btn btn-primary' onClick={() => handleShow()}><span>  <BiPlus size={25} /></span></button>
+                        </>
+                    }
                     highlightOnHover
                     paginationServer={true}
-                    subHeader={<div className='d-flex' style={{ justifyContent: 'space-between' }}></div>}
-                    subHeaderComponent={<span className='d-flex w-100 justify-content-end'>
-                        <select className="form-control mr-2" style={{ height: '40px', fontSize: '18px', width: '15%', marginRight: 10 }} name='searchBy' value={searchBy} onChange={(e) => setSearchBy(e.target.value)}>
-                            <option selected >Search by</option>
-                            <option value='Name' selected>Patient Name</option>
-                            <option value='MobileNo' selected>Mobile No</option>
-                        </select>
-                        <input type='search' placeholder='search' className='w-25 form-control' value={searchString} onChange={(e) => { onSearchInput(e.target.value) }} />
-                        <button className='btn btn-primary' style={{ width: '10%', marginLeft: 10 }} disabled={!searchBy || !searchString} onClick={requestSearch}>Search</button>
-                    </span>}
                     paginationTotalRows={totalnumData}
                     onChangePage={(e) => handlePageChange(e)}
                 />

@@ -241,7 +241,7 @@ const Addpatients = () => {
 
         setPrintContent(
             <div style={{ width: '800px', marginRight: '50px' }}>
-                <div className='card' style={{ border: "2px solid black", padding: '20px', height: '90vh' }}>
+                <div className='card' style={{ border: "2px solid black", padding: '20px', height: 'auto' }}>
                     <div className='row'>
                         <div className='col-lg-6 col-md-6 col-sm-6'>
                             <span><div><b>Case No:-</b></div></span>
@@ -432,7 +432,16 @@ const Addpatients = () => {
                         title={"Patients List"}
                         columns={columns}
                         data={patientsList}
-                        action={userpermissions?.code.includes('ADD_PATIENTS') ? <button className='btn btn-primary' onClick={() => handleShow()}><span>  <BiPlus size={30} /></span></button> : null}
+                        action={
+                            <>
+                                <input type='search' placeholder='Search...' className='w-25 form-control' onChange={(e) => requestSearch(e.target.value)} />
+
+                                <>{
+                                    userpermissions?.code.includes('ADD_PATIENTS') ? <button className='btn btn-primary' onClick={() => handleShow()}><span>  <BiPlus size={30} /></span></button> : null
+                                }
+                                </>
+                            </>
+                        }
                         subHeaderComponent={<>
                             <input type='search' placeholder='Search...' className='w-25 form-control' onChange={(e) => requestSearch(e.target.value)} /></>}
                     />

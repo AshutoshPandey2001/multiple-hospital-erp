@@ -7,7 +7,7 @@ import { useEffect } from 'react'
 import { MdEdit } from 'react-icons/md'
 import { AiFillDelete } from 'react-icons/ai'
 import CommanTable from 'src/comman/table/CommanTable'
-import { addDatainsubcollection, addSingltObject, deleteDatainSubcollection, deleteSingltObject, filDatainsubcollection, setData, updateDatainSubcollection, updateSingltObject } from 'src/services/firebasedb';
+import { updateDataincollection, addDataincollection, addDatainsubcollection, addSingltObject, deleteDatainSubcollection, deleteSingltObject, filDatainsubcollection, setData, updateDatainSubcollection, updateSingltObject } from 'src/services/firebasedb';
 import Button from 'react-bootstrap/Button';
 import Modal from 'react-bootstrap/Modal';
 import { useState } from 'react'
@@ -33,6 +33,9 @@ import PrintButton from 'src/comman/printpageComponents/PrintButton'
 import { ddMMyyyy, yyyyMMdd } from 'src/services/dateFormate'
 import { selectUserId } from 'src/redux/slice/authSlice'
 import { TfiReload } from 'react-icons/tfi'
+import { db } from 'src/firebaseconfig';
+import { debounce } from 'lodash';
+import DataTable from 'react-data-table-component';
 
 const PrintComponent = ({ data }) => {
     const state = data.data1
@@ -155,9 +158,19 @@ const Labreport = () => {
     const [isLoading, setIsLoading] = useState(true)
     const [printContent, setPrintContent] = useState(null);
     const hospitaluid = useSelector(selectUserId)
-
+    const parentDocRef = db.collection('PatientslaboratoryReports').doc('QmwQr1wDcFK6K04hKMYc');
+    const subcollectionRef = parentDocRef.collection('labReports').where('hospitaluid', '==', hospitaluid).where('deleted', '==', 0);
+    const [lastVisible, setLastVisible] = useState(null);
+    const [perPageRows, setPerPageRows] = useState(10); // Initial value for rows per page
+    const [totalnumData, setTotalNumData] = useState(0); // Initial value for rows per page
+    const [currentPage, setCurrentPage] = useState(1);
+    const [firstVisible, setFirstVisible] = useState(null);
+    const [prev, setPrev] = useState(false);
+    const [searchBy, setSearchBy] = useState('');
+    const [searchString, setSearchString] = useState('');
+    let unsubscribe = undefined
+    let unsub = undefined
     const columns = [
-        { name: 'Patient Id', selector: row => row.pid, sortable: true },
         { name: 'Report Id', selector: row => row.labreportuid, sortable: true },
         { name: 'Date', selector: row => row.date, sortable: true },
         { name: 'Name', selector: row => row.pName, sortable: true },
@@ -170,12 +183,111 @@ const Labreport = () => {
             </span>
         }
     ]
-    useEffect(() => {
-        setAllpatientsLabReports([...allPatientsLaboratoryReports].reverse())
-        setAllpatientsLabReportsfilter(allPatientsLaboratoryReports)
-        setIsLoading(false)
+    // useEffect(() => {
+    //     setAllpatientsLabReports([...allPatientsLaboratoryReports].reverse())
+    //     setAllpatientsLabReportsfilter(allPatientsLaboratoryReports)
+    //     setIsLoading(false)
 
-    }, [allPatientsLaboratoryReports])
+    // }, [allPatientsLaboratoryReports])
+
+    useEffect(() => {
+        setIsLoading(true)
+        let query = subcollectionRef
+            .orderBy('timestamp', 'desc')
+            .limit(perPageRows)
+        debouncedRetrieveData(query)
+        setIsLoading(false)
+        totalNumberofData()
+        return () => {
+            unsub()
+            unsubscribe();
+            console.log('unmounting');
+        };
+
+    }, [])
+
+
+
+    const totalNumberofData = async () => {
+
+        try {
+            let count = 0;
+
+            unsub = db
+                .collection('PatientslaboratoryReportsCount')
+                .where('hospitaluid', '==', hospitaluid)
+                .onSnapshot(async (snapshot) => {
+                    if (!snapshot.empty) {
+                        const newData = snapshot.docs[0].data();
+                        count = newData.count;
+                        setTotalNumData(count);
+                        console.log('res.data().count', count);
+                    } else {
+                        const snapshot = await subcollectionRef.get();
+                        const totalDataCount = snapshot.size;
+                        await addDataincollection('PatientslaboratoryReportsCount', { hospitaluid: hospitaluid, count: totalDataCount })
+                        console.log('No documents found in the snapshot.');
+                    }
+                });
+
+            // You can save the unsubscribe function if needed to stop listening later
+            // unsub();
+
+            // Optionally, you can use the unsubscribe function to stop listening to changes
+            // when you no longer need it, e.g., when the component unmounts.
+            // useEffect(() => {
+            //   return () => unsubscribe();
+            // }, []);
+
+        } catch (error) {
+            console.error('Error fetching data:', error);
+        }
+    };
+    const retrieveData = (query) => {
+        try {
+            // let initialSnapshot = true;
+            console.log('i am a lisitnor who alwas call');
+            setIsLoading(true)
+            unsubscribe = query.onSnapshot((snapshot) => {
+                // totalNumberofData()
+                const newData = [];
+                snapshot.forEach((doc) => {
+                    newData.push(doc.data());
+                });
+                // if (initialSnapshot && snapshot.metadata.hasPendingWrites) {
+                //     // Skip the initial snapshot with local, unsaved changes
+                //     initialSnapshot = false;
+                //     return;
+                // }
+                setAllpatientsLabReports(newData);
+                console.log('newData in patients lab reports-------------------------------------', newData);
+                if (snapshot.size > 0) {
+                    const lastVisibleDoc = snapshot.docs[snapshot.docs.length - 1];
+                    // console.log('lastVisibleDoc', lastVisibleDoc.data());
+                    setLastVisible(lastVisibleDoc);
+                    setFirstVisible(snapshot.docs[0]);
+                    // setTotalNumData(snapshot.size)
+                    setIsLoading(false)
+
+                    // console.log('setFirstVisible', snapshot.docs[0].data());
+                } else {
+                    setIsLoading(false)
+
+                    setLastVisible(null);
+                    setFirstVisible(null);
+                }
+            });
+
+            return () => {
+                unsubscribe();
+            };
+        } catch (error) {
+            setIsLoading(false)
+
+            console.error('Error retrieving data:', error);
+        }
+    };
+    const debouncedRetrieveData = debounce(retrieveData, 500);
 
     const handleClose = () => {
         formik.resetForm();
@@ -203,9 +315,7 @@ const Labreport = () => {
                 try {
                     // await addSingltObject('PatientslaboratoryReports', 'QmwQr1wDcFK6K04hKMYc', 'labReports', values)
                     await addDatainsubcollection('PatientslaboratoryReports', 'QmwQr1wDcFK6K04hKMYc', 'labReports', values)
-
-                    // await setData('PatientslaboratoryReports', 'QmwQr1wDcFK6K04hKMYc', 'labReports', report)
-                    dispatch(ADD_LABORATORY_REPORT(Values))
+                    await updateDataincollection('PatientslaboratoryReportsCount', { hospitaluid: hospitaluid, count: totalnumData + 1 })
                     action.resetForm()
                     clearForm()
                     setShow(false)
@@ -219,11 +329,7 @@ const Labreport = () => {
                 let findindex = report1.findIndex((item) => item.labreportuid === Values.labreportuid)
                 report1[findindex] = Values;
                 try {
-                    // await updateSingltObject('PatientslaboratoryReports', 'QmwQr1wDcFK6K04hKMYc', 'labReports', Values, 'labreportuid', 'hospitaluid')
                     await updateDatainSubcollection('PatientslaboratoryReports', 'QmwQr1wDcFK6K04hKMYc', 'labReports', Values, 'labreportuid', 'hospitaluid')
-
-                    // await setData('PatientslaboratoryReports', 'QmwQr1wDcFK6K04hKMYc', 'labReports', report1)
-                    dispatch(EDIT_LABORATORY_REPORT(Values))
                     action.resetForm()
                     clearForm()
                     setShow(false)
@@ -233,7 +339,6 @@ const Labreport = () => {
                     toast.error(error.message)
                     console.error(error.message);
                 }
-
             }
         }
     });
@@ -312,8 +417,7 @@ const Labreport = () => {
                         try {
                             // await deleteSingltObject('PatientslaboratoryReports', 'QmwQr1wDcFK6K04hKMYc', 'labReports', item1, 'labreportuid', 'hospitaluid')
                             await deleteDatainSubcollection('PatientslaboratoryReports', 'QmwQr1wDcFK6K04hKMYc', 'labReports', item1, 'labreportuid', 'hospitaluid')
-                            // await setData('PatientslaboratoryReports', 'QmwQr1wDcFK6K04hKMYc', 'labReports', report)
-                            dispatch(DELETE_LABORATORY_REPORT(item1))
+                            await updateDataincollection('PatientslaboratoryReportsCount', { hospitaluid: hospitaluid, count: totalnumData - 1 })
                             toast.success("Deleted Successfully.......");
                         } catch (error) {
                             toast.error(error.message)
@@ -414,18 +518,120 @@ const Labreport = () => {
     const selectDoctor = (item) => {
         values.drName = item.drName;
     }
+    const handlePageChange = async (page) => {
+        if (page < currentPage) {
+            setPrev(true)
+            prevPage()
+            setCurrentPage(page);
+        } else {
+            setPrev(false)
+            nextPage()
+            setCurrentPage(page);
+        }
+    };
+    const requestSearch = () => {
 
+        if (searchString.length) {
+            var query = subcollectionRef
+            if (searchBy === 'Name') {
+                query = query
+                    .where('pName', '>=', searchString).
+                    where('pName', '<=', searchString + "\uf8ff")
+            } else if (searchBy === 'MobileNo') {
+                query = query
+                    .where('reportName', '>=', searchString)
+                    .where('reportName', '<=', searchString + "\uf8ff");
+            }
+
+
+            query = query.limit(perPageRows);
+            retrieveData(query)
+            query.get().then(snapshot => {
+                // console.log(snapshot);
+                const totalDataCount = snapshot.size;
+                setTotalNumData(totalDataCount)
+                console.log('Total data count:', totalDataCount);
+            }).catch(error => {
+                console.error('Error retrieving data:', error);
+            });
+        }
+
+
+
+
+    }
+
+    const onSearchInput = (value) => {
+        setSearchString(value)
+        if (!value.length) {
+            setIsLoading(true)
+            setSearchString('')
+
+            let query = subcollectionRef
+                .orderBy('timestamp', 'desc')
+                .limit(perPageRows)
+            retrieveData(query)
+            setIsLoading(false)
+            totalNumberofData()
+        }
+    }
+    const nextPage = async () => {
+        setIsLoading(true)
+        let query = subcollectionRef
+            .orderBy('timestamp', 'desc')
+            .limit(perPageRows).startAfter(lastVisible);
+        retrieveData(query)
+        setIsLoading(false)
+
+    };
+    const prevPage = async () => {
+        setIsLoading(true)
+        let query = subcollectionRef
+            .orderBy('timestamp', 'desc')
+            .limit(perPageRows)
+            .endBefore(firstVisible).limitToLast(perPageRows);
+        retrieveData(query)
+        setIsLoading(false)
+
+    }
     return (
         <>
             {isLoading ? <Loaderspinner /> :
                 <>
                     <div style={{ display: 'none' }}>  {printContent && <PrintButton content={printContent} />}</div>
 
-                    <CommanTable
+                    {/* <CommanTable
                         title={"Laboratory Reports"}
                         columns={columns}
                         data={allpatientsLabReports}
                         action={<button className='btn btn-primary' onClick={handleShow}><span>  <BiPlus size={25} /></span></button>}
+                    /> */}
+                    <DataTable
+                        title={"Laboratory Reports"}
+                        columns={columns}
+                        data={allpatientsLabReports}
+                        pagination={true}
+                        fixedHeader={true}
+                        noHeader={false}
+                        persistTableHead
+                        actions={<>
+                            <span className='d-flex w-100 justify-content-end'>
+                                <select className="form-control mr-2" style={{ height: '40px', fontSize: '18px', width: '15%', marginRight: 10 }} name='searchBy' value={searchBy} onChange={(e) => setSearchBy(e.target.value)}>
+                                    <option selected >Search by</option>
+                                    <option value='Name' selected>Patient Name</option>
+                                    <option value='MobileNo' selected>Report Name</option>
+                                </select>
+                                <input type='search' placeholder='search' className='w-25 form-control' value={searchString} onChange={(e) => { onSearchInput(e.target.value) }} />
+                                <button className='btn btn-primary' style={{ width: '10%', marginLeft: 10 }} disabled={!searchBy || !searchString} onClick={requestSearch}>Search</button>
+                            </span>
+                            <button className='btn btn-primary' onClick={() => handleShow()}><span><BiPlus size={25} /></span></button>
+                        </>
+
+                        }
+                        highlightOnHover
+                        paginationServer={true}
+                        paginationTotalRows={totalnumData}
+                        onChangePage={(e) => handlePageChange(e)}
                     />
                 </>
 
@@ -486,7 +692,7 @@ const Labreport = () => {
                                     }
                                 </div>
                                 <div className='col-lg-3'>
-                                    {update || values.pMobileNo ?
+                                    {update || values.reportName ?
                                         <div className="form-group" style={{ marginTop: '20px' }}>
                                             <label>Mobile No<b style={{ color: 'red' }}>*</b>:</label>
                                             <input type="text" className="form-control" placeholder="Enter patient Mobile No" name='pMobileNo' readOnly value={values.pMobileNo} onChange={handleChange} onBlur={handleBlur} />

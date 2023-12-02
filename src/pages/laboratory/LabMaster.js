@@ -9,7 +9,7 @@ import { MdEdit } from 'react-icons/md'
 import { useDispatch, useSelector } from 'react-redux';
 import { AiFillDelete } from 'react-icons/ai'
 import { ImCross } from 'react-icons/im'
-import { addDatainsubcollection, addSingltObject, deleteDatainSubcollection, deleteSingltObject, filDatainsubcollection, setData, updateDatainSubcollection, updateSingltObject } from 'src/services/firebasedb';
+import { addDatainsubcollection, deleteDatainSubcollectionLabparameter, addSingltObject, deleteDatainSubcollection, deleteSingltObject, filDatainsubcollection, setData, updateDatainSubcollection, updateSingltObject } from 'src/services/firebasedb';
 import CommanTable from 'src/comman/table/CommanTable';
 import { confirmAlert } from 'react-confirm-alert';
 import { toast } from 'react-toastify';
@@ -47,8 +47,8 @@ const LabMaster = () => {
         { name: 'Price', selector: row => row.reportPrice, sortable: true },
         // { name: 'Price', selector: row => row.priceperNight, sortable: true },
         {
-            name: 'Action', cell: row => <span><button onClick={() => editRooms(row)} style={{ color: 'orange', border: 'none' }}><MdEdit size={25} /></button>
-                <button onClick={() => deleteRooms(row)} style={{ color: 'red', border: 'none' }} ><AiFillDelete size={25} /></button>
+            name: 'Action', cell: row => <span><button onClick={() => editLabparameter(row)} style={{ color: 'orange', border: 'none' }}><MdEdit size={25} /></button>
+                <button onClick={() => deleteLabparameter(row)} style={{ color: 'red', border: 'none' }} ><AiFillDelete size={25} /></button>
             </span>
         }
     ]
@@ -134,7 +134,7 @@ const LabMaster = () => {
 
         });
     };
-    const editRooms = (item) => {
+    const editLabparameter = (item) => {
         // filDatainsubcollection(allParameters, 'LaboratoryParameters', 'CyBGA7dh7brcm7UlFyft', 'labParameters')
         values.reportuid = item.reportuid;
         values.reportName = item.reportName;
@@ -146,7 +146,7 @@ const LabMaster = () => {
         setUpdate(true)
     }
 
-    const deleteRooms = async (item1) => {
+    const deleteLabparameter = async (item1) => {
         confirmAlert({
             title: 'Confirm to Delete',
             message: 'Are you sure to delete this.',
@@ -157,7 +157,7 @@ const LabMaster = () => {
                         let parameter = parametersFilter.filter((item) => item.reportuid !== item1.reportuid)
                         try {
                             // await deleteSingltObject('LaboratoryParameters', 'CyBGA7dh7brcm7UlFyft', 'labParameters', item1, 'reportuid', 'hospitaluid')
-                            await deleteDatainSubcollection('LaboratoryParameters', 'CyBGA7dh7brcm7UlFyft', 'labParameters', item1, 'reportuid', 'hospitaluid')
+                            await deleteDatainSubcollectionLabparameter('LaboratoryParameters', 'CyBGA7dh7brcm7UlFyft', 'labParameters', item1, 'reportuid', 'hospitaluid')
                             // await setData('LaboratoryParameters', 'CyBGA7dh7brcm7UlFyft', 'labParameters', parameter)
                             // dispatch(DELETE_PARAMETER(item1))
                             toast.success("Deleted Successfully.......");
@@ -173,26 +173,6 @@ const LabMaster = () => {
             ]
         });
     }
-    // const unitrequired = (e) => {
-    //     console.log('uniit required', e);
-    //     // values.isUnitRequired = e
-    //     if (e) {
-    //         values.parameters = [
-    //             {
-    //                 parameterName: '',
-    //                 unit: '',
-    //                 normalRange: '',
-    //             }
-    //         ]
-    //     } else {
-    //         values.parameters = [
-    //             {
-    //                 parameterName: '',
-    //                 normalRange: '',
-    //             }
-    //         ]
-    //     }
-    // }
 
     return <>
         {isLoading ? <Loaderspinner /> :

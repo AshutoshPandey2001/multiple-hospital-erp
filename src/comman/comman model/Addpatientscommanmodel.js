@@ -186,7 +186,26 @@ const Addpatientscommanmodel = ({ show, handleClose, update, data }) => {
                         </div>
                         <div className="form-group" style={{ marginTop: '20px' }}>
                             <label>Age<b style={{ color: 'red' }}>*</b>:</label>
-                            <input type="number" className="form-control" placeholder="Enter patient age" name='page' value={values.page} onChange={handleChange} onBlur={handleBlur} />
+                            <input type="text" className="form-control" placeholder="Enter patient age"
+                                onKeyDown={(e) => {
+                                    // Prevent non-numeric inputs
+                                    if (
+                                        !(
+                                            (e.keyCode >= 48 && e.keyCode <= 57) || // 0-9
+                                            (e.keyCode >= 96 && e.keyCode <= 105) || // Numpad 0-9
+                                            e.keyCode === 8 || // Backspace
+                                            e.keyCode === 9 || // Tab
+                                            e.keyCode === 37 || // Left arrow
+                                            e.keyCode === 39 || // Right arrow
+                                            e.keyCode === 190 || // Period (.)
+                                            e.keyCode === 110 // Numpad period (.)
+                                        )
+                                    ) {
+                                        e.preventDefault();
+                                    }
+                                }}
+
+                                name='page' value={values.page} onChange={handleChange} onBlur={handleBlur} />
                             {errors.page && touched.page ? (<p style={{ color: 'red' }}>*{errors.page}</p>) : null}
                         </div>
                         <div className="form-group" style={{ marginTop: '20px' }}>

@@ -76,16 +76,25 @@ const PrintComponent = ({ data }) => {
                             <td colSpan={4}>Sub Total</td>
                             <td>{state.allMedTotalprice.toFixed(2)}</td>
                         </tr>
-                        <tr>
-                            <td colSpan={3}>CGST%</td>
-                            <td>{state.cgstValue}%</td>
-                            <td>{state.cgstAmount.toFixed(2)}</td>
-                        </tr>
-                        <tr>
-                            <td colSpan={3}>SGST%</td>
-                            <td>{state.sgstValue}%</td>
-                            <td>{state.sgstAmount.toFixed(2)}</td>
-                        </tr>
+                        {
+                            state.cgstValue === 0 ?
+                                null
+                                : <tr>
+                                    <td colSpan={3}>CGST%</td>
+                                    <td>{state.cgstValue}%</td>
+                                    <td>{state.cgstAmount.toFixed(2)}</td>
+                                </tr>
+                        }
+
+                        {
+                            state.sgstValue === 0 ?
+                                null
+                                : <tr>
+                                    <td colSpan={3}>SGST%</td>
+                                    <td>{state.sgstValue}%</td>
+                                    <td>{state.sgstAmount.toFixed(2)}</td>
+                                </tr>
+                        }
 
                     </tbody>
                 </Table>
@@ -294,16 +303,27 @@ const medicineInvoice = () => {
                                         <td colSpan={4}>Sub Total</td>
                                         <td>{state.allMedTotalprice.toFixed(2)}</td>
                                     </tr>
-                                    <tr>
-                                        <td colSpan={3}>CGST%</td>
-                                        <td>{cgstValue}%</td>
-                                        <td>{cgstAmount.toFixed(2)}</td>
-                                    </tr>
-                                    <tr>
-                                        <td colSpan={3}>SGST%</td>
-                                        <td>{sgstValue}%</td>
-                                        <td>{sgstAmount.toFixed(2)}</td>
-                                    </tr>
+                                    {
+                                        cgstValue === 0 ?
+                                            null
+                                            : <tr>
+                                                <td colSpan={3}>CGST%</td>
+                                                <td>{cgstValue}%</td>
+                                                <td>{cgstAmount.toFixed(2)}</td>
+                                            </tr>
+                                    }
+
+                                    {
+                                        sgstValue === 0 ?
+                                            null
+                                            : <tr>
+                                                <td colSpan={3}>SGST%</td>
+                                                <td>{sgstValue}%</td>
+                                                <td>{sgstAmount.toFixed(2)}</td>
+                                            </tr>
+                                    }
+
+
 
                                 </tbody>
                             </Table>

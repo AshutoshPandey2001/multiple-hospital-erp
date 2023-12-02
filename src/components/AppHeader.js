@@ -343,7 +343,7 @@ const AppHeader = () => {
 
   if (userType === 'Patient') {
     return (
-      <CHeader position="sticky" className="mb-4" style={{ backgroundColor: '#fff' }}>
+      <CHeader position="sticky" style={{ backgroundColor: '#fff' }}>
         <CContainer fluid >
           <CHeaderNav>
             <h5 style={{ color: '#5C607B' }}>Hospital Erp</h5>
@@ -364,7 +364,7 @@ const AppHeader = () => {
         {isLoading ? <Loaderspinner /> : <>
           {
             selectedMenu === 'header' ?
-              <CHeader position="sticky" className="mb-4" style={{ backgroundColor: '#fff' }}>
+              <CHeader position="sticky" style={{ backgroundColor: '#fff' }}>
                 <CContainer fluid >
                   <div className="ps-1">
                     <NavLink to="/" ><img src={hospitslLogo ? hospitslLogo : hospitalimg} className="sidebar-brand-full" width="80px" height="70px" alt="hospital_logo" /></NavLink>
@@ -458,7 +458,7 @@ const AppHeader = () => {
                   <AppBreadcrumb />
                 </CContainer>
               </CHeader> :
-              <CHeader position="sticky" className="mb-4" style={{ backgroundColor: '#fff' }}>
+              <CHeader position="sticky" style={{ backgroundColor: '#fff' }}>
                 <CContainer fluid >
                   <CHeaderToggler
                     className="ps-1"

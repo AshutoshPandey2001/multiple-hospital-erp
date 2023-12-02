@@ -197,7 +197,6 @@ const Charges = () => {
                     columns={columns}
                     data={charges}
                     action={userpermissions?.code.includes('ADD_CHARGES') ? <> <button className='btn btn-primary' onClick={() => handleShow()}><span>  <BiPlus size={25} /></span></button></> : null}
-
                 />
             </div>
         }

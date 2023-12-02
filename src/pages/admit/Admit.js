@@ -1061,19 +1061,32 @@ const Admit = () => {
                     fixedHeader={true}
                     noHeader={false}
                     persistTableHead
-                    actions={userpermissions?.code.includes('ADD_INDOOR') ? <button className='btn btn-primary' onClick={() => handleShow()}><span>  <BiPlus size={25} /></span></button> : null}
+                    actions={<>
+                        <span className='d-flex w-100 justify-content-end'>
+                            <select className="form-control mr-2" style={{ height: '40px', fontSize: '18px', width: '15%', marginRight: 10 }} name='searchBy' value={searchBy} onChange={(e) => setSearchBy(e.target.value)}>
+                                <option selected >Search by</option>
+                                <option value='Name' selected>Patient Name</option>
+                                <option value='MobileNo' selected>Mobile No</option>
+                            </select>
+                            <input type='search' placeholder='search' className='w-25 form-control' value={searchString} onChange={(e) => { onSearchInput(e.target.value) }} />
+                            <button className='btn btn-primary' style={{ width: '10%', marginLeft: 10 }} disabled={!searchBy || !searchString} onClick={requestSearch}>Search</button>
+                        </span>
+                        {userpermissions?.code.includes('ADD_INDOOR') ? <button className='btn btn-primary' onClick={() => handleShow()}><span>  <BiPlus size={25} /></span></button> : null
+                        }
+                    </>
+                    }
                     highlightOnHover
                     paginationServer={true}
-                    subHeader={<div className='d-flex' style={{ justifyContent: 'space-between' }}></div>}
-                    subHeaderComponent={<span className='d-flex w-100 justify-content-end'>
-                        <select className="form-control mr-2" style={{ height: '40px', fontSize: '18px', width: '15%', marginRight: 10 }} name='searchBy' value={searchBy} onChange={(e) => setSearchBy(e.target.value)}>
-                            <option selected >Search by</option>
-                            <option value='Name' selected>Patient Name</option>
-                            <option value='MobileNo' selected>Mobile No</option>
-                        </select>
-                        <input type='search' placeholder='search' className='w-25 form-control' value={searchString} onChange={(e) => { onSearchInput(e.target.value) }} />
-                        <button className='btn btn-primary' style={{ width: '10%', marginLeft: 10 }} disabled={!searchBy || !searchString} onClick={requestSearch}>Search</button>
-                    </span>}
+                    // subHeader={<div className='d-flex' style={{ justifyContent: 'space-between' }}></div>}
+                    // subHeaderComponent={<span className='d-flex w-100 justify-content-end'>
+                    //     <select className="form-control mr-2" style={{ height: '40px', fontSize: '18px', width: '15%', marginRight: 10 }} name='searchBy' value={searchBy} onChange={(e) => setSearchBy(e.target.value)}>
+                    //         <option selected >Search by</option>
+                    //         <option value='Name' selected>Patient Name</option>
+                    //         <option value='MobileNo' selected>Mobile No</option>
+                    //     </select>
+                    //     <input type='search' placeholder='search' className='w-25 form-control' value={searchString} onChange={(e) => { onSearchInput(e.target.value) }} />
+                    //     <button className='btn btn-primary' style={{ width: '10%', marginLeft: 10 }} disabled={!searchBy || !searchString} onClick={requestSearch}>Search</button>
+                    // </span>}
                     paginationTotalRows={totalnumData}
                     onChangePage={(e) => handlePageChange(e)}
                 />

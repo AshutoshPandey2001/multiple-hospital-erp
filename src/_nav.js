@@ -121,7 +121,6 @@ const _nav = [
     to: '/medical',
     icon: <CIcon icon={cilMedicalCross} customClassName="nav-icon" />,
     key: 'MEDICAL',
-
     items: [
       {
         component: CNavItem,
