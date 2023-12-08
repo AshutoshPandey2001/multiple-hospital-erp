@@ -600,12 +600,6 @@ const Labreport = () => {
                 <>
                     <div style={{ display: 'none' }}>  {printContent && <PrintButton content={printContent} />}</div>
 
-                    {/* <CommanTable
-                        title={"Laboratory Reports"}
-                        columns={columns}
-                        data={allpatientsLabReports}
-                        action={<button className='btn btn-primary' onClick={handleShow}><span>  <BiPlus size={25} /></span></button>}
-                    /> */}
                     <DataTable
                         title={"Laboratory Reports"}
                         columns={columns}
@@ -626,7 +620,6 @@ const Labreport = () => {
                             </span>
                             <button className='btn btn-primary' onClick={() => handleShow()}><span><BiPlus size={25} /></span></button>
                         </>
-
                         }
                         highlightOnHover
                         paginationServer={true}
@@ -816,9 +809,8 @@ const Labreport = () => {
                                         <label >Patient Age<b style={{ color: 'red' }}>*</b>:</label>
                                         <input name='page'
                                             placeholder="Enter Patient Age"
-                                            type="number" className="form-control" onChange={handleChange} defaultValue={values.page} readOnly />
+                                            type="text" className="form-control" onChange={handleChange} defaultValue={values.page} readOnly />
                                         {errors.page && touched.page ? (<p style={{ color: 'red' }}>*{errors.page}</p>) : null}
-
                                     </div>
                                 </div>
                             </div>

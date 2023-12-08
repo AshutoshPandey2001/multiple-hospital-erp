@@ -34,7 +34,7 @@ import { db } from 'src/firebaseconfig';
 import { debounce } from 'lodash';
 import DataTable from 'react-data-table-component';
 import { selectreturnmedicinerprevBillNo } from 'src/redux/slice/prevBillNoSlice';
-
+import PrintButtonMedical from 'src/comman/printpageComponents/PrintButtonMedical';
 const PrintComponent = ({ data }) => {
     const state = data.data1
     return (
@@ -67,9 +67,12 @@ const PrintComponent = ({ data }) => {
                     <thead>
                         <tr>
                             <th>#</th>
+                            <th>Batch No.</th>
                             <th>Medicine Name</th>
+                            <th>Mfrs. Name</th>
+                            <th>Exp. Date</th>
                             <th>Rate</th>
-                            <th>Units</th>
+                            <th>Qty</th>
                             <th>Total</th>
                         </tr>
                     </thead>
@@ -79,7 +82,10 @@ const PrintComponent = ({ data }) => {
                                 return <>
                                     <tr key={i}>
                                         <td>{i + 1}</td>
+                                        <td>{medicine.batchNo}</td>
                                         <td>{medicine.medname}</td>
+                                        <td>{medicine.mfrsName}</td>
+                                        <td>{medicine.expireDate}</td>
                                         <td>{medicine.medPrice.toFixed(2)}</td>
                                         <td>{Number(medicine.medQty).toFixed(2)}</td>
                                         <td>{medicine.totalmedPrice.toFixed(2)}</td>
@@ -121,8 +127,11 @@ let initalValues = {
             medQty: '',
             medPrice: '',
             meduid: '',
-            totalmedPrice: ''
-        },
+            totalmedPrice: '',
+            batchNo: '',
+            expireDate: '',
+            mfrsName: '',
+        }
     ],
     allMedTotalprice: '',
     returnuid: '',
@@ -172,7 +181,7 @@ const MedicineReturn = () => {
         { name: 'Patient Name', selector: row => row.pName, sortable: true },
         // { name: 'Address', selector: row => row.pAddress },
         { name: 'Mobile No', selector: row => row.pMobileNo },
-        { name: 'Total Amount Return', selector: row => row.allMedTotalprice },
+        { name: 'Total Refund Amount', selector: row => row.allMedTotalprice },
         {
             name: 'Action', cell: row => <span>
                 {/* <button onClick={() => editPatientDetails(row)} style={{ color: 'orange', border: 'none' }}><MdEdit size={25} /></button> */}
@@ -377,8 +386,11 @@ const MedicineReturn = () => {
                     medQty: '',
                     medPrice: '',
                     meduid: '',
-                    totalmedPrice: ''
-                },
+                    totalmedPrice: '',
+                    batchNo: '',
+                    expireDate: '',
+                    mfrsName: '',
+                }
             ],
             allMedTotalprice: '',
             returnuid: '',
@@ -477,6 +489,9 @@ const MedicineReturn = () => {
         med.medname = item.medicineName;
         med.medPrice = item.medicinePrice;
         med.meduid = item.medicineuid;
+        med.expireDate = ddMMyyyy(item.expireDate);
+        med.mfrsName = item.mfrsName;
+        med.batchNo = item.batchNumber
         setStock(item.availableStock)
         setAutofocus(!autofocus)
     }
@@ -597,7 +612,7 @@ const MedicineReturn = () => {
 
         {isLoading ? <Loaderspinner /> :
             <>
-                <div style={{ display: 'none' }}>  {printContent && <PrintButton content={printContent} />}</div>
+                <div style={{ display: 'none' }}>  {printContent && <PrintButtonMedical content={printContent} />}</div>
                 <DataTable
                     title={"Return Medicines invoice"}
                     columns={columns}
@@ -887,7 +902,7 @@ const MedicineReturn = () => {
                                         <button
                                             type="button"
                                             className='btn btn-success'
-                                            onClick={() => push({ medname: '', medPrice: '', medQty: '', meduid: '', totalmedPrice: '' })}
+                                            onClick={() => push({ medname: '', medPrice: '', medQty: '', meduid: '', totalmedPrice: '', batchNo: '', mfrsName: '', expireDate: '' })}
                                         >
                                             <BiPlus size={25} />  Add Medicine
                                         </button>
@@ -934,7 +949,7 @@ const MedicineReturn = () => {
                     {update ? 'Update' : 'Submit'}
                 </Button>
             </Modal.Footer>
-        </Modal>
+        </Modal >
     </>
 }
 

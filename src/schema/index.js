@@ -35,7 +35,7 @@ export const addpatientsSchema = Yup.object({
 export const opdformSchema = Yup.object({
     pid: Yup.string().required("Patient id is Required"),
     pName: Yup.string().required("Patient Name is Required"),
-    page: Yup.number().required("Patient Age is Required"),
+    page: Yup.string().required("Patient Age is Required"),
     pGender: Yup.string().required("Gendre is Required"),
     pAddress: Yup.string().required("Address is Required"),
     // pMobileNo: Yup.string().required("Patient Mobile No is Required"),
@@ -49,7 +49,7 @@ export const opdformSchema = Yup.object({
 export const admitformSchema = Yup.object({
     pid: Yup.string().required("Patient id is Required"),
     pName: Yup.string().required("Patient Name is Required"),
-    page: Yup.number().required("Patient Age is Required"),
+    page: Yup.string().required("Patient Age is Required"),
     pGender: Yup.string().required("Gendre is Required"),
     pAddress: Yup.string().required("Address is Required"),
     // pMobileNo: Yup.string().required("Patient Mobile No is Required"),
@@ -84,8 +84,10 @@ export const medicineSchema = Yup.object({
     medicineuid: Yup.number().required("Medicine UID is Required"),
     medicineName: Yup.string().required("Medicine Name is Required"),
     availableStock: Yup.number().required("Stock Required"),
-    medicineFormula: Yup.string().required("Medicine formula is Required"),
+    batchNumber: Yup.string().required("Batch Number is Required"),
     medicinePrice: Yup.number().required("Price is Reuired"),
+    mfrsName: Yup.string().required("Manufacturer Name is Required"),
+    expireDate: Yup.string().required("Expire date is Required"),
 
 })
 
@@ -147,7 +149,7 @@ export const drSchema = Yup.object({
 export const dischargeSchema = Yup.object({
     pid: Yup.string().required("Patient id is Required"),
     pName: Yup.string().required("Patient Name is Required"),
-    page: Yup.number().required("Patient Age is Required"),
+    page: Yup.string().required("Patient Age is Required"),
     // pMobileNo: Yup.string().required("Patient Mobile No is Required"),
     drName: Yup.string().required("Doctor Name is Required"),
     admitDate: Yup.date().required("Admit Date is Required"),

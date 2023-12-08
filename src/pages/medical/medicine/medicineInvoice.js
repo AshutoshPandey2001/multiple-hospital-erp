@@ -20,6 +20,7 @@ import PrintButton from 'src/comman/printpageComponents/PrintButton';
 import { selectUserName } from 'src/redux/slice/authSlice';
 import { selectAlltax } from 'src/redux/slice/taxSlice';
 import { selectmedicinerprevBillNo } from 'src/redux/slice/prevBillNoSlice';
+import PrintButtonMedical from 'src/comman/printpageComponents/PrintButtonMedical';
 
 const PrintComponent = ({ data }) => {
     const state = data.data1
@@ -52,9 +53,12 @@ const PrintComponent = ({ data }) => {
                     <thead>
                         <tr>
                             <th>#</th>
+                            <th>Batch No.</th>
                             <th>Medicine Name</th>
+                            <th>Mfrs. Name</th>
+                            <th>Exp. Date</th>
                             <th>Rate</th>
-                            <th>Units</th>
+                            <th>Qty</th>
                             <th>Total</th>
                         </tr>
                     </thead>
@@ -64,7 +68,10 @@ const PrintComponent = ({ data }) => {
                                 return <>
                                     <tr key={i}>
                                         <td>{i + 1}</td>
+                                        <td>{medicine.batchNo}</td>
                                         <td>{medicine.medname}</td>
+                                        <td>{medicine.mfrsName}</td>
+                                        <td>{medicine.expireDate}</td>
                                         <td>{medicine.medPrice.toFixed(2)}</td>
                                         <td>{Number(medicine.medQty).toFixed(2)}</td>
                                         <td>{medicine.totalmedPrice.toFixed(2)}</td>
@@ -73,14 +80,14 @@ const PrintComponent = ({ data }) => {
                             })
                         }
                         <tr>
-                            <td colSpan={4}>Sub Total</td>
+                            <td colSpan={7}>Sub Total</td>
                             <td>{state.allMedTotalprice.toFixed(2)}</td>
                         </tr>
                         {
                             state.cgstValue === 0 ?
                                 null
                                 : <tr>
-                                    <td colSpan={3}>CGST%</td>
+                                    <td colSpan={6}>CGST%</td>
                                     <td>{state.cgstValue}%</td>
                                     <td>{state.cgstAmount.toFixed(2)}</td>
                                 </tr>
@@ -90,7 +97,7 @@ const PrintComponent = ({ data }) => {
                             state.sgstValue === 0 ?
                                 null
                                 : <tr>
-                                    <td colSpan={3}>SGST%</td>
+                                    <td colSpan={6}>SGST%</td>
                                     <td>{state.sgstValue}%</td>
                                     <td>{state.sgstAmount.toFixed(2)}</td>
                                 </tr>
@@ -248,7 +255,7 @@ const medicineInvoice = () => {
     return <>
         {isLoading ? <Loaderspinner /> :
             <>
-                <div style={{ display: 'none' }}>  {printContent && <PrintButton content={printContent} />}</div>
+                <div style={{ display: 'none' }}>  {printContent && <PrintButtonMedical content={printContent} />}</div>
                 <div className='d-flex justify-content-center'>
                     <div style={{ width: '600px', height: 'auto', marginLeft: '50px' }} >
                         <b><hr></hr></b>
@@ -279,9 +286,12 @@ const medicineInvoice = () => {
                                 <thead>
                                     <tr>
                                         <th>#</th>
+                                        <th>Batch No.</th>
                                         <th>Medicine Name</th>
+                                        <th>Mfrs. Name</th>
+                                        <th>Exp. Date</th>
                                         <th>Rate</th>
-                                        <th>Units</th>
+                                        <th>Qty</th>
                                         <th>Total</th>
                                     </tr>
                                 </thead>
@@ -291,7 +301,10 @@ const medicineInvoice = () => {
                                             return <>
                                                 <tr key={i}>
                                                     <td>{i + 1}</td>
+                                                    <td>{medicine.batchNo}</td>
                                                     <td>{medicine.medname}</td>
+                                                    <td>{medicine.mfrsName}</td>
+                                                    <td>{medicine.expireDate}</td>
                                                     <td>{medicine.medPrice.toFixed(2)}</td>
                                                     <td>{Number(medicine.medQty).toFixed(2)}</td>
                                                     <td>{medicine.totalmedPrice.toFixed(2)}</td>
@@ -300,14 +313,14 @@ const medicineInvoice = () => {
                                         })
                                     }
                                     <tr>
-                                        <td colSpan={4}>Sub Total</td>
+                                        <td colSpan={7}>Sub Total</td>
                                         <td>{state.allMedTotalprice.toFixed(2)}</td>
                                     </tr>
                                     {
                                         cgstValue === 0 ?
                                             null
                                             : <tr>
-                                                <td colSpan={3}>CGST%</td>
+                                                <td colSpan={6}>CGST%</td>
                                                 <td>{cgstValue}%</td>
                                                 <td>{cgstAmount.toFixed(2)}</td>
                                             </tr>
@@ -317,7 +330,7 @@ const medicineInvoice = () => {
                                         sgstValue === 0 ?
                                             null
                                             : <tr>
-                                                <td colSpan={3}>SGST%</td>
+                                                <td colSpan={6}>SGST%</td>
                                                 <td>{sgstValue}%</td>
                                                 <td>{sgstAmount.toFixed(2)}</td>
                                             </tr>

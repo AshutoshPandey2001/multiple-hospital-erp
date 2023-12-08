@@ -18,8 +18,8 @@ const initalValues = {
     pid: '',
     pName: '',
     page: '',
-    age:'',
-    duration:'Year',
+    age: '',
+    duration: 'Years',
     pGender: '',
     pAddress: '',
     pMobileNo: '',
@@ -37,7 +37,7 @@ const Addpatientscommanmodel = ({ show, handleClose, update, data }) => {
     const lastPatientData = useSelector(selectlastPatientData)
     const parentDocRef = db.collection('Patients').doc('fBoxFLrzXexT8WNBzGGh');
     const subcollectionRef = parentDocRef.collection('patients').where('hospitaluid', '==', hospitaluid)
-    const [duration,setDuration]=useState('Year')
+    const [duration, setDuration] = useState('Year')
     let unsubscribe = undefined
     // useEffect(() => {
     //     console.log('change last p Data', lastPatientData);
@@ -93,8 +93,8 @@ const Addpatientscommanmodel = ({ show, handleClose, update, data }) => {
         onSubmit: async (Values, action) => {
             let timestamp = new Date().getTime();
             let patient1 = [...patientsFilter]
-            values.page =values.age+" "+ values.duration
-           
+            values.page = values.age + " " + values.duration
+            console.log(values, 'values');
             if (!update) {
                 values.pid = Math.floor(Math.random() + timestamp)
                 values.hospitaluid = hospitaluid
@@ -127,6 +127,8 @@ const Addpatientscommanmodel = ({ show, handleClose, update, data }) => {
                 let findindex = patient1.findIndex((item) => item.pid === Values.pid);
                 patient1[findindex] = Values;
                 try {
+                    console.log(values, 'values');
+
                     await updateDatainSubcollectionPatients('Patients', 'fBoxFLrzXexT8WNBzGGh', 'patients', Values, 'pid', 'hospitaluid')
                     // .then((updatedData) => {
                     //     dispatch(FILL_PATIENTS(updatedData))
@@ -135,7 +137,7 @@ const Addpatientscommanmodel = ({ show, handleClose, update, data }) => {
                     //     .catch((error) => {
                     //         console.error('Error updating data:', error);
                     //     });
-                    // dispatch(EDIT_PATIENTS(Values))
+                    dispatch(EDIT_PATIENTS(Values))
                     action.resetForm()
                     handelClear()
                     toast.success("Updated Successfully.......");
@@ -150,14 +152,14 @@ const Addpatientscommanmodel = ({ show, handleClose, update, data }) => {
     const { values, errors, touched, handleBlur, handleChange, handleSubmit } = formik
     const patchData = () => {
         if (update) {
-            console.log(data,'data');
+            console.log(data, 'data');
             formik.setFieldValue('pid', data.pid);
             formik.setFieldValue('pName', data.pName);
             formik.setFieldValue('pMobileNo', data.pMobileNo);
             formik.setFieldValue('pGender', data.pGender);
             formik.setFieldValue('page', data.page);
-            formik.setFieldValue('age', data.age ?data.age:data.page);
-            formik.setFieldValue('duration', data.duration?data.duration:'Year');
+            formik.setFieldValue('age', data.age ? data.age : data.page);
+            formik.setFieldValue('duration', data.duration ? data.duration : 'Years');
             formik.setFieldValue('pAddress', data.pAddress);
             formik.setFieldValue('drName', data.drName);
             formik.setFieldValue('hospitaluid', data.hospitaluid);
@@ -173,8 +175,8 @@ const Addpatientscommanmodel = ({ show, handleClose, update, data }) => {
             drName: '',
             pMobileNo: '',
             hospitaluid: '',
-            age:'',
-            duration:'Year',
+            age: '',
+            duration: 'Years',
         })
         formik.resetForm();
         handleClose()
@@ -195,39 +197,39 @@ const Addpatientscommanmodel = ({ show, handleClose, update, data }) => {
                         <div className='row'>
                             <div className='col-lg-6'>
 
-                        <div className="form-group" style={{ marginTop: '20px' }}>
-                            <label>Age<b style={{ color: 'red' }}>*</b>:</label>
-                            <input type="text" className="form-control" placeholder="Enter patient age"
-                                onKeyDown={(e) => {
-                                    // Prevent non-numeric inputs
-                                    if (
-                                        !(
-                                            (e.keyCode >= 48 && e.keyCode <= 57) || // 0-9
-                                            (e.keyCode >= 96 && e.keyCode <= 105) || // Numpad 0-9
-                                            e.keyCode === 8 || // Backspace
-                                            e.keyCode === 9 || // Tab
-                                            e.keyCode === 37 || // Left arrow
-                                            e.keyCode === 39  // Right arrow                                         
-                                        )
-                                    ) {
-                                        e.preventDefault();
-                                    }
-                                }}
+                                <div className="form-group" style={{ marginTop: '20px' }}>
+                                    <label>Age<b style={{ color: 'red' }}>*</b>:</label>
+                                    <input type="text" className="form-control" placeholder="Enter patient age"
+                                        onKeyDown={(e) => {
+                                            // Prevent non-numeric inputs
+                                            if (
+                                                !(
+                                                    (e.keyCode >= 48 && e.keyCode <= 57) || // 0-9
+                                                    (e.keyCode >= 96 && e.keyCode <= 105) || // Numpad 0-9
+                                                    e.keyCode === 8 || // Backspace
+                                                    e.keyCode === 9 || // Tab
+                                                    e.keyCode === 37 || // Left arrow
+                                                    e.keyCode === 39  // Right arrow                                         
+                                                )
+                                            ) {
+                                                e.preventDefault();
+                                            }
+                                        }}
 
-                                name='age' value={values.age} onChange={handleChange} onBlur={handleBlur} />
-                            {errors.age && touched.age ? (<p style={{ color: 'red' }}>*{errors.age}</p>) : null}
-                        </div>
+                                        name='age' value={values.age} onChange={handleChange} onBlur={handleBlur} />
+                                    {errors.age && touched.age ? (<p style={{ color: 'red' }}>*{errors.age}</p>) : null}
+                                </div>
                             </div>
                             <div className='col-lg-6'>
 
-                        <div className="form-group" style={{ marginTop: '20px' }}>
-                            <label>Duration<b style={{ color: 'red' }}>*</b>:</label>
-                            <select className="form-control" style={{ height: '40px', fontSize: '18px' }} name='duration' defaultValue={values.duration} onChange={handleChange}>
-                                        <option value='Year'>Year</option>
-                                        <option value='Month'>Month</option>
+                                <div className="form-group" style={{ marginTop: '20px' }}>
+                                    <label>Duration:</label>
+                                    <select className="form-control" style={{ height: '40px', fontSize: '18px' }} name='duration' defaultValue={values.duration} onChange={handleChange}>
+                                        <option value='Years'>Years</option>
+                                        <option value='Months'>Months</option>
                                         <option value='Days'>Days</option>
                                     </select>
-                        </div>
+                                </div>
                             </div>
                         </div>
                         <div className="form-group" style={{ marginTop: '20px' }}>
@@ -247,7 +249,7 @@ const Addpatientscommanmodel = ({ show, handleClose, update, data }) => {
                         </div>
 
                         <div className="form-group" style={{ marginTop: '20px' }}>
-                            <label>Mobile No<b style={{ color: 'red' }}>*</b>:</label>
+                            <label>Mobile No:</label>
                             <input type="text" className="form-control" placeholder="Enter patient Mobile No" name='pMobileNo' value={values.pMobileNo} onChange={handleChange} onBlur={handleBlur} />
                             {errors.pMobileNo && touched.pMobileNo ? (<p style={{ color: 'red' }}>*{errors.pMobileNo}</p>) : null}
                         </div>

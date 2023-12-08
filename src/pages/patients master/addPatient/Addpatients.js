@@ -135,72 +135,7 @@ const Addpatients = () => {
         setPatientsFilter(allPatientsList)
         setIsLoading(false)
     }, [allPatientsList])
-    // const totalNumberofData = () => {
-    //     // const parentDocRef = db.collection('opdPatients').doc('m5JHl3l4zhaBCa8Vihcb');
-    //     // const subcollectionRef = parentDocRef.collection('opdPatient');
 
-    //     let query = subcollectionRef.where('hospitaluid', '==', hospitaluid).where('deleted', '==', 0).orderBy('timestamp', 'desc');
-
-    //     query.get().then(snapshot => {
-    //         console.log(snapshot);
-    //         const totalDataCount = snapshot.size;
-    //         setTotalNumData(totalDataCount)
-    //         console.log('Total data count:', totalDataCount);
-    //     }).catch(error => {
-    //         console.error('Error retrieving data:', error);
-    //     });
-    // }
-
-
-    // const retrieveData = (query) => {
-    //     try {
-    //         // let initialSnapshot = true;
-    //         setIsLoading(true)
-    //         unsubscribe = query.onSnapshot((snapshot) => {
-    //             const newData = [];
-    //             console.log('snapshot', snapshot);
-
-    //             snapshot.forEach((doc) => {
-    //                 const data = doc.data();
-    //                 console.log('all Data', data);
-    //                 // Check if the 'deleted' field exists and is truthy (e.g., true)
-    //                 // if (!data.hasOwnProperty('deleted') || !data.deleted) {
-    //                 newData.push(data);
-    //                 // } else {
-    //                 //     console.log('deleted data', data);
-    //                 // }
-
-    //                 // newData.push(doc.data());
-    //             });
-
-    //             setPatientsList(newData);
-    //             console.log('newData-------------------------------------', newData);
-    //             if (snapshot.size > 0) {
-    //                 const lastVisibleDoc = snapshot.docs[snapshot.docs.length - 1];
-    //                 // console.log('lastVisibleDoc', lastVisibleDoc.data());
-    //                 setLastVisible(lastVisibleDoc);
-    //                 setFirstVisible(snapshot.docs[0]);
-    //                 // setTotalNumData(snapshot.size)
-    //                 setIsLoading(false)
-
-    //                 // console.log('setFirstVisible', snapshot.docs[0].data());
-    //             } else {
-    //                 setIsLoading(false)
-
-    //                 setLastVisible(null);
-    //                 setFirstVisible(null);
-    //             }
-    //         });
-
-    //         // return () => {
-    //         //     unsubscribe();
-    //         // };
-    //     } catch (error) {
-    //         setIsLoading(false)
-
-    //         console.error('Error retrieving data:', error);
-    //     }
-    // };
 
     const retrieveData = (query) => {
         try {
@@ -301,7 +236,7 @@ const Addpatients = () => {
                             //     .catch((error) => {
                             //         console.error('Error updating data:', error);
                             //     });
-                            // dispatch(DELETE_PATIENTS(item1))
+                            dispatch(DELETE_PATIENTS(item1))
                             toast.success("Deleted Successfully.......")
                         } catch (error) {
                             toast.error(error.message)

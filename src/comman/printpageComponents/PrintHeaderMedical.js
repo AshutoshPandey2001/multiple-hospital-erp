@@ -4,7 +4,7 @@ import { useSelector } from 'react-redux'
 import hospitalimg from 'src/assets/images/hospitalerp.png'
 import { selectContactnumber, selectHospitalAddress, selectHospitalLogo, selectHospitalName } from 'src/redux/slice/hospitalProfileSlice'
 
-const PrintHeader = () => {
+const PrintHeaderMedical = () => {
     const hospitslLogo = useSelector(selectHospitalLogo)
     const hospitalAddress = useSelector(selectHospitalAddress)
     const hospitslName = useSelector(selectHospitalName)
@@ -12,6 +12,9 @@ const PrintHeader = () => {
     return (
         <>
             <div className="row justify-content-center w-100" >
+                <div>
+                    <span><b>Licence No. SUR-779338 ,SUR-77939</b></span>
+                </div>
                 <div className='d-flex justify-content-center align-content-center'>
                     <img src={hospitslLogo ? hospitslLogo : hospitalimg} className="sidebar-brand-full" width="100px" height="100px" alt='Hosptal_logo' />
                     <h4 style={{ marginTop: '35px', marginLeft: '15px' }}>{hospitslName ? hospitslName : 'SHIVKRUPA HOSPITAL'}</h4>
@@ -26,4 +29,4 @@ const PrintHeader = () => {
     )
 }
 
-export default PrintHeader;
+export default PrintHeaderMedical;

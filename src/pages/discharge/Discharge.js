@@ -1203,7 +1203,7 @@ const Discharge = () => {
                                 <label >Patient Age<b style={{ color: 'red' }}>*</b>:</label>
                                 <input name='page'
                                     placeholder="Enter Patient Age"
-                                    type="number" className="form-control" onChange={handleChange} defaultValue={values.page} readOnly />
+                                    type="text" className="form-control" onChange={handleChange} defaultValue={values.page} readOnly />
                                 {errors.page && touched.page ? (<p style={{ color: 'red' }}>*{errors.page}</p>) : null}
 
                             </div>

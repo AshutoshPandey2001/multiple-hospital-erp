@@ -3,7 +3,7 @@
 import React from 'react'
 import DataTable from 'react-data-table-component';
 import './table.css'
-const CommanTable = ({ title, columns, data, action, subHeaderComponent, retrieveData, handlePerPageRowsChange, paginationTotalRows }) => {
+const CommanTable = ({ title, columns, data, action, subHeaderComponent, conditionalRowStyles, retrieveData, handlePerPageRowsChange, paginationTotalRows }) => {
     const customStyles = {
         tableWrapper: {
             display: 'flex',
@@ -18,6 +18,7 @@ const CommanTable = ({ title, columns, data, action, subHeaderComponent, retriev
             title={title}
             columns={columns}
             data={data}
+            conditionalRowStyles={conditionalRowStyles}
             pagination
             fixedHeader={true}
             noHeader={false}

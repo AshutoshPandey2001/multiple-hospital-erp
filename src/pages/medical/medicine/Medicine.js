@@ -32,6 +32,7 @@ import { db } from 'src/firebaseconfig';
 import { debounce } from 'lodash';
 import DataTable from 'react-data-table-component';
 import billingicon from 'src/assets/images/billing-icon.png'
+import PrintButtonMedical from 'src/comman/printpageComponents/PrintButtonMedical';
 
 const PrintComponent = ({ data }) => {
     const state = data.data1
@@ -64,9 +65,12 @@ const PrintComponent = ({ data }) => {
                     <thead>
                         <tr>
                             <th>#</th>
+                            <th>Batch No.</th>
                             <th>Medicine Name</th>
+                            <th>Mfrs. Name</th>
+                            <th>Exp. Date</th>
                             <th>Rate</th>
-                            <th>Units</th>
+                            <th>Qty</th>
                             <th>Total</th>
                         </tr>
                     </thead>
@@ -76,7 +80,10 @@ const PrintComponent = ({ data }) => {
                                 return <>
                                     <tr key={i}>
                                         <td>{i + 1}</td>
+                                        <td>{medicine.batchNo}</td>
                                         <td>{medicine.medname}</td>
+                                        <td>{medicine.mfrsName}</td>
+                                        <td>{medicine.expireDate}</td>
                                         <td>{medicine.medPrice.toFixed(2)}</td>
                                         <td>{Number(medicine.medQty).toFixed(2)}</td>
                                         <td>{medicine.totalmedPrice.toFixed(2)}</td>
@@ -85,14 +92,14 @@ const PrintComponent = ({ data }) => {
                             })
                         }
                         <tr>
-                            <td colSpan={4}>Sub Total</td>
+                            <td colSpan={7}>Sub Total</td>
                             <td>{state.allMedTotalprice.toFixed(2)}</td>
                         </tr>
                         {
                             state.cgstValue === 0 ?
                                 null
                                 : <tr>
-                                    <td colSpan={3}>CGST%</td>
+                                    <td colSpan={6}>CGST%</td>
                                     <td>{state.cgstValue}%</td>
                                     <td>{state.cgstAmount.toFixed(2)}</td>
                                 </tr>
@@ -102,7 +109,7 @@ const PrintComponent = ({ data }) => {
                             state.sgstValue === 0 ?
                                 null
                                 : <tr>
-                                    <td colSpan={3}>SGST%</td>
+                                    <td colSpan={6}>SGST%</td>
                                     <td>{state.sgstValue}%</td>
                                     <td>{state.sgstAmount.toFixed(2)}</td>
                                 </tr>
@@ -151,7 +158,10 @@ let initalValues = {
             medQty: '',
             medPrice: '',
             meduid: '',
-            totalmedPrice: ''
+            totalmedPrice: '',
+            batchNo: '',
+            expireDate: '',
+            mfrsName: '',
         },
     ],
     allMedTotalprice: '',
@@ -190,6 +200,7 @@ const Medicine = () => {
     const parentDocRefMedicineInvoice = db.collection('PatientsMedicines').doc('GoKwC6l5NRWSonfUAal0');
     const subcollectionRefMedicineInvoice = parentDocRefMedicineInvoice.collection('patientsMedicines').where('hospitaluid', '==', hospitaluid).where('deleted', '==', 0);
     let unsub = undefined
+    const currentDate = new Date();
 
 
     const columns = [
@@ -485,7 +496,10 @@ const Medicine = () => {
                     medQty: '',
                     medPrice: '',
                     meduid: '',
-                    totalmedPrice: ''
+                    totalmedPrice: '',
+                    batchNo: '',
+                    expireDate: '',
+                    mfrsName: '',
                 },
             ],
             allMedTotalprice: '',
@@ -644,6 +658,9 @@ const Medicine = () => {
         med.medname = item.medicineName;
         med.medPrice = item.medicinePrice;
         med.meduid = item.medicineuid;
+        med.expireDate = ddMMyyyy(item.expireDate);
+        med.mfrsName = item.mfrsName;
+        med.batchNo = item.batchNumber
         setStock(item.availableStock)
         setAutofocus(!autofocus)
     }
@@ -766,7 +783,7 @@ const Medicine = () => {
 
         {isLoading ? <Loaderspinner /> :
             <>
-                <div style={{ display: 'none' }}>  {printContent && <PrintButton content={printContent} />}</div>
+                <div style={{ display: 'none' }}>  {printContent && <PrintButtonMedical content={printContent} />}</div>
                 <DataTable
                     title={"Medicines invoice"}
                     columns={columns}
@@ -796,7 +813,7 @@ const Medicine = () => {
 
             </>
         }
-        <Modal show={show} onHide={handleClose} size="lg">
+        <Modal show={show} onHide={handleClose} fullscreen={true}>
             <Modal.Header closeButton>
                 <Modal.Title>Medicine Invoice</Modal.Title>
             </Modal.Header>
@@ -971,7 +988,9 @@ const Medicine = () => {
                                                         <div className="form-group">
                                                             <label htmlFor={`medicines.${index}.medname`}>Medicin Name<b style={{ color: 'red' }}>*</b>:</label>
                                                             <SearchAutocomplete
-                                                                allPatients={medicineList}
+                                                                allPatients={medicineList.filter(medicine => {
+                                                                    return new Date(medicine.expireDate) >= currentDate;
+                                                                })}
                                                                 handleOnSelect={(e) => selectMedicine(e, medicine)}
                                                                 inputsearch={medicine.medname}
                                                                 placeholder={'Enter Medicine Name'}
@@ -1035,7 +1054,7 @@ const Medicine = () => {
                                         <button
                                             type="button"
                                             className='btn btn-success'
-                                            onClick={() => push({ medname: '', medPrice: '', medQty: '', meduid: '', totalmedPrice: '' })}
+                                            onClick={() => push({ medname: '', medPrice: '', medQty: '', meduid: '', totalmedPrice: '', batchNo: '', mfrsName: '', expireDate: '' })}
                                         >
                                             <BiPlus size={25} />  Add Medicine
                                         </button>

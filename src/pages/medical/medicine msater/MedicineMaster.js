@@ -19,13 +19,16 @@ import { toast } from 'react-toastify';
 import { selectUserId } from 'src/redux/slice/authSlice';
 import { TfiReload } from 'react-icons/tfi'
 import { db } from 'src/firebaseconfig';
+import { ddMMyyyy } from 'src/services/dateFormate';
 
 const initalValues = {
     medicineuid: '',
     medicineName: '',
-    medicineFormula: '',
+    batchNumber: '',
     availableStock: '',
     medicinePrice: '',
+    expireDate: '',
+    mfrsName: '',
     hospitaluid: ''
 }
 const MedicineMaster = () => {
@@ -40,16 +43,19 @@ const MedicineMaster = () => {
     const [isLoading, setIsLoading] = useState(true)
     const [files, setFiles] = useState('')
     let [medicine, setMedicines] = useState([])
+    const currentDate = new Date();
     const lastMedicines = useSelector(selectLastMedicine)
     const parentDocRef = db.collection('Medicines').doc('dHFKEhdhbOM4v6WRMb6z');
     const subcollectionRef = parentDocRef.collection('medicines').where('hospitaluid', '==', hospitaluid)
     let unsubscribe = undefined
     const columns = [
         { name: 'Id', selector: row => row.medicineuid },
-        { name: 'Medicine Name', selector: row => row.medicineName, sortable: true },
-        { name: 'Medicine Formula', selector: row => row.medicineFormula, sortable: true },
-        { name: 'Medicine Price', selector: row => row.medicinePrice, sortable: true },
-        { name: 'Available Stock', selector: row => row.availableStock, sortable: true },
+        { name: 'Batch No', selector: row => row.batchNumber, sortable: true },
+        { name: 'Name of Drug', selector: row => row.medicineName, sortable: true },
+        { name: 'Manufacturer Name', selector: row => row.mfrsName, sortable: true },
+        { name: 'Expire Date', selector: row => ddMMyyyy(row.expireDate), sortable: true },
+        { name: 'Price', selector: row => row.medicinePrice, sortable: true },
+        { name: 'Available Quantity', selector: row => row.availableStock, sortable: true },
         {
             name: 'Action', cell: row => <span><button onClick={() => editMedicines(row)} style={{ color: 'orange', border: 'none' }}><MdEdit size={25} /></button>
                 <button onClick={() => deleteMedicines(row)} style={{ color: 'red', border: 'none' }} ><AiFillDelete size={25} /></button>
@@ -61,7 +67,7 @@ const MedicineMaster = () => {
         setShow(false);
         values.medicineName = '';
         values.medicinePrice = '';
-        values.medicineFormula = '';
+        values.batchNumber = '';
         values.medicineuid = '';
         values.availableStock = '';
         values.hospitaluid = '';
@@ -186,9 +192,10 @@ const MedicineMaster = () => {
         values.medicineName = item.medicineName;
         values.medicinePrice = item.medicinePrice;
         values.availableStock = item.availableStock;
-        values.medicineFormula = item.medicineFormula;
+        values.batchNumber = item.batchNumber;
         values.hospitaluid = item.hospitaluid;
-
+        values.expireDate = item.expireDate;
+        values.mfrsName = item.mfrsName;
         setShow(true)
         setUpdate(true)
     }
@@ -226,7 +233,7 @@ const MedicineMaster = () => {
 
     const requestSearch = (searchvalue) => {
         const filteredRows = medicinessFilter.filter((row) => {
-            return row.medicineName.toLowerCase().includes(searchvalue.toLowerCase()) || row.medicineFormula.toLowerCase().includes(searchvalue.toLowerCase());
+            return row.medicineName.toLowerCase().includes(searchvalue.toLowerCase()) || row.batchNumber.toLowerCase().includes(searchvalue.toLowerCase());
         });
         if (searchvalue.length < 1) {
 
@@ -254,7 +261,7 @@ const MedicineMaster = () => {
                     let res = results.data
 
                     await res.map((item) => {
-                        if (item.medicineFormula) {
+                        if (item.batchNumber) {
                             let findMedicine = medicine.findIndex((item1) => item1.medicineuid === item.medicineuid)
                             if (findMedicine >= 0) {
                                 let totalStock = medicine[findMedicine].availableStock + item.availableStock;
@@ -270,24 +277,28 @@ const MedicineMaster = () => {
                     })
 
                     setFiles('')
-                    // try {
-                    //     await uploadArray("Medicines", 'dHFKEhdhbOM4v6WRMb6z', 'medicines', medicine, 'medicineuid', 'hospitaluid')
-                    //     // await setData("Medicines", 'dHFKEhdhbOM4v6WRMb6z', 'medicines', medicine)
-                    //     dispatch(UPLOAD_MEDICINES(medicine))
-                    // } catch (error) {
-                    //     console.error(error.message);
-                    // }
+
                 }
             }
             )
         }
     }
+    const conditionalRowStyles = [
+        {
+            when: row => new Date(row.expireDate) <= currentDate,
+            style: {
+                backgroundColor: 'red',
+                color: 'white', // Adjust text color for better visibility
+            },
+        },
+    ];
     return <>
         {isLoading ? <Loaderspinner /> :
             <>
                 <div>
                     <CommanTable
                         title={"Medicines Stock"}
+                        conditionalRowStyles={conditionalRowStyles}
                         columns={columns}
                         data={medicinesList}
                         action={<span style={{ display: 'flex' }}><span style={{ display: 'flex', marginRight: '20px' }}><BsCloudUploadFill size={30} color={'green'} style={{ marginRight: '10px' }} /><input type="file" className='form-control' accept=".csv,.xlsx,.xls" onChange={(e) => { csvtoJson(e.target.files) }} value={files} /></span><button className='btn btn-primary' onClick={handleShow} style={{ height: '40px' }}><span>  <BiPlus size={25} /></span></button></span>}
@@ -311,18 +322,28 @@ const MedicineMaster = () => {
                         {errors.medicineuid && touched.medicineuid ? (<p style={{ color: 'red' }}>*{errors.medicineuid}</p>) : null}
                     </div>
                     <div className="form-group" style={{ marginTop: '20px' }}>
-                        <label>Medicine Name<b style={{ color: 'red' }}>*</b>:</label>
+                        <label>Batch No.<b style={{ color: 'red' }}>*</b>:</label>
+                        <input type="text" className="form-control" placeholder="Enter Medicine Formula" name='batchNumber' value={values.batchNumber} onChange={handleChange} onBlur={handleBlur} />
+                        {errors.batchNumber && touched.batchNumber ? (<p style={{ color: 'red' }}>*{errors.batchNumber}</p>) : null}
+                    </div>
+                    <div className="form-group" style={{ marginTop: '20px' }}>
+                        <label>Name of Drug<b style={{ color: 'red' }}>*</b>:</label>
                         <input type="text" className="form-control" placeholder="Enter Medicine Name" name='medicineName' value={values.medicineName} onChange={handleChange} onBlur={handleBlur} />
                         {errors.medicineName && touched.medicineName ? (<p style={{ color: 'red' }}>*{errors.medicineName}</p>) : null}
                     </div>
                     <div className="form-group" style={{ marginTop: '20px' }}>
-                        <label>Medicine Formula<b style={{ color: 'red' }}>*</b>:</label>
-                        <input type="text" className="form-control" placeholder="Enter Medicine Formula" name='medicineFormula' value={values.medicineFormula} onChange={handleChange} onBlur={handleBlur} />
-                        {errors.medicineFormula && touched.medicineFormula ? (<p style={{ color: 'red' }}>*{errors.medicineFormula}</p>) : null}
+                        <label>Manufacturer Name<b style={{ color: 'red' }}>*</b>:</label>
+                        <input type="text" className="form-control" placeholder="Enter Manufacturer Name" name='mfrsName' value={values.mfrsName} onChange={handleChange} onBlur={handleBlur} />
+                        {errors.mfrsName && touched.mfrsName ? (<p style={{ color: 'red' }}>*{errors.mfrsName}</p>) : null}
                     </div>
                     <div className="form-group" style={{ marginTop: '20px' }}>
-                        <label>Stock<b style={{ color: 'red' }}>*</b>:</label>
-                        <input type="number" className="form-control" placeholder="Enter Stock" name='availableStock' value={values.availableStock} onChange={handleChange} onBlur={handleBlur} />
+                        <label>Expire Date<b style={{ color: 'red' }}>*</b>:</label>
+                        <input type="date" className="form-control" placeholder="Enter Medicine Name" name='expireDate' value={values.expireDate} onChange={handleChange} onBlur={handleBlur} />
+                        {errors.expireDate && touched.expireDate ? (<p style={{ color: 'red' }}>*{errors.expireDate}</p>) : null}
+                    </div>
+                    <div className="form-group" style={{ marginTop: '20px' }}>
+                        <label>Quantity<b style={{ color: 'red' }}>*</b>:</label>
+                        <input type="number" className="form-control" placeholder="Enter Quantity" name='availableStock' value={values.availableStock} onChange={handleChange} onBlur={handleBlur} />
                         {errors.availableStock && touched.availableStock ? (<p style={{ color: 'red' }}>*{errors.availableStock}</p>) : null}
                     </div>
                     <div className="form-group" style={{ marginTop: '20px' }}>
