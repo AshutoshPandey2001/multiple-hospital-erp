@@ -35,7 +35,6 @@ const MedicineMaster = () => {
     const dispatch = useDispatch();
     const allMedicinesList = useSelector(selectAllMedicines)
     const hospitaluid = useSelector(selectUserId)
-
     const [show, setShow] = useState(false);
     const [medicinesList, setMedicinesList] = useState([]);
     const [medicinessFilter, setMedicinessFilter] = useState([]);

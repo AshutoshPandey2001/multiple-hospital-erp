@@ -124,6 +124,12 @@ const _nav = [
     items: [
       {
         component: CNavItem,
+        name: 'Medical Profile',
+        to: '/medical/medicalprofile',
+        key: 'VIEW_MEDICINE_STOCK',
+      },
+      {
+        component: CNavItem,
         name: 'Medicine Stock',
         to: '/medical/medicinemaster',
         key: 'VIEW_MEDICINE_STOCK',

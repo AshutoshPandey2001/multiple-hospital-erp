@@ -31,6 +31,7 @@ import { SET_HOSPITAL_PROFILE } from 'src/redux/slice/hospitalProfileSlice'
 import { SET_INDOORPREVBILL_NO, SET_MEDICINEPREVBILL_NO, SET_OPDPREVBILL_NO, SET_RETURN_MEDICINEPREVBILL_NO } from 'src/redux/slice/prevBillNoSlice'
 import { db } from 'src/firebaseconfig'
 import { FILL_ROLE } from 'src/redux/slice/userRolesSlice'
+import { SET_MEDICAL_PROFILE } from 'src/redux/slice/medicalProfileSlice'
 
 const DefaultLayout = () => {
   // const { hospitaluid } = props
@@ -122,6 +123,13 @@ const DefaultLayout = () => {
         // Handle the updated data in the callback function
         dispatch(SET_HOSPITAL_PROFILE(data))
         console.log('Received real-time data :', data);
+      }).catch((error) => {
+        console.error('Error:', error);
+      })
+      await getHospitalProfile('MedicalMaster', 'S4fRJIO5ZxE5isoBIbEU', 'medicalMaster', hospitaluid, (data) => {
+        // Handle the updated data in the callback function
+        dispatch(SET_MEDICAL_PROFILE(data))
+        console.log('Medical Profile :', data);
       }).catch((error) => {
         console.error('Error:', error);
       })

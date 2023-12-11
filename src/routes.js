@@ -10,6 +10,7 @@ const MedicineReturn = React.lazy(() => lazyRetry(() => import('./pages/medical/
 const Rooms = React.lazy(() => lazyRetry(() => import('./pages/rooms/Addrooms/AddRooms'), "rooms"))
 
 const Medicinemaster = React.lazy(() => lazyRetry(() => import('./pages/medical/medicine msater/MedicineMaster'), "medicinemaster"))
+const MedicalProfile = React.lazy(() => lazyRetry(() => import('./pages/medical/medical profile/MedicalProfile'), "medicalprofile"))
 const PatientsHistory = React.lazy(() => lazyRetry(() => import('./pages/patients master/Patientshistory'), "patienthistory"))
 const Invoice = React.lazy(() => lazyRetry(() => import('./pages/Invoice/Invoicepage'), "admitinvoice"))
 const Usersmasters = React.lazy(() => lazyRetry(() => import('./pages/Hospital user Registration/MasterUserRegistration/UsersMstersregistration'), 'userMaster'))
@@ -48,6 +49,7 @@ const routes = [
   { path: '/indoor', name: 'Indoor', element: Admit },
   { path: '/discharge', name: 'Discharge', element: Discharge },
   { path: '/medical', element: Medicine, exact: true },
+  { path: '/medical/medicalprofile', name: 'Medical', element: MedicalProfile },
   { path: '/medical/medicinemaster', name: 'Medicine Stock', element: Medicinemaster },
   { path: '/medical/medicine', name: 'Medicine Invoice', element: Medicine },
   { path: '/medical/medicine/medicineinvoice', name: 'Invoice', element: Medicineinvoice },
