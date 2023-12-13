@@ -8,17 +8,17 @@ import PrintHeaderMedical from "./PrintHeaderMedical";
 
 const PrintableComponentMedical = forwardRef((props, ref) => (
     <div ref={ref}>
-        <table style={{ margin: "10px 50px 10px 50px" }}>
-            <thead>
+        <table style={{ margin: "30px", marginRight: '30px' }}>
+            {/* <thead>
                 <div className="header"> <PrintHeaderMedical /></div>
-            </thead>
+            </thead> */}
             <tbody style={{ fontSize: "12px" }}>
                 {props.content}
             </tbody>
-            <tfoot style={{ backgroundColor: 'none' }}>
+            {/* <tfoot style={{ backgroundColor: 'none' }}>
                 <div style={{ marginTop: '50px' }}></div>
                 <div className="footer" ><PrintFooter /></div>
-            </tfoot>
+            </tfoot> */}
         </table>
     </div>
 ));

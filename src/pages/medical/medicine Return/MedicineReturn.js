@@ -35,81 +35,167 @@ import { debounce } from 'lodash';
 import DataTable from 'react-data-table-component';
 import { selectreturnmedicinerprevBillNo } from 'src/redux/slice/prevBillNoSlice';
 import PrintButtonMedical from 'src/comman/printpageComponents/PrintButtonMedical';
+import { selectLicenceNumber, selectMedicalAddress, selectMedicalContactnumber, selectMedicalName } from 'src/redux/slice/medicalProfileSlice';
+import Barcode from 'react-barcode';
+
 const PrintComponent = ({ data }) => {
     const state = data.data1
     return (
-        <div style={{ width: '800px', marginRight: '50px' }} >
-            <div className='row text-center'> <h3>Invoice</h3></div>
-            <b><hr></hr></b>
-            <div className='row'>
-                <div className='col-lg-6 col-md-6 col-sm-6'>
-                    <span><b>Patient id : {state.pid}</b></span>
-                    <span><div>Name: {state.pName} </div></span>
-                    <span><div>Address: {state.pAddress}</div></span>
-                    <span><div>Date: {state.returnDate} </div></span>
 
+        <div style={{ width: '800px', marginRight: '30px' }} >
+            <div className='card' style={{ border: '1px solid black', margin: 0 }}>
+                <div className='row' style={{ display: 'flex', width: '100%' }}>
+                    <div className='col-lg-5' style={{ borderRight: '1px solid black', width: '45%' }}>
+                        <div className='p-2'>
+                            <div><b>{state.medicalName}</b></div>
+                            <div>{state.medicalAddress}</div>
+                            <div>{state.contactNumber}</div>
+                            <div>{state.licenceNumber}</div>
+                        </div>
+                    </div>
+                    <div className='col-lg-3' style={{ borderRight: '1px solid black', width: '20%' }}>
+                        <div>
+                            <div><b>Bill #: {state.invoiceuid}</b></div>
+                            <div>Date: {state.medicineDate}</div>
+                            <Barcode value={state.pid} height={30} width={1} displayValue={false} />
+                        </div>
+                    </div>
+                    <div className='col-lg-4' style={{ width: '35%' }}>
+                        <div className='p-2'>
+                            <div><b>
+                                Patient:-{state.pName}
+                            </b>
+                            </div>
+                            <div>
+                                <b>
+                                    Addrss:-{state.pAddress}
+                                </b>
+
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div className='col-lg-6 col-md-6 col-sm-6 d-flex justify-content-end'>
-                    <div>
-                        <span><b>Return Bill No: {state.invoiceuid}</b></span>
-                        <span><div>Age /sex: {state.page} / {state.pGender}</div></span>
-                        <span><div>Mobile No: {state.pMobileNo}</div></span>
-
+                <div style={{ marginRight: -3 }}>
+                    <Table bordered border={4}  >
+                        <thead style={{ border: '1px solid black' }}>
+                            <tr>
+                                <th>#</th>
+                                <th>Batch No.</th>
+                                <th>Medicine Name</th>
+                                <th>Mfrs. Name</th>
+                                <th>Exp. Date</th>
+                                <th>Rate</th>
+                                <th>Qty</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {
+                                state.medicines.map((medicine, i) => {
+                                    return <>
+                                        <tr key={i}>
+                                            <td>{i + 1}</td>
+                                            <td>{medicine.batchNo}</td>
+                                            <td>{medicine.medname}</td>
+                                            <td>{medicine.mfrsName}</td>
+                                            <td>{medicine.expireDate}</td>
+                                            <td>{medicine.medPrice.toFixed(2)}</td>
+                                            <td>{Number(medicine.medQty).toFixed(2)}</td>
+                                            <td>{medicine.totalmedPrice.toFixed(2)}</td>
+                                        </tr>
+                                    </>
+                                })
+                            }
+                            <tr>
+                                <td colSpan={7}>Sub Total</td>
+                                <td>{state.allMedTotalprice.toFixed(2)}</td>
+                            </tr>
+                        </tbody>
+                    </Table>
+                </div>
+                <div className='row'>
+                    <div className='col-lg-12 col-md-12 col-sm-12 d-flex justify-content-end'>
+                        <div className='p-2'>
+                            <h6>Refund Amount : {state.allMedTotalprice.toFixed(2)}</h6>
+                        </div>
                     </div>
 
                 </div>
             </div>
-
-            <b><hr></hr></b>
-            <div className='row text-center'> <h3>Medicine Summary</h3></div>
-            <div className='row'>
-                <Table striped bordered>
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Batch No.</th>
-                            <th>Medicine Name</th>
-                            <th>Mfrs. Name</th>
-                            <th>Exp. Date</th>
-                            <th>Rate</th>
-                            <th>Qty</th>
-                            <th>Total</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {
-                            state.medicines.map((medicine, i) => {
-                                return <>
-                                    <tr key={i}>
-                                        <td>{i + 1}</td>
-                                        <td>{medicine.batchNo}</td>
-                                        <td>{medicine.medname}</td>
-                                        <td>{medicine.mfrsName}</td>
-                                        <td>{medicine.expireDate}</td>
-                                        <td>{medicine.medPrice.toFixed(2)}</td>
-                                        <td>{Number(medicine.medQty).toFixed(2)}</td>
-                                        <td>{medicine.totalmedPrice.toFixed(2)}</td>
-                                    </tr>
-                                </>
-                            })
-                        }
-
-                    </tbody>
-                </Table>
-            </div>
-
-            <div className='row'>
-                <b><hr></hr></b>
-                <div className='col-lg-12 col-md-12 col-sm-12 d-flex justify-content-end'>
-                    <div>
-                        <h6>Refund Amount : {state.allMedTotalprice.toFixed(2)}</h6>
-                    </div>
-                </div>
-                <b><hr></hr></b>
-            </div>
-
 
         </div>
+        // <div style={{ width: '800px', marginRight: '50px' }} >
+        //     <div className='row text-center'> <h3>Invoice</h3></div>
+        //     <b><hr></hr></b>
+        //     <div className='row'>
+        //         <div className='col-lg-6 col-md-6 col-sm-6'>
+        //             <span><b>Patient id : {state.pid}</b></span>
+        //             <span><div>Name: {state.pName} </div></span>
+        //             <span><div>Address: {state.pAddress}</div></span>
+        //             <span><div>Date: {state.returnDate} </div></span>
+
+        //         </div>
+        //         <div className='col-lg-6 col-md-6 col-sm-6 d-flex justify-content-end'>
+        //             <div>
+        //                 <span><b>Return Bill No: {state.invoiceuid}</b></span>
+        //                 <span><div>Age /sex: {state.page} / {state.pGender}</div></span>
+        //                 <span><div>Mobile No: {state.pMobileNo}</div></span>
+
+        //             </div>
+
+        //         </div>
+        //     </div>
+
+        //     <b><hr></hr></b>
+        //     <div className='row text-center'> <h3>Medicine Summary</h3></div>
+        //     <div className='row'>
+        //         <Table striped bordered>
+        //             <thead>
+        //                 <tr>
+        //                     <th>#</th>
+        //                     <th>Batch No.</th>
+        //                     <th>Medicine Name</th>
+        //                     <th>Mfrs. Name</th>
+        //                     <th>Exp. Date</th>
+        //                     <th>Rate</th>
+        //                     <th>Qty</th>
+        //                     <th>Total</th>
+        //                 </tr>
+        //             </thead>
+        //             <tbody>
+        //                 {
+        //                     state.medicines.map((medicine, i) => {
+        //                         return <>
+        //                             <tr key={i}>
+        //                                 <td>{i + 1}</td>
+        //                                 <td>{medicine.batchNo}</td>
+        //                                 <td>{medicine.medname}</td>
+        //                                 <td>{medicine.mfrsName}</td>
+        //                                 <td>{medicine.expireDate}</td>
+        //                                 <td>{medicine.medPrice.toFixed(2)}</td>
+        //                                 <td>{Number(medicine.medQty).toFixed(2)}</td>
+        //                                 <td>{medicine.totalmedPrice.toFixed(2)}</td>
+        //                             </tr>
+        //                         </>
+        //                     })
+        //                 }
+
+        //             </tbody>
+        //         </Table>
+        //     </div>
+
+        //     <div className='row'>
+        //         <b><hr></hr></b>
+        //         <div className='col-lg-12 col-md-12 col-sm-12 d-flex justify-content-end'>
+        //             <div>
+        //                 <h6>Refund Amount : {state.allMedTotalprice.toFixed(2)}</h6>
+        //             </div>
+        //         </div>
+        //         <b><hr></hr></b>
+        //     </div>
+
+
+        // </div>
     )
 };
 let initalValues = {
@@ -173,7 +259,10 @@ const MedicineReturn = () => {
     const parentDocRefMedicineInvoice = db.collection('ReturnMedicine').doc('lGxMW7T2f7Dsb93A19qa');
     const subcollectionRefMedicineInvoice = parentDocRefMedicineInvoice.collection('returnMedicine').where('hospitaluid', '==', hospitaluid).where('deleted', '==', 0);
     let unsub = undefined
-
+    const medicalName = useSelector(selectMedicalName)
+    const medicalAddress = useSelector(selectMedicalAddress)
+    const licenceNumber = useSelector(selectLicenceNumber)
+    const contactNumber = useSelector(selectMedicalContactnumber)
 
     const columns = [
         // { name: 'ID', selector: row => row.pid, sortable: true },
@@ -415,6 +504,10 @@ const MedicineReturn = () => {
         setPrintContent(<PrintComponent data={{
             data1: {
                 ...item,
+                medicalName,
+                medicalAddress,
+                licenceNumber,
+                contactNumber
             }
         }} />)
 

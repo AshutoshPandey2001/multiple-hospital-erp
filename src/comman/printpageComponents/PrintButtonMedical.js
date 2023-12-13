@@ -12,38 +12,32 @@ import PrintableComponentMedical from "./PrintablecomponentMedical";
 // ));
 
 const PrintButtonMedical = ({ content }) => {
-    const componentRef = useRef();
-    const printRef = useRef();
-    useEffect(() => {
-        // Automatically click on the print button when the component mounts
-        const printButton = document.getElementById("print-button");
-        printButton.click();
-    }, [content]);
+  const componentRef = useRef();
+  const printRef = useRef();
+  useEffect(() => {
+    // Automatically click on the print button when the component mounts
+    const printButton = document.getElementById("print-button");
+    printButton.click();
+  }, [content]);
 
-    return (
-        <div>
-            <div style={{ display: 'none' }}>
-                <PrintableComponentMedical ref={componentRef} content={content} />
-            </div>
-            <ReactToPrint
-                trigger={() => <button className='btn btn-primary mx-2' id="print-button">Print</button>}
-                content={() => componentRef.current}
-                pageStyle={`
+  return (
+    <div>
+      <div style={{ display: 'none' }}>
+        <PrintableComponentMedical ref={componentRef} content={content} />
+      </div>
+      <ReactToPrint
+        trigger={() => <button className='btn btn-primary mx-2' id="print-button">Print</button>}
+        content={() => componentRef.current}
+        pageStyle={`
                         @page {
-                          size: A4;
-                          margin: 0;
-                        }
+                          size: A4 ;
+                        margin:0;
+                        padding:0
+                           }
                         @media print {
                           body {
                             margin: 0;
-                          }
-                          .header {                           
-                            position: fixed;
-                            top: 0;
-                            left: 0;
-                            right: 0;
-                            text-align: center;
-                            background-color: transparent;
+                            padding:0;
                           }
                           .footer {
                             position: fixed;
@@ -55,10 +49,12 @@ const PrintButtonMedical = ({ content }) => {
                           }
                         }
                       `}
-                ref={printRef}
-            />
-        </div>
-    );
+
+        ref={printRef}
+
+      />
+    </div>
+  );
 };
 
 export default PrintButtonMedical;
