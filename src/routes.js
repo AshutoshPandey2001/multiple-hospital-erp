@@ -18,6 +18,7 @@ const Drsmasters = React.lazy(() => lazyRetry(() => import('./pages/doctorMaster
 const Discharge = React.lazy(() => lazyRetry(() => import('./pages/discharge/Discharge'), "discharge"))
 
 const TaxMasters = React.lazy(() => lazyRetry(() => import('./pages/tax masters/taxMaster'), "taxmaster"))
+const Medicaltax = React.lazy(() => lazyRetry(() => import('./pages/tax masters/medicalTax'), "medicaltax"))
 const Opdinvoice = React.lazy(() => lazyRetry(() => import('./pages/opd/opdInvoice'), "opdinvoice"))
 const Medicineinvoice = React.lazy(() => lazyRetry(() => import('./pages/medical/medicine/medicineInvoice'), "medineInvoice"))
 const ReturnMedicineinvoice = React.lazy(() => lazyRetry(() => import('./pages/medical/medicine Return/ReturnmedicineInvoice'), "returnmedineInvoice"))
@@ -62,6 +63,8 @@ const routes = [
   { path: '/indoor/invoice', name: 'Invoice', element: Invoice, exact: true },
   { path: '/opd/opdinvoice', name: 'Invoice', element: Opdinvoice, exact: true },
   { path: '/tax', name: 'Tax', element: TaxMasters, exact: true },
+  { path: '/tax/hospitaltax', name: 'Hospital Tax', element: TaxMasters },
+  { path: '/tax/medicaltax', name: 'Medical Tax', element: Medicaltax },
   { path: '/drmaster', name: 'Doctors', element: Drsmasters, exact: true },
   { path: '/charges', name: 'Charges', element: Charges, exact: true },
   { path: '/hospitalprofile', name: 'Hospital Profile', element: HospitalMaster, exact: true },

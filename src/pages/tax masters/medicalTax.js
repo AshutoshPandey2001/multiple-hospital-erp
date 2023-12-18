@@ -12,7 +12,7 @@ import { useState } from 'react'
 import { useFormik } from 'formik'
 import { taxSchema } from 'src/schema'
 import { useDispatch, useSelector } from 'react-redux'
-import { EDIT_TAX, selectAlltax } from 'src/redux/slice/taxSlice'
+import { EDIT_TAX, selectAlltax, selectMedicalax } from 'src/redux/slice/taxSlice'
 import { selectpermissions } from 'src/redux/slice/authSlice'
 
 const initalValues = {
@@ -21,9 +21,9 @@ const initalValues = {
     taxValue: undefined,
     hospitaluid: ''
 }
-const taxMaster = () => {
+const Medicaltax = () => {
     const [show, setShow] = useState(false);
-    const allTax = useSelector(selectAlltax)
+    const allTax = useSelector(selectMedicalax)
     const [taxData, setTaxData] = useState([])
     const dispatch = useDispatch()
     const permissions = useSelector(selectpermissions)
@@ -64,7 +64,7 @@ const taxMaster = () => {
 
             try {
                 // await updateSingltObject('Tax', 'LZnOzIOavFxXLPkmFaWc', 'tax', Values, 'taxUid', 'hospitaluid')
-                await updateDatainSubcollection('Tax', 'LZnOzIOavFxXLPkmFaWc', 'tax', Values, 'taxUid', 'hospitaluid')
+                await updateDatainSubcollection('MedicalTax', 'LZnOzIOavFxXLPkmFaWc', 'medicaltax', Values, 'taxUid', 'hospitaluid')
                 // dispatch(EDIT_TAX(Values))
                 // await setData('Tax', 'LZnOzIOavFxXLPkmFaWc', 'tax', temp_Data)
                 // await setTaxData(taxData.map((item) => (item.taxName === Values.taxName ? { ...item, taxValue: Values.taxValue } : item)))
@@ -93,7 +93,7 @@ const taxMaster = () => {
         <>
             <>
                 <CommanTable
-                    title={"Hospital Tax"}
+                    title={"Medical Tax"}
                     columns={columns}
                     data={taxData}
                 />
@@ -130,4 +130,4 @@ const taxMaster = () => {
     )
 }
 
-export default taxMaster
+export default Medicaltax

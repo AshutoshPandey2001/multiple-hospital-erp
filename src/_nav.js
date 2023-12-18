@@ -179,13 +179,36 @@ const _nav = [
     key: 'CHARGES',
     icon: <CIcon icon={cilMoney} customClassName="nav-icon" />,
   },
+  // {
+  //   component: CNavItem,
+  //   name: 'Tax',
+  //   to: '/tax',
+  //   key: 'TAX',
+
+  //   icon: <CIcon icon={cilTextSquare} customClassName="nav-icon" />,
+  // },
   {
-    component: CNavItem,
+    component: CNavGroup,
     name: 'Tax',
     to: '/tax',
-    key: 'TAX',
-
     icon: <CIcon icon={cilTextSquare} customClassName="nav-icon" />,
+    key: 'TAX',
+    items: [
+      {
+        component: CNavItem,
+        name: 'Hospital Tax',
+        to: '/tax/hospitaltax',
+        key: 'VIEW_TAX',
+
+      },
+      {
+        component: CNavItem,
+        name: 'Medical Tax',
+        to: '/tax/medicaltax',
+        key: 'VIEW_TAX',
+
+      },
+    ],
   },
   {
     component: CNavItem,

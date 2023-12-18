@@ -18,7 +18,7 @@ import PrintFooter from 'src/comman/printpageComponents/PrintFooter';
 import { TfiArrowCircleLeft } from 'react-icons/tfi'
 import PrintButton from 'src/comman/printpageComponents/PrintButton';
 import { selectUserName } from 'src/redux/slice/authSlice';
-import { selectAlltax } from 'src/redux/slice/taxSlice';
+import { selectAlltax, selectMedicalax } from 'src/redux/slice/taxSlice';
 import { selectmedicinerprevBillNo } from 'src/redux/slice/prevBillNoSlice';
 import PrintButtonMedical from 'src/comman/printpageComponents/PrintButtonMedical';
 import { selectLicenceNumber, selectMedicalAddress, selectMedicalContactnumber, selectMedicalName } from 'src/redux/slice/medicalProfileSlice';
@@ -269,7 +269,7 @@ const medicineInvoice = () => {
     // } 
     const dispatch = useDispatch()
     const allMedicinePatient = useSelector(selectAllPatientsMedicines)
-    const alltax = useSelector(selectAlltax)
+    const alltax = useSelector(selectMedicalax)
     const [cgstAmount, setCgstamount] = useState(0)
     const [sgstAmount, setSgstamount] = useState(0)
     const [cgstValue, setCgstValue] = useState(0)

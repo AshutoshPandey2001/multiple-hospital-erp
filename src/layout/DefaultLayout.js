@@ -25,7 +25,7 @@ import { selectChangeState } from 'src/redux/slice/changeStateslice'
 import ChangeMenustyle from 'src/components/changeMenustyle/ChangeMenustyle'
 import { selectmenuStyle } from 'src/redux/slice/changeMenustyleSlice'
 import { FILL_RETURN_PATIENTS_MEDICINES } from 'src/redux/slice/returnMedicineslice'
-import { FILL_TAXS } from 'src/redux/slice/taxSlice'
+import { FILL_TAXS, FILL_MEDICAL_TAXS } from 'src/redux/slice/taxSlice'
 import { FILL_CHARGES } from 'src/redux/slice/chargesSlice'
 import { SET_HOSPITAL_PROFILE } from 'src/redux/slice/hospitalProfileSlice'
 import { SET_INDOORPREVBILL_NO, SET_MEDICINEPREVBILL_NO, SET_OPDPREVBILL_NO, SET_RETURN_MEDICINEPREVBILL_NO } from 'src/redux/slice/prevBillNoSlice'
@@ -106,6 +106,13 @@ const DefaultLayout = () => {
       await getTaxDatainsubCollection('Tax', 'LZnOzIOavFxXLPkmFaWc', 'tax', hospitaluid, (data) => {
         // Handle the updated data in the callback function
         dispatch(FILL_TAXS(data))
+        console.log('Received real-time data tax:', data);
+      }).catch((error) => {
+        console.error('Error:', error);
+      })
+      await getTaxDatainsubCollection('MedicalTax', 'LZnOzIOavFxXLPkmFaWc', 'medicaltax', hospitaluid, (data) => {
+        // Handle the updated data in the callback function
+        dispatch(FILL_MEDICAL_TAXS(data))
         console.log('Received real-time data tax:', data);
       }).catch((error) => {
         console.error('Error:', error);
