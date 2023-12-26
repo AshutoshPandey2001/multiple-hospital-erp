@@ -27,7 +27,12 @@ const SearchAutocomplete = ({ allPatients, handleOnSelect, inputsearch, placehol
                             )
                         case 'medicineName':
                             return (
-                                <span className="result-span">{item.medicineName} - {item.batchNumber} - {item.mfrsName}- {ddMMyyyy(item.expireDate)}</span>
+                                <span className="result-span">
+                                    {item.medicineName} - {item.batchNumber} - {item.mfrsName} -
+                                    {item.medicineType && item.medicineCapacity ?
+                                        `${item.medicineType} - ${item.medicineCapacity}` :
+                                        (item.medicineType || item.medicineCapacity || '')} - {ddMMyyyy(item.expireDate)}
+                                </span>
                             )
                         default:
                             return (

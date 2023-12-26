@@ -19,7 +19,7 @@ import { toast } from 'react-toastify';
 import { selectUserId } from 'src/redux/slice/authSlice';
 import { TfiReload } from 'react-icons/tfi'
 import { db } from 'src/firebaseconfig';
-import { ddMMyyyy } from 'src/services/dateFormate';
+import { ddMMyyyy, formatDateYYYYMMDD } from 'src/services/dateFormate';
 
 const initalValues = {
     medicineuid: '',
@@ -28,6 +28,8 @@ const initalValues = {
     availableStock: '',
     medicinePrice: '',
     expireDate: '',
+    medicineType: '',
+    medicineCapacity: '',
     mfrsName: '',
     hospitaluid: ''
 }
@@ -48,7 +50,6 @@ const MedicineMaster = () => {
     const subcollectionRef = parentDocRef.collection('medicines').where('hospitaluid', '==', hospitaluid)
     let unsubscribe = undefined
     const columns = [
-        { name: 'Id', selector: row => row.medicineuid },
         { name: 'Batch No', selector: row => row.batchNumber, sortable: true },
         { name: 'Name of Drug', selector: row => row.medicineName, sortable: true },
         { name: 'Manufacturer Name', selector: row => row.mfrsName, sortable: true },
@@ -121,6 +122,9 @@ const MedicineMaster = () => {
             let medd = [...medicinessFilter]
             if (!update) {
                 values.hospitaluid = hospitaluid
+                let timestamp = new Date(values.expireDate).getTime();
+                let medicineCapacity = values.medicineCapacity ? values.medicineCapacity.toUpperCase() : ''; // If medicineCapacity doesn't exist, assign an empty string
+                values.medicineuid = values.medicineName.substring(0, 3).toUpperCase() + values.mfrsName.substring(0, 3).toUpperCase() + timestamp + medicineCapacity
                 // setMedicinessFilter([...medicinessFilter, Values])
                 let findMedicine = medd.findIndex((item1) => item1.medicineuid === Values.medicineuid)
                 if (findMedicine >= 0) {
@@ -195,6 +199,8 @@ const MedicineMaster = () => {
         values.hospitaluid = item.hospitaluid;
         values.expireDate = item.expireDate;
         values.mfrsName = item.mfrsName;
+        values.medicineType = item.medicineType;
+        values.medicineCapacity = item.medicineCapacity;
         setShow(true)
         setUpdate(true)
     }
@@ -239,7 +245,6 @@ const MedicineMaster = () => {
             setMedicinesList(medicinessFilter.reverse())
         }
         else {
-
             setMedicinesList(filteredRows)
         }
 
@@ -261,14 +266,19 @@ const MedicineMaster = () => {
 
                     await res.map((item) => {
                         if (item.batchNumber) {
-                            let findMedicine = medicine.findIndex((item1) => item1.medicineuid === item.medicineuid)
+                            item.expireDate = formatDateYYYYMMDD(item.expireDate)
+                            let timestamp = new Date(item.expireDate).getTime();
+                            let medicineCapacity = item.medicineCapacity ? item.medicineCapacity.toUpperCase() : ''; // If medicineCapacity doesn't exist, assign an empty string
+
+                            const medicineuid = item.medicineName.substring(0, 3).toUpperCase() + item.mfrsName.substring(0, 3).toUpperCase() + timestamp + medicineCapacity
+                            let findMedicine = medicine.findIndex((item1) => item1.medicineuid === medicineuid)
                             if (findMedicine >= 0) {
                                 let totalStock = medicine[findMedicine].availableStock + item.availableStock;
                                 let newObj = { ...medicine[findMedicine], availableStock: totalStock }
                                 updateDatainSubcollectionMedicalAndPatients("Medicines", 'dHFKEhdhbOM4v6WRMb6z', 'medicines', newObj, 'medicineuid', 'hospitaluid')
                                 // medicine[findMedicine] = newObj
                             } else {
-                                addDatainsubcollectionmedicalAndPatients("Medicines", 'dHFKEhdhbOM4v6WRMb6z', 'medicines', { ...item, hospitaluid: hospitaluid })
+                                addDatainsubcollectionmedicalAndPatients("Medicines", 'dHFKEhdhbOM4v6WRMb6z', 'medicines', { ...item, hospitaluid: hospitaluid, medicineuid: medicineuid })
                                 // medicine.push({ ...item, hospitaluid: hospitaluid })
                             }
                             tempData.push({ ...item, hospitaluid: hospitaluid })
@@ -315,11 +325,11 @@ const MedicineMaster = () => {
             </Modal.Header>
             <Modal.Body>
                 <form >
-                    <div className="form-group" style={{ marginTop: '20px' }}>
+                    {/* <div className="form-group" style={{ marginTop: '20px' }}>
                         <label>Medicine id<b style={{ color: 'red' }}>*</b>:</label>
                         <input type="number" className="form-control" placeholder="Enter Medicine UID" name='medicineuid' value={values.medicineuid} onChange={handleChange} onBlur={handleBlur} />
                         {errors.medicineuid && touched.medicineuid ? (<p style={{ color: 'red' }}>*{errors.medicineuid}</p>) : null}
-                    </div>
+                    </div> */}
                     <div className="form-group" style={{ marginTop: '20px' }}>
                         <label>Batch No.<b style={{ color: 'red' }}>*</b>:</label>
                         <input type="text" className="form-control" placeholder="Enter Medicine Formula" name='batchNumber' value={values.batchNumber} onChange={handleChange} onBlur={handleBlur} />
@@ -329,6 +339,16 @@ const MedicineMaster = () => {
                         <label>Name of Drug<b style={{ color: 'red' }}>*</b>:</label>
                         <input type="text" className="form-control" placeholder="Enter Medicine Name" name='medicineName' value={values.medicineName} onChange={handleChange} onBlur={handleBlur} />
                         {errors.medicineName && touched.medicineName ? (<p style={{ color: 'red' }}>*{errors.medicineName}</p>) : null}
+                    </div>
+                    <div className="form-group" style={{ marginTop: '20px' }}>
+                        <label>Medicine Type<b style={{ color: 'red' }}>*</b>:</label>
+                        <input type="text" className="form-control" placeholder="Enter Medicine Type" name='medicineType' value={values.medicineType} onChange={handleChange} onBlur={handleBlur} />
+                        {errors.medicineType && touched.medicineType ? (<p style={{ color: 'red' }}>*{errors.medicineType}</p>) : null}
+                    </div>
+                    <div className="form-group" style={{ marginTop: '20px' }}>
+                        <label>Capacity<b style={{ color: 'red' }}>*</b>:</label>
+                        <input type="text" className="form-control" placeholder="Enter Medicine Capacity" name='medicineCapacity' value={values.medicineCapacity} onChange={handleChange} onBlur={handleBlur} />
+                        {errors.medicineCapacity && touched.medicineCapacity ? (<p style={{ color: 'red' }}>*{errors.medicineCapacity}</p>) : null}
                     </div>
                     <div className="form-group" style={{ marginTop: '20px' }}>
                         <label>Manufacturer Name<b style={{ color: 'red' }}>*</b>:</label>

@@ -81,7 +81,7 @@ export const roomSchema = Yup.object({
 
 
 export const medicineSchema = Yup.object({
-    medicineuid: Yup.number().required("Medicine UID is Required"),
+    // medicineuid: Yup.number().required("Medicine UID is Required"),
     medicineName: Yup.string().required("Medicine Name is Required"),
     availableStock: Yup.number().required("Stock Required"),
     batchNumber: Yup.string().required("Batch Number is Required"),
