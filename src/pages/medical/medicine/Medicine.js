@@ -559,7 +559,6 @@ const Medicine = () => {
         navigate("/medical/medicine/medicineinvoice", { state: item })
     }
     const editPatientDetails = (item) => {
-        // filDatainsubcollection(allPatientsMedicines, "PatientsMedicines", 'GoKwC6l5NRWSonfUAal0', 'patientsMedicines')
         const {
             pid,
             pName,
@@ -657,7 +656,7 @@ const Medicine = () => {
                     return med;
                 }
             });
-            formik.setFieldValue('allMedTotalprice', await values.medicines.reduce((price, item) => price + item.medPrice * item.medQty, 0));
+            formik.setFieldValue('allMedTotalprice', await Number(values.medicines.reduce((price, item) => price + item.medPrice * item.medQty, 0).toFixed(2)));
 
             // values.allMedTotalprice = await values.medicines.reduce((price, item) => price + item.medPrice * item.medQty, 0);
             setStockerror(false);
@@ -696,7 +695,7 @@ const Medicine = () => {
     }
     const removeMedicine = async (indexToRemove) => {
         values.medicines = values.medicines.filter((_, index) => index !== indexToRemove);
-        formik.setFieldValue('allMedTotalprice', await values.medicines.reduce((price, item) => price + item.medPrice * item.medQty, 0));
+        formik.setFieldValue('allMedTotalprice', await Number(values.medicines.reduce((price, item) => price + item.medPrice * item.medQty, 0).toFixed(2)));
 
         // values.allMedTotalprice = await values.medicines.reduce((price, item) => price + item.medPrice * item.medQty, 0);
         setAutofocus(!autofocus);
@@ -805,6 +804,103 @@ const Medicine = () => {
         setIsLoading(false)
 
     }
+    // const saveAndPrint = async () => {
+    //     let medd = [...patientsMedicineList]
+    //     values.medicineDate = values.medicineDate ? ddMMyyyy(values.medicineDate) : values.medicineDate;
+    //     // await Values.medicines.map((item) => updateStock(item))
+    //     await Promise.all(values.medicines.map((item) => updateStock(item)));
+    //     setIsLoading(true)
+    //     if (!update) {
+    //         values.pmeduid = Math.floor(315 + Math.random() * 8000)
+    //         setPatientsMedicineFilter([...patientsMedicineFilter, values])
+
+    //         try {
+    //             await addDatainsubcollection("PatientsMedicines", 'GoKwC6l5NRWSonfUAal0', 'patientsMedicines', values).then((newDocData) => {
+    //                 navigate("/medical/medicine/medicineinvoice", { state: newDocData.data() })
+    //             })
+    //                 .catch((error) => {
+    //                     // Handle any errors that occurred during the addition
+    //                     setIsLoading(false)
+
+    //                     console.error(error);
+    //                 });
+    //             await updateDataincollection('MedicinePatientsCount', { hospitaluid: hospitaluid, count: totalnumData + 1 })
+    //             // action.resetForm()
+    //             clearForm()
+    //             setShow(false)
+    //             navigate("/medical/medicine/medicineinvoice", { state: values })
+    //             setIsLoading(false)
+    //             toast.success("Added Successfully.......");
+    //         } catch (error) {
+    //             setIsLoading(false)
+    //             toast.error(error.message)
+    //             console.error(error.message);
+    //         }
+
+    //     } else {
+
+    //         let findindex = await medd.findIndex((item) => item.pmeduid === values.pmeduid);
+    //         await medd[findindex].medicines.map((item) => updateStockonUpdate(item))
+    //         medd[findindex] = values;
+
+    //         try {
+    //             await updateDatainSubcollection("PatientsMedicines", 'GoKwC6l5NRWSonfUAal0', 'patientsMedicines', values, 'pmeduid', 'hospitaluid')
+    //             // action.resetForm()
+    //             clearForm()
+    //             setShow(false)
+    //             setUpdate(false)
+    //             navigate("/medical/medicine/medicineinvoice", { state: values })
+    //             setIsLoading(false)
+
+    //             toast.success("Updated Successfully.......");
+    //         } catch (error) {
+    //             setIsLoading(false)
+
+    //             toast.error(error.message)
+    //             console.error(error.message);
+    //         }
+    //     }
+    // }
+    const saveAndPrint = async () => {
+        setIsLoading(true);
+
+        try {
+            await Promise.all(values.medicines.map((item) => updateStock(item)));
+            if (!update) {
+                values.pmeduid = Math.floor(315 + Math.random() * 8000);
+                setPatientsMedicineFilter([...patientsMedicineFilter, values]);
+
+                const newDocData = await addDatainsubcollection("PatientsMedicines", 'GoKwC6l5NRWSonfUAal0', 'patientsMedicines', values);
+                await updateDataincollection('MedicinePatientsCount', { hospitaluid: hospitaluid, count: totalnumData + 1 });
+
+                clearForm();
+                setShow(false);
+                setIsLoading(false);
+                navigate("/medical/medicine/medicineinvoice", { state: newDocData.data() });
+                toast.success("Added Successfully.......");
+            } else {
+                let findindex = patientsMedicineList.findIndex((item) => item.pmeduid === values.pmeduid);
+
+                await Promise.all(patientsMedicineList[findindex].medicines.map((item) => updateStockonUpdate(item)));
+
+                patientsMedicineList[findindex] = values;
+
+                await updateDatainSubcollection("PatientsMedicines", 'GoKwC6l5NRWSonfUAal0', 'patientsMedicines', values, 'pmeduid', 'hospitaluid');
+
+                clearForm();
+                setShow(false);
+                setUpdate(false);
+                setIsLoading(false);
+                navigate("/medical/medicine/medicineinvoice", { state: values });
+                toast.success("Updated Successfully.......");
+            }
+        } catch (error) {
+            setIsLoading(false);
+            toast.error(error.message);
+            console.error(error.message);
+        }
+    };
+
     return <>
 
         {isLoading ? <Loaderspinner /> :
@@ -1135,10 +1231,13 @@ const Medicine = () => {
             </Modal.Body>
             <Modal.Footer>
                 <Button variant="secondary" onClick={handleClose}>
-                    Close
+                    Cancel
                 </Button>
                 <Button variant="primary" onClick={handleSubmit} >
-                    {update ? 'Update' : 'Submit'}
+                    {update ? 'Update' : 'Save'}
+                </Button>
+                <Button variant="primary" onClick={() => saveAndPrint()} >
+                    Print
                 </Button>
             </Modal.Footer>
         </Modal>

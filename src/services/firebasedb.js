@@ -567,7 +567,7 @@ export const getSubcollectionDataWithoutsnapshotMedicalAndPatients = async (coll
         const parentDocRef = db.collection(collectionName).doc(collectionuid);
         // Access the specific subcollection
         const subcollectionRef = parentDocRef.collection(subcollectionName);
-        let query = subcollectionRef.where('hospitaluid', '==', hospitaluid);
+        let query = subcollectionRef.where('hospitaluid', '==', hospitaluid).where('deleted', '==', 0);
 
         // If lastData is provided, add a filter to get data after the last timestamp
         console.log('last Data', lastData);
@@ -604,7 +604,7 @@ export const updateDatainSubcollectionMedicalAndPatients = (collectionName, coll
 
     // Access the specific subcollection
     const subcollectionRef = parentDocRef.collection(subcollectionName);
-    const query = subcollectionRef.where(cond2, '==', data[cond2]).where(cond1, '==', data[cond1])
+    const query = subcollectionRef.where(cond2, '==', data[cond2]).where(cond1, '==', data[cond1]).where('deleted', '==', 0)
     const timestamp = new Date();
     query.get()
         .then(querySnapshot => {
@@ -819,7 +819,7 @@ export const deleteDatainSubcollectionMedicalAndPatients = (collectionName, coll
     const parentDocRef = db.collection(collectionName).doc(collectionuid);
     // Access the specific subcollection
     const subcollectionRef = parentDocRef.collection(subcollectionName);
-    const query = subcollectionRef.where(cond2, '==', data[cond2]).where(cond1, '==', data[cond1])
+    const query = subcollectionRef.where(cond2, '==', data[cond2]).where(cond1, '==', data[cond1]).where('deleted', '==', 0)
     const timestamp = new Date();
     const timestampWithNanoseconds = data.timestamp.seconds * 1000 + Math.floor(data.timestamp.nanoseconds / 1e6);
     const dateObject = new Date(timestampWithNanoseconds);

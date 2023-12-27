@@ -219,7 +219,7 @@ const MedicineMaster = () => {
                             // await deleteDatainSubcollection("Medicines", 'dHFKEhdhbOM4v6WRMb6z', 'medicines', item1, 'medicineuid', 'hospitaluid')
                             await deleteDatainSubcollectionMedicalAndPatients("Medicines", 'dHFKEhdhbOM4v6WRMb6z', 'medicines', item1, 'medicineuid', 'hospitaluid')
                             // await setData("Medicines", 'dHFKEhdhbOM4v6WRMb6z', 'medicines', med)
-                            // dispatch(DELETE_MEDICINES(item1))
+                            dispatch(DELETE_MEDICINES(item1))
                             toast.success("Deleted Successfully.......");
                         } catch (error) {
                             toast.error(error.message)

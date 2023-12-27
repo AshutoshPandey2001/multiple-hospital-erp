@@ -280,7 +280,7 @@ const medicineInvoice = () => {
     const [paid, setPaid] = useState(false)
     const [printContent, setPrintContent] = useState(null);
     const [paymentType, setPaymentType] = useState()
-    const [paymentStatus, setPaymentStatus] = useState('')
+    const [paymentStatus, setPaymentStatus] = useState('Pending')
     const userName = useSelector(selectUserName)
     const prevBillNo = useSelector(selectmedicinerprevBillNo)
     const [invoiceuid, setInvoiceuid] = useState()
@@ -319,7 +319,6 @@ const medicineInvoice = () => {
     }
     const saveInvoice = async () => {
         setIsLoading(true)
-        let medicinePatient = await [...allMedicinePatient]
         let newObj = await {
             ...state,
             paymentStatus: 'Completed',
@@ -339,9 +338,19 @@ const medicineInvoice = () => {
 
             // await setData("PatientsMedicines", 'GoKwC6l5NRWSonfUAal0', 'patientsMedicines', newArray)
             // dispatch(EDIT_PATIENTS_MEDICINES(newObj))
+
+            await setPrintContent(<PrintComponent data={{
+                data1: {
+                    ...newObj
+                }
+            }} />)
             toast.success("Invoice Saved SuccessFully...")
+            setIsLoading(false)
+            setTimeout(() => {
+                window.history.back();
+            }, 2000);
             // setIsLoading(false)
-            window.history.back()
+            // window.history.back()
         } catch (error) {
             setIsLoading(false)
             console.error(error);
@@ -349,31 +358,29 @@ const medicineInvoice = () => {
 
     }
     const printInvoice = () => {
-        // if (state.paymentStatus === "Complete") {
-        //     setPrintContent(<PrintComponent data={{
-        //         data1: {
-        //             ...state,
-        //         }
-        //     }} />)
-        // } else {
-        setPrintContent(<PrintComponent data={{
-            data1: {
-                ...state,
-                cgstValue: cgstValue,
-                cgstAmount: cgstAmount,
-                sgstValue: sgstValue,
-                sgstAmount: sgstAmount,
-                payableAmount: payAbleAmount,
-                medicalName,
-                medicalAddress,
-                contactNumber,
-                licenceNumber,
-                paymentType,
-                userName,
-                invoiceuid
-            }
-        }} />)
-        // }
+        if (paymentStatus === 'Completed') {
+            saveInvoice()
+        } else {
+            setPrintContent(<PrintComponent data={{
+                data1: {
+                    ...state,
+                    cgstValue: cgstValue,
+                    cgstAmount: cgstAmount,
+                    sgstValue: sgstValue,
+                    sgstAmount: sgstAmount,
+                    payableAmount: payAbleAmount,
+                    medicalName,
+                    medicalAddress,
+                    contactNumber,
+                    licenceNumber,
+                    paymentType,
+                    userName,
+                    invoiceuid
+                }
+            }} />)
+        }
+
+
 
 
 
