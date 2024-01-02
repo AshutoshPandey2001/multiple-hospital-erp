@@ -101,34 +101,17 @@ const Addpatients = () => {
     ]
 
     useEffect(() => {
+        const retrivePatientsList = async () => {
+            const stockQuery = subcollectionRef;
+            retrieveData(stockQuery);
+        };
+        retrivePatientsList()
         setUserpermissions(permissions?.find(permission => permission.module === "PATIENTS"))
+        return () => {
+            unsubscribe()
+        }
     }, [])
 
-    // useEffect(() => {
-    //     // setPatientsList([...allPatientsList].reverse())
-    //     // setPatientsFilter(allPatientsList)
-    //     // setIsLoading(false)
-    //     let query = subcollectionRef
-    //         .orderBy('timestamp', 'desc')
-    //         .limit(perPageRows)
-    //     // let query = new firebase.firestore.Query(subcollectionRef)
-    //     //     .where('hospitaluid', '==', hospitaluid)
-    //     //     .whereEqualTo('deleted', null)
-    //     //     // .where('deleted', '!=', 1)
-    //     //     // .where('deleted', '==', null)
-    //     //     .orderBy('timestamp', 'desc')
-    //     //     .limit(perPageRows)
-    //     retrieveData(query)
-    //     setIsLoading(false)
-    //     // totalNumberofData()
-    //     // chnageDetectore()
-    //     return () => {
-    //         // unsub()
-    //         unsubscribe();
-    //         // setSearchString('')
-    //         // console.log('unmounting');
-    //     };
-    // }, [])
 
     useEffect(() => {
         setPatientsList([...allPatientsList].reverse())
@@ -144,10 +127,6 @@ const Addpatients = () => {
             unsubscribe = query.onSnapshot((snapshot) => {
                 fetchData()
             });
-
-            // return () => {
-            //     unsubscribe();
-            // };
         } catch (error) {
             setIsLoading(false)
 

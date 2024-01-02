@@ -597,6 +597,42 @@ export const getSubcollectionDataWithoutsnapshotMedicalAndPatients = async (coll
         throw error;
     }
 };
+export const getSubcollectionDataWithoutsnapshotPatients = async (collectionName, collectionuid, subcollectionName, hospitaluid, lastData, callback) => {
+    try {
+        // Get a reference to the parent document
+        const parentDocRef = db.collection(collectionName).doc(collectionuid);
+        // Access the specific subcollection
+        const subcollectionRef = parentDocRef.collection(subcollectionName);
+        let query = subcollectionRef.where('hospitaluid', '==', hospitaluid).where('deleted', '==', 0);
+
+        // If lastData is provided, add a filter to get data after the last timestamp
+        console.log('last Data', lastData);
+        if (lastData) {
+            const timestamp = new firebase.firestore.Timestamp(lastData.timestamp.seconds, lastData.timestamp.nanoseconds);
+            console.log('i am inside this Patients', timestamp);
+            query = query.where('lastUpdated', '>', timestamp);
+        }
+
+
+        const querySnapshot = await query.get();
+        let temp_data = [];
+        querySnapshot.forEach((doc) => {
+            temp_data.push(doc.data());
+        });
+        console.log('temp_data', temp_data);
+
+        // Get the last visible document for pagination
+        let lastVisibleDoc = querySnapshot.docs[querySnapshot.docs.length - 1];
+
+        // Pass the ID of the last visible document to the callback function
+        // This can be used for pagination to get the next set of data
+        callback(temp_data, lastVisibleDoc ? lastVisibleDoc.data() : lastData);
+
+        return temp_data;
+    } catch (error) {
+        throw error;
+    }
+};
 // update document in subcollection
 
 export const updateDatainSubcollectionMedicalAndPatients = (collectionName, collectionuid, subcollectionName, data, cond1, cond2) => {

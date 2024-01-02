@@ -43,8 +43,9 @@ const PrintComponent = ({ data }) => {
                         <div>
                             <div><b>Bill #: {state.invoiceuid}</b></div>
                             <div>Date: {state.medicineDate}</div>
-                            <Barcode value={state.pid} height={30} width={1} displayValue={false} />
-                        </div>
+                            {state.pid &&
+                                <Barcode value={state.pid} height={30} width={1} displayValue={false} />
+                            }                        </div>
                     </div>
                     <div className='col-lg-4' style={{ width: '35%' }}>
                         <div className='p-2'>
@@ -405,7 +406,10 @@ const medicineInvoice = () => {
                                     <div>
                                         <div><b>Bill #: {state.invoiceuid ? state.invoiceuid : invoiceuid}</b></div>
                                         <div>Date: {state.medicineDate}</div>
-                                        <Barcode value={state.pid} height={30} width={1} displayValue={false} />
+                                        {state.pid &&
+                                            <Barcode value={state.pid} height={30} width={1} displayValue={false} />
+                                        }
+                                        {/* <Barcode value={state.pid} height={30} width={1} displayValue={false} /> */}
                                     </div>
                                 </div>
                                 <div className='col-lg-4'>

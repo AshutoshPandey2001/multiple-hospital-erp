@@ -92,8 +92,8 @@ export const medicineSchema = Yup.object({
 })
 
 export const padtientmedicineSchema = Yup.object({
-    pid: Yup.string().required("Patient id is required"),
-    pName: Yup.string().required("Patient Name is required"),
+    // pid: Yup.string().required("Patient id is required"),
+    // pName: Yup.string().required("Patient Name is required"),
     // pMobileNo: Yup.string().required("Patient Mobile No is required"),
     medicineDate: Yup.string().required("Date is required"),
     paymentStatus: Yup.string().required("Payment Status in Required"),

@@ -5,7 +5,7 @@ import { ReactSearchAutocomplete } from "react-search-autocomplete";
 import "./searchstyle.css";
 import { ddMMyyyy } from 'src/services/dateFormate';
 
-const SearchAutocomplete = ({ allPatients, handleOnSelect, inputsearch, placeholder, handleClear, keyforSearch, resultstringkey, style }) => {
+const SearchAutocomplete = ({ allPatients, handleOnSearch, handleOnSelect, inputsearch, placeholder, handleClear, keyforSearch, resultstringkey, style }) => {
     const formatResult = (item) => {
 
         return (
@@ -43,6 +43,7 @@ const SearchAutocomplete = ({ allPatients, handleOnSelect, inputsearch, placehol
             </div>
         )
     }
+
     return (
         <>
             <ReactSearchAutocomplete
@@ -53,6 +54,7 @@ const SearchAutocomplete = ({ allPatients, handleOnSelect, inputsearch, placehol
                 onClear={handleClear}
                 inputSearchString={inputsearch}
                 placeholder={placeholder}
+                onSearch={handleOnSearch}
                 showIcon={false}
                 formatResult={formatResult}
                 styling={style} />
