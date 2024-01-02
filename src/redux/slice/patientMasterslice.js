@@ -34,8 +34,11 @@ const patientSlice = createSlice({
 
         },
         DELETE_PATIENTS: (state, actions) => {
-
             state.patientsList = state.patientsList.filter((item) => item.pid !== actions.payload.pid)
+            if (state.lastPatientsData.pid === actions.payload.pid) {
+                state.lastPatientsData = undefined
+
+            }
 
         },
         // FILL_PATIENTS: (state, actions) => {

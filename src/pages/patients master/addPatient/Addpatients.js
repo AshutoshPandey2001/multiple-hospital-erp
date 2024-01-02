@@ -100,17 +100,6 @@ const Addpatients = () => {
         }
     ]
 
-    useEffect(() => {
-        const retrivePatientsList = async () => {
-            const stockQuery = subcollectionRef;
-            retrieveData(stockQuery);
-        };
-        retrivePatientsList()
-        setUserpermissions(permissions?.find(permission => permission.module === "PATIENTS"))
-        return () => {
-            unsubscribe()
-        }
-    }, [])
 
 
     useEffect(() => {
@@ -119,6 +108,17 @@ const Addpatients = () => {
         setIsLoading(false)
     }, [allPatientsList])
 
+    useEffect(() => {
+        // const retrivePatientsList = async () => {
+        //     const stockQuery = subcollectionRef;
+        //     retrieveData(stockQuery);
+        // };
+        // retrivePatientsList()
+        setUserpermissions(permissions?.find(permission => permission.module === "PATIENTS"))
+        // return () => {
+        //     unsubscribe()
+        // }
+    }, [])
 
     const retrieveData = (query) => {
         try {

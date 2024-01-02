@@ -529,7 +529,7 @@ export const getSubcollectionDataWithoutsnapshot = async (collectionName, collec
         const parentDocRef = db.collection(collectionName).doc(collectionuid);
         // Access the specific subcollection
         const subcollectionRef = parentDocRef.collection(subcollectionName);
-        let query = subcollectionRef.where('hospitaluid', '==', hospitaluid).orderBy('timestamp', 'asc');
+        let query = subcollectionRef.where('hospitaluid', '==', hospitaluid).where('deleted', '==', 0).orderBy('timestamp', 'asc');
 
         // If lastData is provided, add a filter to get data after the last timestamp
         console.log('last Data', lastData);
