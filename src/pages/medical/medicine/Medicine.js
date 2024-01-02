@@ -76,7 +76,7 @@ const PrintComponent = ({ data }) => {
                         </div>
                     </div>
                 </div>
-                <div style={{ marginRight: -3 }}>
+                <div style={{ marginRight: -3, marginBottom: '-20px' }}>
                     <Table bordered border={4}  >
                         <thead style={{ border: '1px solid black' }}>
                             <tr>

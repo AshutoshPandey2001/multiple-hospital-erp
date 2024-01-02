@@ -30,7 +30,7 @@ const PrintButtonMedical = ({ content }) => {
         content={() => componentRef.current}
         pageStyle={`
                         @page {
-                          size: A4 ;
+                          size: A4;
                         margin:0;
                         padding:0
                            }

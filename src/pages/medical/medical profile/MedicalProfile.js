@@ -153,7 +153,6 @@ const MedicalProfile = () => {
                                 defaultValue={contactNumber}
                                 onChange={handleChange}
                                 placeholder='Enter Contact Number'
-                                required
                             />
                         </div>
 

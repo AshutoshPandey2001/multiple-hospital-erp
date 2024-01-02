@@ -71,6 +71,10 @@ const MedicineMaster = () => {
         values.medicineuid = '';
         values.availableStock = '';
         values.hospitaluid = '';
+        values.expireDate = '';
+        values.medicineType = '';
+        values.medicineCapacity = '';
+        values.mfrsName = '';
         setUpdate(false)
         formik.resetForm();
     }
@@ -133,9 +137,6 @@ const MedicineMaster = () => {
                     medd[findMedicine] = newObj
                     try {
                         await updateDatainSubcollectionMedicalAndPatients("Medicines", 'dHFKEhdhbOM4v6WRMb6z', 'medicines', newObj, 'medicineuid', 'hospitaluid')
-
-                        // await updateDatainSubcollection("Medicines", 'dHFKEhdhbOM4v6WRMb6z', 'medicines', values, 'medicineuid', 'hospitaluid')
-                        // dispatch(EDIT_MEDICINES(Values))
                         action.resetForm()
                         setShow(false)
                         setUpdate(false)
@@ -264,11 +265,11 @@ const MedicineMaster = () => {
                     let tempData = [];
                     let res = results.data
 
-                    await res.map((item) => {
+                    await res.map(async (item) => {
                         if (item.batchNumber) {
-                            item.expireDate = formatDateYYYYMMDD(item.expireDate)
+                            item.expireDate = await formatDateYYYYMMDD(item.expireDate)
                             let timestamp = new Date(item.expireDate).getTime();
-                            let medicineCapacity = item.medicineCapacity ? item.medicineCapacity.toUpperCase() : ''; // If medicineCapacity doesn't exist, assign an empty string
+                            let medicineCapacity = item.medicineCapacity ? item.medicineCapacity.toString().toUpperCase() : ''; // If medicineCapacity doesn't exist, assign an empty string
 
                             const medicineuid = item.medicineName.substring(0, 3).toUpperCase() + item.mfrsName.substring(0, 3).toUpperCase() + timestamp + medicineCapacity
                             let findMedicine = medicine.findIndex((item1) => item1.medicineuid === medicineuid)
@@ -332,7 +333,7 @@ const MedicineMaster = () => {
                     </div> */}
                     <div className="form-group" style={{ marginTop: '20px' }}>
                         <label>Batch No.<b style={{ color: 'red' }}>*</b>:</label>
-                        <input type="text" className="form-control" placeholder="Enter Medicine Formula" name='batchNumber' value={values.batchNumber} onChange={handleChange} onBlur={handleBlur} />
+                        <input type="text" className="form-control" placeholder="Enter batch number" name='batchNumber' value={values.batchNumber} onChange={handleChange} onBlur={handleBlur} />
                         {errors.batchNumber && touched.batchNumber ? (<p style={{ color: 'red' }}>*{errors.batchNumber}</p>) : null}
                     </div>
                     <div className="form-group" style={{ marginTop: '20px' }}>
@@ -357,7 +358,7 @@ const MedicineMaster = () => {
                     </div>
                     <div className="form-group" style={{ marginTop: '20px' }}>
                         <label>Expire Date<b style={{ color: 'red' }}>*</b>:</label>
-                        <input type="date" className="form-control" placeholder="Enter Medicine Name" name='expireDate' value={values.expireDate} onChange={handleChange} onBlur={handleBlur} />
+                        <input type="date" className="form-control" placeholder="Enter Medicine Expire date" name='expireDate' value={values.expireDate} onChange={handleChange} onBlur={handleBlur} />
                         {errors.expireDate && touched.expireDate ? (<p style={{ color: 'red' }}>*{errors.expireDate}</p>) : null}
                     </div>
                     <div className="form-group" style={{ marginTop: '20px' }}>

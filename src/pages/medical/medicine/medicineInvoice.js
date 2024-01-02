@@ -64,7 +64,7 @@ const PrintComponent = ({ data }) => {
                         </div>
                     </div>
                 </div>
-                <div style={{ marginRight: -3 }}>
+                <div style={{ marginRight: -3, marginBottom: '-20px' }}>
                     <Table bordered border={4}  >
                         <thead style={{ border: '1px solid black' }}>
                             <tr>
@@ -124,7 +124,7 @@ const PrintComponent = ({ data }) => {
                         </tbody>
                     </Table>
                 </div>
-                <div className='row'>
+                <div className='row' style={{ marginTop: -5 }}>
                     <div className='col-lg-6 col-md-6 col-sm-6 d-flex justify-content-start'>
                         <div className='p-2'>
                             <div>

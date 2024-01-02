@@ -61,6 +61,7 @@ import { RESET_TAX } from 'src/redux/slice/taxSlice'
 import { RESET_PARAMETERS } from 'src/redux/slice/laborataryMaster'
 import { RESET_PATIENTS_MEDICINES } from 'src/redux/slice/patientsMedicinesSlice'
 import { RESET_ROLE } from 'src/redux/slice/userRolesSlice'
+import { toast } from 'react-toastify';
 
 const AppHeader = () => {
   const dispatch = useDispatch()
@@ -103,6 +104,11 @@ const AppHeader = () => {
   const calCulateDays = () => {
     let time_differ = (new Date(timeFilter(subscriptionExpireDate)) - new Date(formattedDate));
     const days = time_differ / (1000 * 60 * 60 * 24);
+    if (days <= 0) {
+      toast.error("Your Subsciption Expire");
+      alert('Your Subsciption Expire')
+    }
+
     setTotalRemaningDays(days)
   }
 
