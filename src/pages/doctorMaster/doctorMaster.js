@@ -89,19 +89,22 @@ const doctorMaster = () => {
             if (!update) {
                 values.druid = Math.floor(2000 + Math.random() * 7000);
                 values.hospitaluid = hospitaluid;
+
                 let doctor = [...drFilter, Values]
                 try {
                     // await setData('Doctors', 'd3ryEUfqA2FMa0fEyxde', 'doctors', doctor)
-                    const userCredential = await createUserWithEmailAndPassword(auth, values.email, "Test@1234");
-                    const user = userCredential.user;
-                    await db.collection('UserList').doc(user.uid).set({
-                        userEmail: values.email,
-                        userName: values.drName,
-                        userType: "Doctor",
-                        userPassword: "Test@1234",
-                        hospitaluid: hospitaluid,
-                        druid: values.druid
-                    });
+                    if (values.email) {
+                        const userCredential = await createUserWithEmailAndPassword(auth, values.email, "Test@1234");
+                        const user = userCredential.user;
+                        await db.collection('UserList').doc(user.uid).set({
+                            userEmail: values.email,
+                            userName: values.drName,
+                            userType: "Doctor",
+                            userPassword: "Test@1234",
+                            hospitaluid: hospitaluid,
+                            druid: values.druid
+                        });
+                    }
                     await addSingltObject('Doctors', 'd3ryEUfqA2FMa0fEyxde', 'doctors', values)
                     // await addDatainsubcollection('Doctors', 'd3ryEUfqA2FMa0fEyxde', 'doctors', values)
                     dispatch(ADD_DR(Values))
@@ -141,6 +144,7 @@ const doctorMaster = () => {
     const { values, errors, touched, handleBlur, handleChange, handleSubmit } = formik
     const clearForm = () => {
         formik.setValues({
+            email: '',
             druid: '',
             drName: '',
             hospitaluid: '',
@@ -157,8 +161,7 @@ const doctorMaster = () => {
         });
     }
     const editDoctor = (item) => {
-        console.log('item', item);
-        values.email = item.email;
+        values.email = item.email ? item.email : '';
         values.drName = item.drName;
         values.druid = item.druid;
         values.hospitaluid = item.hospitaluid
@@ -237,11 +240,12 @@ const doctorMaster = () => {
                             <input className="form-control" placeholder='Enter Dr Name' name='drName' defaultValue={values.drName} onChange={handleChange} />
                             {errors.drName && touched.drName ? (<p style={{ color: 'red' }}>*{errors.drName}</p>) : null}
                         </div>
-                        <div className="form-group" style={{ marginTop: '20px' }}>
-                            <label>Email<b style={{ color: 'red' }}>*</b>:</label>
-                            <input type='email' className="form-control" placeholder='Enter doctor email' name='email' readOnly={update} defaultValue={values.email} onChange={handleChange} />
-                            {errors.email && touched.email ? (<p style={{ color: 'red' }}>*{errors.email}</p>) : null}
-                        </div>
+                        {update ? null :
+                            <div className="form-group" style={{ marginTop: '20px' }}>
+                                <label>Email<b style={{ color: 'red' }}>*</b>:</label>
+                                <input type='email' className="form-control" placeholder='Enter doctor email' name='email' readOnly={update} defaultValue={values.email} onChange={handleChange} />
+                                {errors.email && touched.email ? (<p style={{ color: 'red' }}>*{errors.email}</p>) : null}
+                            </div>}
                         <div className="form-group" style={{ marginTop: '20px' }}>
                             <label>Consulting Charges<b style={{ color: 'red' }}>*</b>:</label>
                             {/* <input type="number" className="form-control" placeholder="Enter Consulting Charges" name='consultingCharge' value={values.consultingCharge} onChange={handleChange} onBlur={handleBlur} />

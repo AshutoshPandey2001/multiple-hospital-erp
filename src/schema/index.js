@@ -141,9 +141,7 @@ export const drSchema = Yup.object({
                 .required('Charge is required')
         })
     ),
-    email: Yup.string()
-        .email('Invalid email format') // Add email validation here
-        .required('Email is required')
+
 })
 
 export const dischargeSchema = Yup.object({
