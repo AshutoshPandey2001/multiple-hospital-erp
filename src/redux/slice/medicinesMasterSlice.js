@@ -38,6 +38,9 @@ const medicinesMsterSlice = createSlice({
         DELETE_MEDICINES: (state, actions) => {
 
             state.medicinesList = state.medicinesList.filter((item) => item.medicineuid !== actions.payload.medicineuid)
+            if (state.lastMedicines.medicineuid === actions.payload.medicineuid) {
+                state.lastMedicines = undefined
+            }
 
         },
         UPLOAD_MEDICINES: (state, actions) => {

@@ -14,7 +14,7 @@ import { BsPencilSquare } from 'react-icons/bs'
 import { FiFilter } from 'react-icons/fi'
 import { TfiReload } from 'react-icons/tfi'
 // import Select from "react-dropdown-select";
-import { selectAllPatients } from 'src/redux/slice/patientMasterslice';
+import { ADD_LAST_PATIENT_DATA, FILL_PATIENTS, selectAllPatients, selectlastPatientData } from 'src/redux/slice/patientMasterslice';
 import { useDispatch, useSelector } from 'react-redux';
 import { ADD_ADMIT_PATIENTS, DELETE_ADMIT_PATIENTS, EDIT_ADMIT_PATIENTS, FILL_ADMIT_PATIENTS, selectAdmitPatients } from 'src/redux/slice/admitPatientsSlice';
 import { EDIT_ROOM, FILL_ROOMS, selectAllRooms } from 'src/redux/slice/roomMasterSlice';
@@ -24,7 +24,7 @@ import { setTimeout } from 'core-js';
 import Table from 'react-bootstrap/Table';
 import Loaderspinner from '../../comman/spinner/Loaderspinner';
 import CommanTable from 'src/comman/table/CommanTable';
-import { addDatainsubcollection, deleteDatainSubcollection, deleteSingltObject, filDatainsubcollection, getSubcollectionData, setData, getData, updateDatainSubcollection, updateSingltObject, addDataincollection, updateDataincollection } from 'src/services/firebasedb';
+import { addDatainsubcollection, deleteDatainSubcollection, getSubcollectionDataWithoutsnapshot, deleteSingltObject, filDatainsubcollection, getSubcollectionData, setData, getData, updateDatainSubcollection, updateSingltObject, addDataincollection, updateDataincollection } from 'src/services/firebasedb';
 import Dropdown from 'react-bootstrap/Dropdown';
 import { confirmAlert } from 'react-confirm-alert';
 import { toast } from 'react-toastify';
@@ -296,6 +296,7 @@ const Admit = () => {
     const [searchString, setSearchString] = useState('');
     const permissions = useSelector(selectpermissions)
     const [userpermissions, setUserpermissions] = useState([]);
+    const lastPatientData = useSelector(selectlastPatientData)
 
     // const subcollectionRef = parentDocRef.collection('opdPatient').where('hospitaluid', '==', hospitaluid);
     const parentDocRef = db.collection('admitPatients').doc('jSqDGnjO21bpPGhb6O2y');
@@ -517,6 +518,7 @@ const Admit = () => {
         setitems()
     }
     const handleShow = () => {
+        fetchDataPatients()
         setShow(true)
         setTodayDate(new Date().toISOString().substr(0, 10) + 'T' + new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' }))
     };
@@ -944,7 +946,16 @@ const Admit = () => {
         })
     }
 
-
+    const fetchDataPatients = async () => {
+        await getSubcollectionDataWithoutsnapshot("Patients", 'fBoxFLrzXexT8WNBzGGh', 'patients', hospitaluid, lastPatientData, (data, lastData) => {
+            dispatch(FILL_PATIENTS(data))
+            dispatch(ADD_LAST_PATIENT_DATA(lastData))
+            console.log('Get Patients with last Data', data, lastData);
+            setIsLoading(false)
+        }).catch((error) => {
+            console.error('Error:', error);
+        })
+    }
 
     const handlePageChange = async (page) => {
         if (page < currentPage) {

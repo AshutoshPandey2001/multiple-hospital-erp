@@ -635,33 +635,78 @@ export const getSubcollectionDataWithoutsnapshotPatients = async (collectionName
 };
 // update document in subcollection
 
+// export const updateDatainSubcollectionMedicalAndPatients = (collectionName, collectionuid, subcollectionName, data, cond1, cond2) => {
+//     const parentDocRef = db.collection(collectionName).doc(collectionuid);
+
+//     // Access the specific subcollection
+//     const subcollectionRef = parentDocRef.collection(subcollectionName);
+//     const query = subcollectionRef.where(cond2, '==', data[cond2]).where(cond1, '==', data[cond1]).where('deleted', '==', 0)
+//     const timestamp = new Date();
+//     query.get()
+//         .then(querySnapshot => {
+//             querySnapshot.forEach(doc => {
+//                 doc.ref.update({
+//                     ...data,
+//                     lastUpdated: timestamp,
+
+//                 })
+//                     .then(() => {
+//                         console.log('Document successfully updated!');
+//                     })
+//                     .catch(error => {
+//                         console.error('Error updating document: ', error);
+//                     });
+//             });
+//         })
+//         .catch(error => {
+//             console.log('Error getting documents: ', error);
+//         });
+// }
 export const updateDatainSubcollectionMedicalAndPatients = (collectionName, collectionuid, subcollectionName, data, cond1, cond2) => {
     const parentDocRef = db.collection(collectionName).doc(collectionuid);
 
     // Access the specific subcollection
     const subcollectionRef = parentDocRef.collection(subcollectionName);
-    const query = subcollectionRef.where(cond2, '==', data[cond2]).where(cond1, '==', data[cond1]).where('deleted', '==', 0)
+    const query = subcollectionRef.where(cond2, '==', data[cond2]).where(cond1, '==', data[cond1]).where('deleted', '==', 0);
     const timestamp = new Date();
-    query.get()
+
+    return query.get()
         .then(querySnapshot => {
+            const promises = [];
+
             querySnapshot.forEach(doc => {
-                doc.ref.update({
+                const updatePromise = doc.ref.update({
                     ...data,
                     lastUpdated: timestamp,
-
                 })
                     .then(() => {
                         console.log('Document successfully updated!');
+                        // Fetch the updated document
+                        return doc.ref.get();
+                    })
+                    .then(updatedDoc => {
+                        // Return the updated document's data
+                        return updatedDoc.data();
                     })
                     .catch(error => {
                         console.error('Error updating document: ', error);
                     });
+
+                promises.push(updatePromise);
+            });
+
+            // Return a Promise that resolves when all updates are completed
+            return Promise.all(promises).then(updatedDataArray => {
+                // Return the first (and presumably only) updated document's data
+                return updatedDataArray[0];
             });
         })
         .catch(error => {
             console.log('Error getting documents: ', error);
+            throw error; // Propagate the error
         });
 }
+
 
 
 export const updateDatainSubcollection = (collectionName, collectionuid, subcollectionName, data, cond1, cond2) => {

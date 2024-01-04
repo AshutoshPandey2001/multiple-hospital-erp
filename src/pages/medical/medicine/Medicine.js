@@ -261,23 +261,24 @@ const Medicine = () => {
     };
 
     useEffect(() => {
-
         setMedList([...medicineList])
-        // medList = [...medicineList]
         setIsLoading(false)
     }, [medicineList])
 
 
+    useEffect(() => {
+        if (show) {
+            fetchData()
+            fetchDataPatients()
+        }
+    }, [show])
 
     useEffect(() => {
-        const retrieveMedicineStock = async () => {
-            const stockQuery = subcollectionRefMedicineStock;
-            retrieveData(stockQuery);
-        };
-        const retrivePatientsList = async () => {
-            const stockQuery = subcollectionRefpatients;
-            retrieveDataPatients(stockQuery);
-        };
+
+        // const retrivePatientsList = async () => {
+        //     const stockQuery = subcollectionRefpatients;
+        //     retrieveDataPatients(stockQuery);
+        // };
 
         const retrieveMedicineInvoices = async () => {
             const invoiceQuery = subcollectionRefMedicineInvoice
@@ -287,20 +288,21 @@ const Medicine = () => {
         };
 
         const fetchDataAndUpdateTotal = async () => {
-            retrieveMedicineStock();
+            // retrieveMedicineStock();
             retrieveMedicineInvoices();
-            retrivePatientsList()
+            // retrivePatientsList()
             totalNumberOfData();
         };
 
         fetchDataAndUpdateTotal();
 
         return () => {
-            unsubscribe();
+            // unsubscribe();
             unsub();
-            unsubpatients()
+            // unsubpatients()
         };
     }, []);
+
 
 
     const totalNumberOfData = async () => {
@@ -621,7 +623,6 @@ const Medicine = () => {
         formik.setFieldValue('page', item.page);
         formik.setFieldValue('pAddress', item.pAddress);
         formik.setFieldValue('hospitaluid', item.hospitaluid);
-
     };
 
     const handleOnSearch = (string, results) => {

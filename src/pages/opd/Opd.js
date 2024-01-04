@@ -8,7 +8,7 @@ import { useFormik } from 'formik';
 import { opdformSchema } from 'src/schema';
 import { MdEdit } from 'react-icons/md'
 import { AiFillDelete } from 'react-icons/ai'
-import { selectAllPatients } from 'src/redux/slice/patientMasterslice';
+import { ADD_LAST_PATIENT_DATA, FILL_PATIENTS, selectAllPatients, selectlastPatientData } from 'src/redux/slice/patientMasterslice';
 import { useDispatch, useSelector } from 'react-redux';
 import { ADD_LAST_OPD_DATA, ADD_OPD_PATIENTS, DELETE_OPD_PATIENTS, EDIT_OPD_PATIENTS, FILL_OPD_PATIENTS, selectOpdPatients, selectlastOpdData } from 'src/redux/slice/opdPatientsList';
 import Addpatientscommanmodel from '../../comman/comman model/Addpatientscommanmodel';
@@ -266,6 +266,8 @@ const Opd = () => {
     const lastOpdData = useSelector(selectlastOpdData)
     const permissions = useSelector(selectpermissions)
     console.log('userpermissions', userpermissions);
+    const lastPatientData = useSelector(selectlastPatientData)
+
     // const subcollectionRef = parentDocRef.collection('opdPatient').where('hospitaluid', '==', hospitaluid);
     const parentDocRef = db.collection('opdPatients').doc('m5JHl3l4zhaBCa8Vihcb');
     const subcollectionRef = parentDocRef.collection('opdPatient').where('hospitaluid', '==', hospitaluid).where('deleted', '==', 0);
@@ -752,6 +754,7 @@ const Opd = () => {
     const handleShow = () => {
         setShow(true)
         formik.setFieldValue('consultingDate', new Date().toISOString().substr(0, 10));
+        fetchDataPatients()
     };
 
 
@@ -947,7 +950,16 @@ const Opd = () => {
         // setAutofocus(!autofocus)
         // console.log('values', e, selectedDoctor, values);
     }
-
+    const fetchDataPatients = async () => {
+        await getSubcollectionDataWithoutsnapshot("Patients", 'fBoxFLrzXexT8WNBzGGh', 'patients', hospitaluid, lastPatientData, (data, lastData) => {
+            dispatch(FILL_PATIENTS(data))
+            dispatch(ADD_LAST_PATIENT_DATA(lastData))
+            console.log('Get Patients with last Data', data, lastData);
+            setIsLoading(false)
+        }).catch((error) => {
+            console.error('Error:', error);
+        })
+    }
 
     const pushAdvice = () => {
         // if (!advice) {

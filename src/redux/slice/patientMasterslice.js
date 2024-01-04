@@ -41,24 +41,7 @@ const patientSlice = createSlice({
             }
 
         },
-        // FILL_PATIENTS: (state, actions) => {
-        //     actions.payload.forEach((newPatient) => {
-        //         const existingPatientIndex = state.patientsList.findIndex(
-        //             (patient) => patient.pid === newPatient.pid
-        //         );
 
-        //         if (existingPatientIndex !== -1) {
-        //             // If a patient with the same pid already exists, replace it with the new patient
-        //             state.patientsList.splice(existingPatientIndex, 1, newPatient);
-        //         } else {
-        //             // If the patient with the same pid doesn't exist, add the new patient to the list
-        //             state.patientsList.push(newPatient);
-        //         }
-        //     });
-
-        //     // state.patientsList = [...state.patientsList, ...actions.payload];
-
-        // },
         FILL_PATIENTS: (state, actions) => {
             actions.payload.forEach((newPatient) => {
                 const existingPatientIndex = state.patientsList.findIndex(

@@ -43,38 +43,38 @@ const Addpatientscommanmodel = ({ show, handleClose, update, data }) => {
     //     console.log('change last p Data', lastPatientData);
     //     setLastpData(lastPatientData)
     // }, [lastPatientData])
-    useEffect(() => {
-        const retrivePatientsList = async () => {
-            const stockQuery = subcollectionRef;
-            retrieveData(stockQuery);
-        };
-        retrivePatientsList()
-        return () => {
-            unsubscribe()
-        }
-    }, [])
+    // useEffect(() => {
+    //     const retrivePatientsList = async () => {
+    //         const stockQuery = subcollectionRef;
+    //         retrieveData(stockQuery);
+    //     };
+    //     retrivePatientsList()
+    //     return () => {
+    //         unsubscribe()
+    //     }
+    // }, [])
 
-    const retrieveData = (query) => {
-        try {
-            // let initialSnapshot = true;
-            unsubscribe = query.onSnapshot((snapshot) => {
-                fetchData()
-            });
-        } catch (error) {
-            console.error('Error retrieving data:', error);
-        }
-    };
+    // const retrieveData = (query) => {
+    //     try {
+    //         // let initialSnapshot = true;
+    //         unsubscribe = query.onSnapshot((snapshot) => {
+    //             fetchData()
+    //         });
+    //     } catch (error) {
+    //         console.error('Error retrieving data:', error);
+    //     }
+    // };
 
-    const fetchData = async () => {
-        await getSubcollectionDataWithoutsnapshot('Patients', 'fBoxFLrzXexT8WNBzGGh', 'patients', hospitaluid, lastPatientData, (data, lastData) => {
-            // Handle the updated data in the callback function
-            dispatch(FILL_PATIENTS(data))
-            dispatch(ADD_LAST_PATIENT_DATA(lastData))
-            console.log('Get Patients data with last Data', data, lastData);
-        }).catch((error) => {
-            console.error('Error:', error);
-        })
-    }
+    // const fetchData = async () => {
+    //     await getSubcollectionDataWithoutsnapshot('Patients', 'fBoxFLrzXexT8WNBzGGh', 'patients', hospitaluid, lastPatientData, (data, lastData) => {
+    //         // Handle the updated data in the callback function
+    //         dispatch(FILL_PATIENTS(data))
+    //         dispatch(ADD_LAST_PATIENT_DATA(lastData))
+    //         console.log('Get Patients data with last Data', data, lastData);
+    //     }).catch((error) => {
+    //         console.error('Error:', error);
+    //     })
+    // }
     useEffect(() => {
         setPatientsFilter(allPatientsList)
         patchData()
@@ -138,7 +138,7 @@ const Addpatientscommanmodel = ({ show, handleClose, update, data }) => {
                         .then((newDocData) => {
                             // Handle the new added data here
                             // console.log('newDocData', newDocData);
-                            // dispatch(ADD_PATIENTS(newDocData.data()))
+                            dispatch(ADD_PATIENTS(newDocData.data()))
                             dispatch(dispatch(ADD_LAST_PATIENT_DATA(newDocData.data())))
                         })
                         .catch((error) => {

@@ -81,10 +81,10 @@ const MedicineMaster = () => {
     const handleShow = () => setShow(true);
 
     useEffect(() => {
-        setMedicinesList(allMedicinesList)
-        setMedicinessFilter(allMedicinesList)
-        setIsLoading(false)
-    }, [allMedicinesList])
+        setMedicinesList(allMedicinesList.slice().reverse());
+        setMedicinessFilter([...allMedicinesList]);
+        setIsLoading(false);
+    }, [allMedicinesList]);
 
     useEffect(() => {
         let query = subcollectionRef
@@ -94,11 +94,15 @@ const MedicineMaster = () => {
         };
     }, [])
 
+    useEffect(() => {
+        fetchData()
+    }, [])
+
     const retrieveData = (query) => {
         try {
             setIsLoading(true)
             unsubscribe = query.onSnapshot((snapshot) => {
-                fetchData()
+                // fetchData()
             });
         } catch (error) {
             setIsLoading(false)
@@ -136,7 +140,15 @@ const MedicineMaster = () => {
                     let newObj = { ...medd[findMedicine], availableStock: totalStock }
                     medd[findMedicine] = newObj
                     try {
+                        // await updateDatainSubcollectionMedicalAndPatients("Medicines", 'dHFKEhdhbOM4v6WRMb6z', 'medicines', newObj, 'medicineuid', 'hospitaluid')
                         await updateDatainSubcollectionMedicalAndPatients("Medicines", 'dHFKEhdhbOM4v6WRMb6z', 'medicines', newObj, 'medicineuid', 'hospitaluid')
+                            .then(updatedData => {
+                                console.log('Updated Data:', updatedData);
+                                fetchData()
+                            })
+                            .catch(error => {
+                                console.error('Error:', error);
+                            });
                         action.resetForm()
                         setShow(false)
                         setUpdate(false)
@@ -154,7 +166,13 @@ const MedicineMaster = () => {
                 }
                 try {
                     // await addDatainsubcollection("Medicines", 'dHFKEhdhbOM4v6WRMb6z', 'medicines', values)
-                    await addDatainsubcollectionmedicalAndPatients("Medicines", 'dHFKEhdhbOM4v6WRMb6z', 'medicines', values)
+                    await addDatainsubcollectionmedicalAndPatients("Medicines", 'dHFKEhdhbOM4v6WRMb6z', 'medicines', values).then(newAddedData => {
+                        console.log('Updated Data:', newAddedData);
+                        fetchData()
+                    })
+                        .catch(error => {
+                            console.error('Error:', error);
+                        });
                     // dispatch(ADD_MEDICINES(Values))
                     action.resetForm()
                     setShow(false)
@@ -171,8 +189,15 @@ const MedicineMaster = () => {
                 medd[findindex] = Values;
 
                 try {
+                    // await updateDatainSubcollectionMedicalAndPatients("Medicines", 'dHFKEhdhbOM4v6WRMb6z', 'medicines', values, 'medicineuid', 'hospitaluid')
                     await updateDatainSubcollectionMedicalAndPatients("Medicines", 'dHFKEhdhbOM4v6WRMb6z', 'medicines', values, 'medicineuid', 'hospitaluid')
-
+                        .then(updatedData => {
+                            console.log('Updated Data:', updatedData);
+                            fetchData()
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                        });
                     // await updateDatainSubcollection("Medicines", 'dHFKEhdhbOM4v6WRMb6z', 'medicines', values, 'medicineuid', 'hospitaluid')
                     // dispatch(EDIT_MEDICINES(Values))
                     action.resetForm()
@@ -238,61 +263,133 @@ const MedicineMaster = () => {
     }
 
     const requestSearch = (searchvalue) => {
-        const filteredRows = medicinessFilter.filter((row) => {
-            return row.medicineName.toLowerCase().includes(searchvalue.toLowerCase()) || row.batchNumber.toLowerCase().includes(searchvalue.toLowerCase());
-        });
         if (searchvalue.length < 1) {
+            setMedicinesList([...allMedicinesList].reverse())
+            return
+        }
 
-            setMedicinesList(medicinessFilter.reverse())
-        }
-        else {
-            setMedicinesList(filteredRows)
-        }
+        const filteredRows = medicinessFilter.filter((row) => {
+            const searchString = searchvalue.toLowerCase()
+            return row.medicineName.toString().toLowerCase().includes(searchString) ||
+                row.batchNumber.toString().toLowerCase().includes(searchString)
+        });
+
+        setMedicinesList(filteredRows)
+        // const filteredRows = medicinessFilter.filter((row) => {
+        //     return row.medicineName.toLowerCase().includes(searchvalue.toLowerCase()) || row.batchNumber.toLowerCase().includes(searchvalue.toLowerCase());
+        // });
+        // if (searchvalue.length < 1) {
+
+        //     setMedicinesList(medicinessFilter.reverse())
+        // }
+        // else {
+        //     setMedicinesList(filteredRows)
+        // }
 
 
     }
 
-    const csvtoJson = (files) => {
-        // setFiles(files[0].name)
-        medicine = [...medicinessFilter]
+    // const csvtoJson = (files) => {
+    //     // setFiles(files[0].name)
+    //     medicine = [...medicinessFilter]
 
-        if (files) {
+    //     if (files) {
 
-            Papa.parse(files[0], {
-                header: true,
-                dynamicTyping: true,
-                complete: async function (results) {
-                    let tempData = [];
-                    let res = results.data
+    //         Papa.parse(files[0], {
+    //             header: true,
+    //             dynamicTyping: true,
+    //             complete: async function (results) {
+    //                 let tempData = [];
+    //                 let res = results.data
 
-                    await res.map(async (item) => {
-                        if (item.batchNumber) {
-                            item.expireDate = await formatDateYYYYMMDD(item.expireDate)
-                            let timestamp = new Date(item.expireDate).getTime();
-                            let medicineCapacity = item.medicineCapacity ? item.medicineCapacity.toString().toUpperCase() : ''; // If medicineCapacity doesn't exist, assign an empty string
+    //                 await res.map(async (item) => {
+    //                     if (item.batchNumber) {
+    //                         item.expireDate = await formatDateYYYYMMDD(item.expireDate)
+    //                         let timestamp = new Date(item.expireDate).getTime();
+    //                         let medicineCapacity = item.medicineCapacity ? item.medicineCapacity.toString().toUpperCase() : ''; // If medicineCapacity doesn't exist, assign an empty string
 
-                            const medicineuid = item.medicineName.substring(0, 3).toUpperCase() + item.mfrsName.substring(0, 3).toUpperCase() + timestamp + medicineCapacity
-                            let findMedicine = medicine.findIndex((item1) => item1.medicineuid === medicineuid)
-                            if (findMedicine >= 0) {
-                                let totalStock = medicine[findMedicine].availableStock + item.availableStock;
-                                let newObj = { ...medicine[findMedicine], availableStock: totalStock }
-                                updateDatainSubcollectionMedicalAndPatients("Medicines", 'dHFKEhdhbOM4v6WRMb6z', 'medicines', newObj, 'medicineuid', 'hospitaluid')
-                                // medicine[findMedicine] = newObj
-                            } else {
-                                addDatainsubcollectionmedicalAndPatients("Medicines", 'dHFKEhdhbOM4v6WRMb6z', 'medicines', { ...item, hospitaluid: hospitaluid, medicineuid: medicineuid })
-                                // medicine.push({ ...item, hospitaluid: hospitaluid })
-                            }
-                            tempData.push({ ...item, hospitaluid: hospitaluid })
-                        }
-                    })
+    //                         const medicineuid = item.medicineName.substring(0, 3).toUpperCase() + item.mfrsName.substring(0, 3).toUpperCase() + timestamp + medicineCapacity
+    //                         let findMedicine = medicine.findIndex((item1) => item1.medicineuid === medicineuid)
+    //                         if (findMedicine >= 0) {
+    //                             let totalStock = medicine[findMedicine].availableStock + item.availableStock;
+    //                             let newObj = { ...medicine[findMedicine], availableStock: totalStock }
+    //                             updateDatainSubcollectionMedicalAndPatients("Medicines", 'dHFKEhdhbOM4v6WRMb6z', 'medicines', newObj, 'medicineuid', 'hospitaluid')
+    //                         } else {
+    //                             addDatainsubcollectionmedicalAndPatients("Medicines", 'dHFKEhdhbOM4v6WRMb6z', 'medicines', { ...item, hospitaluid: hospitaluid, medicineuid: medicineuid })
 
-                    setFiles('')
+    //                         }
+    //                         tempData.push({ ...item, hospitaluid: hospitaluid })
+    //                     }
+    //                 })
+    //                 fetchData()
 
+    //                 setFiles('')
+
+    //             }
+    //         }
+    //         )
+    //     }
+    // }
+    const csvtoJson = async (files) => {
+        if (!files || files.length === 0) return;
+        setIsLoading(true)
+        const [file] = files;
+        try {
+            const results = await new Promise((resolve, reject) => {
+                Papa.parse(file, {
+                    header: true,
+                    dynamicTyping: true,
+                    complete: (results) => resolve(results),
+                    error: (error) => reject(error)
+                });
+            });
+
+            if (!results || !results.data || results.data.length === 0) return;
+
+            const medicine = [...medicinessFilter];
+            const tempData = [];
+
+            const promises = results.data.map(async (item) => {
+                try {
+                    if (!item.batchNumber || !item.expireDate) return;
+
+                    const formattedExpireDate = await formatDateYYYYMMDD(item.expireDate);
+                    item.expireDate = formattedExpireDate
+                    const timestamp = new Date(formattedExpireDate).getTime();
+                    const medicineCapacity = item.medicineCapacity ? item.medicineCapacity.toString().toUpperCase() : '';
+
+                    const medicineuid = item.medicineName.substring(0, 3).toUpperCase() + item.mfrsName.substring(0, 3).toUpperCase() + timestamp + medicineCapacity;
+                    const findMedicine = medicine.findIndex((item1) => item1.medicineuid === medicineuid);
+
+                    if (findMedicine >= 0) {
+                        const totalStock = medicine[findMedicine].availableStock + item.availableStock;
+                        const newObj = { ...medicine[findMedicine], availableStock: totalStock };
+                        await updateDatainSubcollectionMedicalAndPatients("Medicines", 'dHFKEhdhbOM4v6WRMb6z', 'medicines', newObj, 'medicineuid', 'hospitaluid');
+                    } else {
+                        await addDatainsubcollectionmedicalAndPatients("Medicines", 'dHFKEhdhbOM4v6WRMb6z', 'medicines', { ...item, hospitaluid: hospitaluid, medicineuid: medicineuid });
+                    }
+                    tempData.push({ ...item, hospitaluid: hospitaluid });
+                } catch (error) {
+                    setIsLoading(false)
+
+                    console.error('Error processing item:', error);
+                    // Handle or log the error as needed
                 }
-            }
-            )
+            });
+
+            await Promise.all(promises);
+            fetchData();
+            setFiles('');
+            setIsLoading(false)
+        } catch (error) {
+            setIsLoading(false)
+
+            console.error('Error parsing CSV:', error);
+            // Handle or log the error as needed
         }
-    }
+    };
+
+
     const conditionalRowStyles = [
         {
             when: row => new Date(row.expireDate) <= currentDate,
@@ -311,7 +408,7 @@ const MedicineMaster = () => {
                         conditionalRowStyles={conditionalRowStyles}
                         columns={columns}
                         data={medicinesList}
-                        action={<span style={{ display: 'flex' }}><span style={{ display: 'flex', marginRight: '20px' }}><BsCloudUploadFill size={30} color={'green'} style={{ marginRight: '10px' }} /><input type="file" className='form-control' accept=".csv,.xlsx,.xls" onChange={(e) => { csvtoJson(e.target.files) }} value={files} /></span><button className='btn btn-primary' onClick={handleShow} style={{ height: '40px' }}><span>  <BiPlus size={25} /></span></button></span>}
+                        action={<span style={{ display: 'flex' }}><span style={{ display: 'flex', marginRight: '20px' }}><input type="file" className='w-100 form-control' accept=".csv,.xlsx,.xls" onChange={(e) => { csvtoJson(e.target.files) }} value={files} /></span>  <input type='search' placeholder='search' className='w-35 form-control' onChange={(e) => requestSearch(e.target.value)} /> <button className='btn btn-primary' onClick={handleShow} style={{ height: '40px', marginLeft: '20px' }}><span>  <BiPlus size={25} /></span></button></span>}
                         subHeaderComponent={<>
                             <input type='search' placeholder='search' className='w-25 form-control' onChange={(e) => requestSearch(e.target.value)} /></>}
                     />

@@ -115,6 +115,7 @@ const Addpatients = () => {
         // };
         // retrivePatientsList()
         setUserpermissions(permissions?.find(permission => permission.module === "PATIENTS"))
+        fetchData()
         // return () => {
         //     unsubscribe()
         // }
@@ -244,9 +245,9 @@ const Addpatients = () => {
 
         const filteredRows = patientsFilter.filter((row) => {
             const searchString = searchvalue.toLowerCase()
-            return row.pid.toString().includes(searchString) ||
-                row.pName.toLowerCase().includes(searchString) ||
-                row.pMobileNo.includes(searchString);
+            return row.pid.toString().toLowerCase().includes(searchString) ||
+                row.pName.toString().toLowerCase().includes(searchString) ||
+                row.pMobileNo.toString().toLowerCase().includes(searchString);
         });
 
         setPatientsList(filteredRows)
