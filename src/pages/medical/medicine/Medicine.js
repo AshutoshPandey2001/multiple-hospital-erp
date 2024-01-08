@@ -14,7 +14,7 @@ import { ADD_LAST_PATIENT_DATA, FILL_PATIENTS, selectAllPatients, selectlastPati
 import { ADD_LAST_MEDICINES, FILL_MEDICINES_STOCK, selectAllMedicines, selectLastMedicine, UPDATE_MEDICINES } from 'src/redux/slice/medicinesMasterSlice';
 import { ADD_PATIENTS_MEDICINES, DELETE_PATIENTS_MEDICINES, EDIT_PATIENTS_MEDICINES, selectAllPatientsMedicines } from 'src/redux/slice/patientsMedicinesSlice';
 import { useDispatch, useSelector } from 'react-redux';
-import { addDataincollection, getSubcollectionDataWithoutsnapshot, getSubcollectionDataWithoutsnapshotPatients, addDatainsubcollection, addSingltObject, deleteDatainSubcollection, deleteSingltObject, filDatainsubcollection, getData, getSubcollectionDataWithoutsnapshotMedicalAndPatients, multimedicineStockUpdate, setData, updateDatainSubcollection, updateDatainSubcollectionMedicalAndPatients, updateDataincollection, updateSingltObject, uploadArray } from 'src/services/firebasedb';
+import { addDataincollection, updateDataInSubcollectionMedinvoice, getSubcollectionDataWithoutsnapshot, getSubcollectionDataWithoutsnapshotPatients, addDatainsubcollection, addSingltObject, deleteDatainSubcollection, deleteSingltObject, filDatainsubcollection, getData, getSubcollectionDataWithoutsnapshotMedicalAndPatients, multimedicineStockUpdate, setData, updateDatainSubcollection, updateDatainSubcollectionMedicalAndPatients, updateDataincollection, updateSingltObject, uploadArray } from 'src/services/firebasedb';
 import Loaderspinner from 'src/comman/spinner/Loaderspinner';
 import CommanTable from 'src/comman/table/CommanTable';
 import { confirmAlert } from 'react-confirm-alert';
@@ -99,7 +99,7 @@ const PrintComponent = ({ data }) => {
                                         <tr key={i}>
                                             <td>{i + 1}</td>
                                             <td>{medicine.batchNo}</td>
-                                            <td>{medicine.medname}</td>
+                                            <td>{medicine.medname}{medicine.medType && `-${medicine.medType}`}</td>
                                             <td>{medicine.mfrsName}</td>
                                             <td>{medicine.expireDate}</td>
                                             <td>{medicine.medPrice.toFixed(2)}</td>
@@ -177,6 +177,7 @@ let initalValues = {
             meduid: '',
             totalmedPrice: '',
             batchNo: '',
+            medType: '',
             expireDate: '',
             mfrsName: '',
         },
@@ -274,12 +275,6 @@ const Medicine = () => {
     }, [show])
 
     useEffect(() => {
-
-        // const retrivePatientsList = async () => {
-        //     const stockQuery = subcollectionRefpatients;
-        //     retrieveDataPatients(stockQuery);
-        // };
-
         const retrieveMedicineInvoices = async () => {
             const invoiceQuery = subcollectionRefMedicineInvoice
                 .orderBy('timestamp', 'desc')
@@ -288,9 +283,7 @@ const Medicine = () => {
         };
 
         const fetchDataAndUpdateTotal = async () => {
-            // retrieveMedicineStock();
             retrieveMedicineInvoices();
-            // retrivePatientsList()
             totalNumberOfData();
         };
 
@@ -468,7 +461,7 @@ const Medicine = () => {
             pAddress: '',
             drName: '',
             paymentStatus: 'Pending',
-            medicineDate: '',
+            medicineDate: new Date().toISOString().substr(0, 10),
             medicines: [
                 {
                     medname: '',
@@ -477,6 +470,7 @@ const Medicine = () => {
                     meduid: '',
                     totalmedPrice: '',
                     batchNo: '',
+                    medType: '',
                     expireDate: '',
                     mfrsName: '',
                 },
@@ -643,6 +637,7 @@ const Medicine = () => {
         med.expireDate = ddMMyyyy(item.expireDate);
         med.mfrsName = item.mfrsName;
         med.batchNo = item.batchNumber
+        med.medType = item.medicineType
         setStock(item.availableStock)
         setAutofocus(!autofocus)
     }
@@ -665,15 +660,10 @@ const Medicine = () => {
         if (page < currentPage) {
             setPrev(true)
             prevPage()
-            // const one = true
-            // console.log('i am here');
-            // retrieveData(one)
             setCurrentPage(page);
         } else {
             setPrev(false)
             nextPage()
-            // const one = false
-            // retrieveData(one)
             setCurrentPage(page);
         }
         console.log('page', page);
@@ -733,7 +723,7 @@ const Medicine = () => {
         let query = subcollectionRefMedicineInvoice
             .orderBy('timestamp', 'desc')
             .limit(perPageRows).startAfter(lastVisible);
-        debouncedRetrieveData(query)
+        retrieveDataMedicineInvoice(query)
         setIsLoading(false)
 
     };
@@ -743,20 +733,22 @@ const Medicine = () => {
             .orderBy('timestamp', 'desc')
             .limit(perPageRows)
             .endBefore(firstVisible).limitToLast(perPageRows);
-        debouncedRetrieveData(query)
+        retrieveDataMedicineInvoice(query)
         setIsLoading(false)
 
     }
 
     const saveAndPrint = async () => {
+
         setIsLoading(true);
 
         try {
+            values.medicineDate = values.medicineDate ? ddMMyyyy(values.medicineDate) : values.medicineDate;
             await Promise.all(values.medicines.map((item) => updateStock(item)));
             if (!update) {
                 values.pmeduid = Math.floor(315 + Math.random() * 8000);
                 setPatientsMedicineFilter([...patientsMedicineFilter, values]);
-
+                values.hospitaluid = hospitaluid
                 const newDocData = await addDatainsubcollection("PatientsMedicines", 'GoKwC6l5NRWSonfUAal0', 'patientsMedicines', values);
                 await updateDataincollection('MedicinePatientsCount', { hospitaluid: hospitaluid, count: totalnumData + 1 });
 
@@ -772,13 +764,12 @@ const Medicine = () => {
 
                 patientsMedicineList[findindex] = values;
 
-                await updateDatainSubcollection("PatientsMedicines", 'GoKwC6l5NRWSonfUAal0', 'patientsMedicines', values, 'pmeduid', 'hospitaluid');
-
+                const updatedDocData = await updateDataInSubcollectionMedinvoice("PatientsMedicines", 'GoKwC6l5NRWSonfUAal0', 'patientsMedicines', values, 'pmeduid', 'hospitaluid');
                 clearForm();
                 setShow(false);
                 setUpdate(false);
                 setIsLoading(false);
-                navigate("/medical/medicine/medicineinvoice", { state: values });
+                navigate("/medical/medicine/medicineinvoice", { state: updatedDocData });
                 toast.success("Updated Successfully.......");
             }
         } catch (error) {
@@ -833,7 +824,7 @@ const Medicine = () => {
                             <div className='col-lg-6'>
                                 {update ?
                                     <div className="form-group" style={{ marginTop: '20px' }}>
-                                        <label >Patient Name<b style={{ color: 'red' }}>*</b>:</label>
+                                        <label >Patient Name:</label>
                                         <input name='pName'
                                             placeholder="Enter Patient Name"
                                             type="text" className="form-control" onChange={handleChange} defaultValue={values.pName} readOnly />
@@ -841,7 +832,7 @@ const Medicine = () => {
 
                                     </div> :
                                     <div className="form-group" style={{ marginTop: '20px' }}>
-                                        <label>Patient Name<b style={{ color: 'red' }}>*</b>: </label>
+                                        <label>Patient Name: </label>
                                         <SearchAutocomplete
                                             allPatients={allPatients}
                                             handleOnSelect={handleOnSelect}
@@ -882,12 +873,12 @@ const Medicine = () => {
                             <div className='col-lg-6'>
                                 {update ?
                                     <div className="form-group" style={{ marginTop: '20px' }}>
-                                        <label>Mobile No<b style={{ color: 'red' }}>*</b>:</label>
+                                        <label>Mobile No:</label>
                                         <input type="text" className="form-control" placeholder="Enter patient Mobile No" name='pMobileNo' value={values.pMobileNo} onChange={handleChange} onBlur={handleBlur} readOnly />
                                         {errors.pMobileNo && touched.pMobileNo ? (<p style={{ color: 'red' }}>*{errors.pMobileNo}</p>) : null}
                                     </div> :
                                     <div className="form-group" style={{ marginTop: '20px' }}>
-                                        <label>Mobile No<b style={{ color: 'red' }}>*</b>: </label>
+                                        <label>Mobile No: </label>
                                         <SearchAutocomplete
                                             allPatients={allPatients}
                                             handleOnSelect={handleOnSelect}
@@ -927,57 +918,17 @@ const Medicine = () => {
 
                         </div>
                         <div className='row'>
-                            {/* <div className='col-lg-4'>
-                                {update ?
-                                    <div className="form-group" style={{ marginTop: '20px' }}>
-                                        <label >Patient Name<b style={{ color: 'red' }}>*</b>:</label>
-                                        <input name='pName'
-                                            placeholder="Enter Patient Name"
-                                            type="text" className="form-control" onChange={handleChange} defaultValue={values.pName} readOnly />
-                                        {errors.pName && touched.pName ? (<p style={{ color: 'red' }}>*{errors.pName}</p>) : null}
 
-                                    </div> :
-                                    <div className="form-group" style={{ marginTop: '20px' }}>
-                                        <label>Patient Name<b style={{ color: 'red' }}>*</b>: </label>
-                                        <SearchAutocomplete
-                                            allPatients={allPatients}
-                                            handleOnSelect={handleOnSelect}
-                                            handleOnSearch={handleOnSearch}
-                                            inputsearch={values.pName}
-                                            placeholder={'Enter Patient Name'}
-                                            handleClear={handleOnClear}
-                                            keyforSearch={"pName"}
-                                            style={{
-                                                height: '36px',
-                                                display: 'block',
-                                                width: '100%',
-                                                borderRadius: "0.375rem",
-                                                backgroundColor: "#fff",
-                                                boxShadow: "none",
-                                                padding: '0.375rem 0.75rem',
-                                                backgroundClip: 'padding-box',
-                                                hoverBackgroundColor: "lightgray",
-                                                color: '#212529',
-                                                fontSize: '1rem',
-                                                lineHeight: '1.5',
-                                                fontFamily: "inherit",
-                                                iconColor: "#212529",
-                                                fontWeight: "400",
-                                                lineColor: "lightgray",
-                                                placeholderColor: "#212529",
-                                                clearIconMargin: "3px 8px 0 0",
-                                                appearance: 'none',
-                                                zIndex: 1,
-                                                transition: 'border-color .15s ease-in-out,box-shadow .15s ease-in-out'
-                                            }} />
-
-                                        {errors.pName && touched.pName ? (<p style={{ color: 'red' }}>*{errors.pName}</p>) : null}
-
-                                    </div>
-                                }
-
-                            </div> */}
-                            <div className='col-lg-6'>
+                            <div className='col-lg-4'>
+                                <div className="form-group" style={{ marginTop: '20px' }}>
+                                    <label >Address:</label>
+                                    <input name='pAddress'
+                                        placeholder="Enter address"
+                                        type="text" className="form-control" onChange={handleChange} defaultValue={values.pAddress} />
+                                    {errors.pAddress && touched.pAddress ? (<p style={{ color: 'red' }}>*{errors.pAddress}</p>) : null}
+                                </div>
+                            </div>
+                            <div className='col-lg-4'>
                                 <div className="form-group" style={{ marginTop: '20px' }}>
                                     <label >Date<b style={{ color: 'red' }}>*</b>:</label>
                                     <input name='medicineDate'
@@ -987,7 +938,7 @@ const Medicine = () => {
 
                                 </div>
                             </div>
-                            <div className='col-lg-6'>
+                            <div className='col-lg-4'>
                                 <div className="form-group" style={{ marginTop: '20px' }}>
                                     <label >Doctor Name<b style={{ color: 'red' }}>*</b>:</label>
                                     <select className="form-control" style={{ height: '40px', fontSize: '18px' }} name='drName' value={values.drName} onChange={handleChange}>
@@ -1126,10 +1077,10 @@ const Medicine = () => {
                 <Button variant="secondary" onClick={handleClose}>
                     Cancel
                 </Button>
-                <Button variant="primary" onClick={handleSubmit} >
+                <Button variant="primary" onClick={handleSubmit} disabled={values.medicines && values.medicines.some(medd => !medd.medname || !medd.medPrice || !medd.medQty)} >
                     {update ? 'Update' : 'Save'}
                 </Button>
-                <Button variant="primary" onClick={() => saveAndPrint()} >
+                <Button variant="primary" onClick={() => saveAndPrint()} disabled={values.medicines && values.medicines.some(medd => !medd.medname || !medd.medPrice || !medd.medQty)}>
                     Print
                 </Button>
             </Modal.Footer>

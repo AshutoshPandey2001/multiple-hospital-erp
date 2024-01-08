@@ -724,6 +724,7 @@ export const updateDatainSubcollection = (collectionName, collectionuid, subcoll
                 })
                     .then(() => {
                         console.log('Document successfully updated!');
+                        return doc.ref.get();
                     })
                     .catch(error => {
                         console.error('Error updating document: ', error);
@@ -734,6 +735,41 @@ export const updateDatainSubcollection = (collectionName, collectionuid, subcoll
             console.log('Error getting documents: ', error);
         });
 }
+export const updateDataInSubcollectionMedinvoice = (collectionName, collectionUid, subcollectionName, data, cond1, cond2) => {
+    const parentDocRef = db.collection(collectionName).doc(collectionUid);
+
+    // Access the specific subcollection
+    const subcollectionRef = parentDocRef.collection(subcollectionName);
+    const query = subcollectionRef.where(cond2, '==', data[cond2]).where(cond1, '==', data[cond1]);
+
+    return query.get()
+        .then(querySnapshot => {
+            if (querySnapshot.size === 1) {
+                const doc = querySnapshot.docs[0];
+                return doc.ref.update({
+                    ...data,
+                })
+                    .then(() => {
+                        console.log('Document successfully updated!');
+                        return doc.ref.get();
+                    })
+                    .then(updatedDoc => {
+                        return updatedDoc.data();
+                    })
+                    .catch(error => {
+                        console.error('Error updating document: ', error);
+                        throw error;
+                    });
+            } else {
+                throw new Error('No or multiple documents found matching the conditions.');
+            }
+        })
+        .catch(error => {
+            console.log('Error getting or updating documents: ', error);
+            throw error;
+        });
+}
+
 export const updateDatainSubcollectionmedicineinvoice = (collectionName, collectionuid, subcollectionName, data, cond1, cond2) => {
     const parentDocRef = db.collection(collectionName).doc(collectionuid);
     const subcollectionRef = parentDocRef.collection(subcollectionName);

@@ -86,7 +86,7 @@ const PrintComponent = ({ data }) => {
                                         <tr key={i}>
                                             <td>{i + 1}</td>
                                             <td>{medicine.batchNo}</td>
-                                            <td>{medicine.medname}</td>
+                                            <td>{medicine.medname}{medicine.medType && `-${medicine.medType}`}</td>
                                             <td>{medicine.mfrsName}</td>
                                             <td>{medicine.expireDate}</td>
                                             <td>{medicine.medPrice.toFixed(2)}</td>
@@ -342,7 +342,11 @@ const medicineInvoice = () => {
 
             await setPrintContent(<PrintComponent data={{
                 data1: {
-                    ...newObj
+                    ...newObj,
+                    medicalName,
+                    medicalAddress,
+                    contactNumber,
+                    licenceNumber,
                 }
             }} />)
             toast.success("Invoice Saved SuccessFully...")
@@ -451,7 +455,7 @@ const medicineInvoice = () => {
                                                     <tr key={i}>
                                                         <td>{i + 1}</td>
                                                         <td>{medicine.batchNo}</td>
-                                                        <td>{medicine.medname}</td>
+                                                        <td>{medicine.medname}{medicine.medType && `-${medicine.medType}`}</td>
                                                         <td>{medicine.mfrsName}</td>
                                                         <td>{medicine.expireDate}</td>
                                                         <td>{medicine.medPrice.toFixed(2)}</td>

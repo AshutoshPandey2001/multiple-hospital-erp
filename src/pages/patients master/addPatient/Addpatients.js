@@ -109,16 +109,8 @@ const Addpatients = () => {
     }, [allPatientsList])
 
     useEffect(() => {
-        // const retrivePatientsList = async () => {
-        //     const stockQuery = subcollectionRef;
-        //     retrieveData(stockQuery);
-        // };
-        // retrivePatientsList()
         setUserpermissions(permissions?.find(permission => permission.module === "PATIENTS"))
         fetchData()
-        // return () => {
-        //     unsubscribe()
-        // }
     }, [])
 
     const retrieveData = (query) => {
@@ -137,7 +129,6 @@ const Addpatients = () => {
 
     const fetchData = async () => {
         await getSubcollectionDataWithoutsnapshot('Patients', 'fBoxFLrzXexT8WNBzGGh', 'patients', hospitaluid, lastPatientData, (data, lastData) => {
-            // Handle the updated data in the callback function
             dispatch(FILL_PATIENTS(data))
             dispatch(ADD_LAST_PATIENT_DATA(lastData))
             console.log('Get Patients data with last Data', data, lastData);
@@ -258,91 +249,14 @@ const Addpatients = () => {
         // navigate(`/patients/patientslist/patientshistory`, { state: item })
         navigate(`/patients/patientshistory`, { state: item })
     }
-    const reloadData = () => {
-        setIsLoading(true)
-        getSubcollectionData('Patients', 'fBoxFLrzXexT8WNBzGGh', 'patients', hospitaluid, (data) => {
-            // Handle the updated data in the callback function
-            dispatch(FILL_PATIENTS(data))
-            setIsLoading(false)
 
-            console.log('Received real-time data:', data);
-        }).catch((error) => {
-            setIsLoading(false)
-
-            console.error('Error:', error);
-        })
-    }
-
-    // const handlePageChange = async (page) => {
-    //     if (page < currentPage) {
-    //         setPrev(true)
-    //         prevPage()
-    //         // const one = true
-    //         // console.log('i am here');
-    //         // retrieveData(one)
-    //         setCurrentPage(page);
-    //     } else {
-    //         setPrev(false)
-    //         nextPage()
-    //         // const one = false
-    //         // retrieveData(one)
-    //         setCurrentPage(page);
-    //     }
-    //     console.log('page', page);
-
-    //     // Perform any additional logic or actions based on the page change
-    // };
-
-    // const nextPage = async () => {
-    //     setIsLoading(true)
-    //     let query = subcollectionRef
-    //         .orderBy('timestamp', 'desc')
-    //         .limit(perPageRows).startAfter(lastVisible);
-    //     retrieveData(query)
-    //     setIsLoading(false)
-
-    // };
-    // const prevPage = async () => {
-    //     setIsLoading(true)
-    //     let query = subcollectionRef
-    //         .orderBy('timestamp', 'desc')
-    //         .limit(perPageRows)
-    //         .endBefore(firstVisible).limitToLast(perPageRows);
-    //     retrieveData(query)
-    //     setIsLoading(false)
-
-    // }
     return <>
         {isLoading ? <Loaderspinner /> :
             <>
                 <div style={{ display: 'none' }}>  {printContent && <PrintButton content={printContent} />}</div>
                 <div>
 
-                    {/* <DataTable
-                        title={"Patients List"}
-                        columns={columns}
-                        data={patientsList}
-                        pagination={true}
-                        fixedHeader={true}
-                        noHeader={false}
-                        persistTableHead
-                        actions={<button className='btn btn-primary' onClick={handleShow}><span>  <BiPlus size={25} /></span></button>}
-                        highlightOnHover
-                        paginationServer={true}
-                        subHeader={<div className='d-flex' style={{ justifyContent: 'space-between' }}></div>}
-                        subHeaderComponent={<span className='d-flex w-100 justify-content-end'>
-                            <select className="form-control mr-2" style={{ height: '40px', fontSize: '18px', width: '15%', marginRight: 10 }} name='searchBy' value={searchBy} onChange={(e) => setSearchBy(e.target.value)}>
-                                <option selected >Search by</option>
-                                <option value='Name' selected>Patient Name</option>
-                                <option value='MobileNo' selected>Mobile No</option>
-                            </select>
-                            <input type='search' placeholder='search' className='w-25 form-control' value={searchString} onChange={(e) => { onSearchInput(e.target.value) }} />
-                            <button className='btn btn-primary' style={{ width: '10%', marginLeft: 10 }} disabled={!searchBy || !searchString} onClick={requestSearch}>Search</button>
-                        </span>}
-                        paginationTotalRows={totalnumData}
 
-                        onChangePage={(e) => handlePageChange(e)}
-                    /> */}
                     <CommanTable
                         title={"Patients List"}
                         columns={columns}
@@ -363,58 +277,7 @@ const Addpatients = () => {
                 </div>
             </>}
         <Addpatientscommanmodel show={show} handleClose={handleClose} data={item} update={update} />
-        {/* <Modal show={show} onHide={handleClose}>
-            <Modal.Header closeButton>
-                <Modal.Title>Add Patients</Modal.Title>
-            </Modal.Header>
-            <Modal.Body>
-                <form >
-                    <div className="form-group" style={{ marginTop: '20px' }}>
-                        <label>Patient Name:</label>
-                        <input type="text" className="form-control" placeholder="Enter patient name" name='pName' value={values.pName} onChange={handleChange} onBlur={handleBlur} />
-                        {errors.pName && touched.pName ? (<p style={{ color: 'red' }}>*{errors.pName}</p>) : null}
-                    </div>
-                    <div className="form-group" style={{ marginTop: '20px' }}>
-                        <label>Age:</label>
-                        <input type="number" className="form-control" placeholder="Enter patient age" name='page' value={values.page} onChange={handleChange} onBlur={handleBlur} />
-                        {errors.page && touched.page ? (<p style={{ color: 'red' }}>*{errors.page}</p>) : null}
-                    </div>
-                    <div className="form-group" style={{ marginTop: '20px' }}>
-                        <label>Gender:</label>
-                        <select className="form-control" style={{ height: '40px', fontSize: '18px' }} name='pGender' defaultValue={values.pGender} onChange={handleChange}>
-                            <option >Select Gender</option>
-                            <option value='Male'>Male</option>
-                            <option value='Female'>Female</option>
-                            <option value='Others'>Others</option>
-                        </select>
-                        {errors.pGender && touched.pGender ? (<p style={{ color: 'red' }}>*{errors.pGender}</p>) : null}
-                    </div>
-                    <div className="form-group" style={{ marginTop: '20px' }}>
-                        <label>Address:</label>
-                        <input type="text" className="form-control" placeholder="Enter patient address" name='pAddress' value={values.pAddress} onChange={handleChange} onBlur={handleBlur} />
-                        {errors.pAddress && touched.pAddress ? (<p style={{ color: 'red' }}>*{errors.pAddress}</p>) : null}
-                    </div>
 
-                    <div className="form-group" style={{ marginTop: '20px' }}>
-                        <label>Mobile No:</label>
-                        <input type="text" className="form-control" placeholder="Enter patient Mobile No" name='pMobileNo' value={values.pMobileNo} onChange={handleChange} onBlur={handleBlur} />
-                        {errors.pMobileNo && touched.pMobileNo ? (<p style={{ color: 'red' }}>*{errors.pMobileNo}</p>) : null}
-                    </div>
-
-
-
-
-                </form>
-            </Modal.Body>
-            <Modal.Footer>
-                <Button variant="secondary" onClick={handleClose}>
-                    Close
-                </Button>
-                <Button variant="primary" onClick={handleSubmit} >
-                    {update ? 'Update Patient' : 'Add Patient'}
-                </Button>
-            </Modal.Footer>
-        </Modal> */}
     </>
 
 
