@@ -5,7 +5,7 @@ import React, { useRef, useEffect } from "react";
 import ReactToPrint from "react-to-print";
 import PrintableComponentMedical from "./PrintablecomponentMedical";
 
-const PrintButtonMedical = ({ content }) => {
+const PrintButtonMedical = ({ content, sendData }) => {
   const componentRef = useRef();
   const printRef = useRef();
 
@@ -18,7 +18,7 @@ const PrintButtonMedical = ({ content }) => {
   return (
     <div>
       <div style={{ display: 'none' }}>
-        <PrintableComponentMedical ref={componentRef} content={content} />
+        <PrintableComponentMedical ref={componentRef} content={content} sendData={sendData} />
       </div>
       <ReactToPrint
         trigger={() => <button className='btn btn-primary mx-2' id="print-button">Print</button>}
@@ -26,7 +26,7 @@ const PrintButtonMedical = ({ content }) => {
         pageStyle={`
           @page {
             size: A5 landscape;
-            margin: 5.5mm 0mm 3mm 0mm; 
+            margin: 5.5mm 5mm 5mm 7mm; 
             padding: 0;
           }
 

@@ -40,153 +40,71 @@ import { selectLicenceNumber, selectMedicalAddress, selectMedicalContactnumber, 
 const PrintComponent = ({ data }) => {
     const state = data.data1
     return (
-        <div style={{ width: '800px', marginRight: '30px' }} >
-            <div className='card' style={{}}>
-                <table style={{ border: '1px solid black', }}>
-                    <thead style={{ marginTop: '20px' }}>
-                        <div className='row' style={{ display: 'flex', width: '100%' }}>
-                            <div className='col-lg-5' style={{ borderRight: '1px solid black', width: '45%' }}>
-                                <div className='p-2'>
-                                    <div><b>{state.medicalName}</b></div>
-                                    <div>{state.medicalAddress}</div>
-                                    <div>{state.contactNumber}</div>
-                                    <div>{state.licenceNumber}</div>
-                                </div>
-                            </div>
-                            <div className='col-lg-3' style={{ borderRight: '1px solid black', width: '20%' }}>
-                                <div>
-                                    <div><b>Bill #: {state.invoiceuid}</b></div>
-                                    <div>Date: {state.medicineDate}</div>
-                                    {state.pid &&
-                                        <Barcode value={state.pid} height={30} width={1} displayValue={false} />
-                                    }
-                                </div>
-                            </div>
-                            <div className='col-lg-4' style={{ width: '35%' }}>
-                                <div className='p-2'>
-                                    <div>
-                                        Doctor:-{state.drName}
-                                    </div>
-                                    <div><b>
-                                        Patient:-{state.pName}
-                                    </b>
-                                    </div>
-                                    <div>
-                                        <b>
-                                            Addrss:-{state.pAddress}
-                                        </b>
-
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </thead>
-                    <tbody >
-                        <div style={{ marginRight: -3, marginBottom: '-20px' }}>
-                            <Table bordered border={4}  >
-                                <thead style={{ border: '1px solid black' }}>
-                                    <tr>
-                                        <th>#</th>
-                                        <th>Batch No.</th>
-                                        <th>Medicine Name</th>
-                                        <th>Mfrs. Name</th>
-                                        <th>Exp. Date</th>
-                                        <th>Rate</th>
-                                        <th>Qty</th>
-                                        <th>Total</th>
+        <div style={{ width: '800px' }} >
+            <div >
+                <div style={{ marginRight: -3, marginBottom: '-20px' }}>
+                    <Table bordered border={4}  >
+                        <thead style={{ border: '1px solid black' }}>
+                            <tr style={{ padding: 2, border: '1px solid black' }}>
+                                <th style={{ padding: 2 }}>#</th>
+                                <th style={{ padding: 2 }}>Batch No.</th>
+                                <th style={{ padding: 2 }}>Medicine Name</th>
+                                <th style={{ padding: 2 }}>Mfrs. Name</th>
+                                <th style={{ padding: 2 }}>Exp. Date</th>
+                                <th style={{ padding: 2 }}>Rate</th>
+                                <th style={{ padding: 2 }}>Qty</th>
+                                <th style={{ padding: 2 }}>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {
+                                state.medicines.map((medicine, i) => {
+                                    return <>
+                                        <tr key={i} style={{ padding: 1 }}>
+                                            <td style={{ padding: 1 }}>{i + 1}</td>
+                                            <td style={{ padding: 1 }}>{medicine.batchNo}</td>
+                                            <td style={{ padding: 1 }}>{medicine.medname}{medicine.medType && `-${medicine.medType}`}</td>
+                                            <td style={{ padding: 1 }}>{medicine.mfrsName}</td>
+                                            <td style={{ padding: 1 }}>{medicine.expireDate}</td>
+                                            <td style={{ padding: 1 }}>{medicine.medPrice.toFixed(2)}</td>
+                                            <td style={{ padding: 1 }}>{Number(medicine.medQty).toFixed(2)}</td>
+                                            <td style={{ padding: 1 }}>{medicine.totalmedPrice.toFixed(2)}</td>
+                                        </tr>
+                                    </>
+                                })
+                            }
+                            <tr style={{ padding: 1 }}>
+                                <td style={{ padding: 1 }} colSpan={7}>Sub Total</td>
+                                <td style={{ padding: 1 }}>{state.allMedTotalprice.toFixed(2)}</td>
+                            </tr>
+                            {
+                                state.cgstValue === 0 ?
+                                    null
+                                    : <tr style={{ padding: 1 }}>
+                                        <td style={{ padding: 1 }} colSpan={6}>CGST%</td>
+                                        <td style={{ padding: 1 }}>{state.cgstValue}%</td>
+                                        <td style={{ padding: 1 }}>{state.cgstAmount.toFixed(2)}</td>
                                     </tr>
-                                </thead>
-                                <tbody>
-                                    {
-                                        state.medicines.map((medicine, i) => {
-                                            return <>
-                                                <tr key={i}>
-                                                    <td>{i + 1}</td>
-                                                    <td>{medicine.batchNo}</td>
-                                                    <td>{medicine.medname}{medicine.medType && `-${medicine.medType}`}</td>
-                                                    <td>{medicine.mfrsName}</td>
-                                                    <td>{medicine.expireDate}</td>
-                                                    <td>{medicine.medPrice.toFixed(2)}</td>
-                                                    <td>{Number(medicine.medQty).toFixed(2)}</td>
-                                                    <td>{medicine.totalmedPrice.toFixed(2)}</td>
-                                                </tr>
-                                            </>
-                                        })
-                                    }
-                                    <tr>
-                                        <td colSpan={7}>Sub Total</td>
-                                        <td>{state.allMedTotalprice.toFixed(2)}</td>
+                            }
+
+                            {
+                                state.sgstValue === 1 ?
+                                    null
+                                    : <tr style={{ padding: 1 }}>
+                                        <td style={{ padding: 1 }} colSpan={6}>SGST%</td>
+                                        <td style={{ padding: 1 }}>{state.sgstValue}%</td>
+                                        <td style={{ padding: 1 }}>{state.sgstAmount.toFixed(2)}</td>
                                     </tr>
-                                    {
-                                        state.cgstValue === 0 ?
-                                            null
-                                            : <tr>
-                                                <td colSpan={6}>CGST%</td>
-                                                <td>{state.cgstValue}%</td>
-                                                <td>{state.cgstAmount.toFixed(2)}</td>
-                                            </tr>
-                                    }
-
-                                    {
-                                        state.sgstValue === 0 ?
-                                            null
-                                            : <tr>
-                                                <td colSpan={6}>SGST%</td>
-                                                <td>{state.sgstValue}%</td>
-                                                <td>{state.sgstAmount.toFixed(2)}</td>
-                                            </tr>
-                                    }
+                            }
 
 
 
-                                </tbody>
-                            </Table>
-                        </div>
-                        {/* <div className='row mt-2'>
-                            <div className='col-lg-6 col-md-6 col-sm-6 d-flex justify-content-start'>
-                                <div className='p-2'>
-                                    <div>
-                                        <div><b>Invoice By :{state.userName}</b></div>
-                                        <span>Payment Type <b>:{state.paymentType}</b></span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className='col-lg-6 col-md-6 col-sm-6 d-flex justify-content-end'>
-                                <div className='p-2'>
-                                    <h6>Payable Amount : {Number(state.payableAmount).toFixed(2)}</h6>
-                                </div>
-                            </div>
-
-                        </div>      */}
-
-                    </tbody>
-                    <tfoot style={{ backgroundColor: 'none' }}>
-                        <div style={{ marginTop: '20px' }}></div>
-                        <div className='row'>
-                            <div className='col-lg-6 col-md-6 col-sm-6 d-flex justify-content-start'>
-                                <div className='p-2'>
-                                    <div>
-                                        <div><b>Invoice By :{state.userName}</b></div>
-                                        <span>Payment Type <b>:{state.paymentType}</b></span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className='col-lg-6 col-md-6 col-sm-6 d-flex justify-content-end'>
-                                <div className='p-2 payable-amount'>
-                                    <h6>Payable Amount : {Number(state.payableAmount).toFixed(2)}</h6>
-                                </div>
-                            </div>
-
-                        </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
-                            <span style={{ marginLeft: '20px', fontSize: '12px' }}><b>Terms & Conditions:</b>Subject to SURAT Judrisdiction</span>
-                            <span style={{ marginRight: '20px', fontSize: '12px' }}> Authorised Signatory</span>
-                        </div>
-                    </tfoot>
-                </table>
-
-
-
+                        </tbody>
+                    </Table>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '20px', marginRight: '20px' }}>
+                    <h6 style={{ fontSize: '12px' }}>Payable Amount : {Number(state.payableAmount).toFixed(2)}</h6>
+                </div>
             </div>
 
         </div>
@@ -261,7 +179,7 @@ const Medicine = () => {
     const licenceNumber = useSelector(selectLicenceNumber)
     const contactNumber = useSelector(selectMedicalContactnumber)
     const lastPatientData = useSelector(selectlastPatientData)
-
+    const [sendData, setSendData] = useState()
     const columns = [
         // { name: 'ID', selector: row => row.pid, sortable: true },
         { name: 'Date', selector: row => row.medicineDate, sortable: true },
@@ -536,6 +454,13 @@ const Medicine = () => {
                     contactNumber
                 }
             }} />)
+            setSendData({
+                ...item,
+                medicalAddress,
+                medicalName,
+                licenceNumber,
+                contactNumber
+            })
         } else {
             navigate("/medical/medicine/medicineinvoice", { state: item })
 
@@ -816,7 +741,7 @@ const Medicine = () => {
 
         {isLoading ? <Loaderspinner /> :
             <>
-                <div style={{ display: 'none' }}>  {printContent && <PrintButtonMedical content={printContent} />}</div>
+                <div style={{ display: 'none' }}>  {printContent && <PrintButtonMedical content={printContent} sendData={sendData} />}</div>
                 <DataTable
                     title={"Medicines invoice"}
                     columns={columns}
