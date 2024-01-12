@@ -7,7 +7,7 @@ import PrintFooter from "./PrintFooter";
 import PrintHeaderMedical from "./PrintHeaderMedical";
 
 const PrintableComponentMedical = forwardRef((props, ref) => (
-    <div ref={ref} style={{width:'100vw'}}>
+    <div ref={ref} style={{ width: '100vw' }} className="page-break">
         <table style={{ marginLeft: '30px', marginTop: '20px', marginRight: '30px' }}>
             {/* <thead>
                 <div className="header"> <PrintHeader /></div>
