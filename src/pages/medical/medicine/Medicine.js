@@ -998,7 +998,7 @@ const Medicine = () => {
 
                                                 </div>
                                                 <div className='row'>
-                                                    <div className='col-lg-4'>
+                                                    <div className='col-lg-6'>
                                                         <div className="form-group">
                                                             <label htmlFor={`medicines.${index}.medname`}>Medicin Name<b style={{ color: 'red' }}>*</b>:</label>
                                                             <SearchAutocomplete
@@ -1038,7 +1038,19 @@ const Medicine = () => {
 
                                                         </div>
                                                     </div>
-                                                    <div className='col-lg-4'>
+                                                    <div className='col-lg-6'>
+                                                        <div className="form-group">
+                                                            <label htmlFor={`medicines.${index}.medType`}>Type:</label>
+                                                            <input name={`medicines.${index}.medType`}
+                                                                placeholder="Enter Type"
+                                                                type="text" className="form-control" value={medicine.medType} onChange={handleChange} required readOnly />
+                                                            {errors.medicines && errors.medicines[index] && errors.medicines[index].medType && touched.medicines && touched.medicines[index] && touched.medicines[index].medType ? (
+                                                                <p style={{ color: 'red' }}>*{errors.medicines[index].medType}</p>) : null}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div className='row'>
+                                                    <div className='col-lg-6'>
                                                         <div className="form-group">
                                                             <label htmlFor={`medicines.${index}.medPrice`}>Price<b style={{ color: 'red' }}>*</b>:</label>
                                                             <input name={`medicines.${index}.medPrice`}
@@ -1048,7 +1060,7 @@ const Medicine = () => {
                                                                 <p style={{ color: 'red' }}>*{errors.medicines[index].medPrice}</p>) : null}
                                                         </div>
                                                     </div>
-                                                    <div className='col-lg-4'>
+                                                    <div className='col-lg-6'>
                                                         <div className="form-group">
                                                             <label htmlFor={`medicines.${index}.medQty`}>Qty<b style={{ color: 'red' }}>*</b>:</label>
                                                             <input name={`medicines.${index}.medQty`}
