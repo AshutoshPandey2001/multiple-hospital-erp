@@ -55,7 +55,7 @@ const PrintableComponentMedical = forwardRef((props, ref) => (
                     <span>Payment Type <b>:{props.sendData.paymentType}</b></span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
-                    <span style={{ marginLeft: '20px', fontSize: '10px' }}><b>Terms & Conditions:</b>Subject to SURAT Judrisdiction</span>
+                    <span style={{ marginLeft: '20px', fontSize: '10px' }}><b>Terms & Conditions:</b>Subject to Mangrol Judrisdiction</span>
                     <span style={{ marginRight: '20px', fontSize: '10px' }}> Authorised Signatory</span>
                 </div>
             </tfoot>

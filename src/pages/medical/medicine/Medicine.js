@@ -88,7 +88,7 @@ const PrintComponent = ({ data }) => {
                             }
 
                             {
-                                state.sgstValue === 1 ?
+                                state.sgstValue === 0 ?
                                     null
                                     : <tr style={{ padding: 1 }}>
                                         <td style={{ padding: 1 }} colSpan={6}>SGST%</td>
