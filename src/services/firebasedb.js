@@ -706,6 +706,50 @@ export const updateDatainSubcollectionMedicalAndPatients = (collectionName, coll
             throw error; // Propagate the error
         });
 }
+export const updateDatainSubcollectionMedicalAndPatientsMedical = (collectionName, collectionuid, subcollectionName, data, cond1, cond2, cond3) => {
+    const parentDocRef = db.collection(collectionName).doc(collectionuid);
+
+    // Access the specific subcollection
+    const subcollectionRef = parentDocRef.collection(subcollectionName);
+    const query = subcollectionRef.where(cond2, '==', data[cond2]).where(cond1, '==', data[cond1]).where(cond3, '==', data[cond3]).where('deleted', '==', 0);
+    const timestamp = new Date();
+
+    return query.get()
+        .then(querySnapshot => {
+            const promises = [];
+
+            querySnapshot.forEach(doc => {
+                const updatePromise = doc.ref.update({
+                    ...data,
+                    lastUpdated: timestamp,
+                })
+                    .then(() => {
+                        console.log('Document successfully updated!');
+                        // Fetch the updated document
+                        return doc.ref.get();
+                    })
+                    .then(updatedDoc => {
+                        // Return the updated document's data
+                        return updatedDoc.data();
+                    })
+                    .catch(error => {
+                        console.error('Error updating document: ', error);
+                    });
+
+                promises.push(updatePromise);
+            });
+
+            // Return a Promise that resolves when all updates are completed
+            return Promise.all(promises).then(updatedDataArray => {
+                // Return the first (and presumably only) updated document's data
+                return updatedDataArray[0];
+            });
+        })
+        .catch(error => {
+            console.log('Error getting documents: ', error);
+            throw error; // Propagate the error
+        });
+}
 
 
 
@@ -715,6 +759,32 @@ export const updateDatainSubcollection = (collectionName, collectionuid, subcoll
     // Access the specific subcollection
     const subcollectionRef = parentDocRef.collection(subcollectionName);
     const query = subcollectionRef.where(cond2, '==', data[cond2]).where(cond1, '==', data[cond1])
+
+    query.get()
+        .then(querySnapshot => {
+            querySnapshot.forEach(doc => {
+                doc.ref.update({
+                    ...data,
+                })
+                    .then(() => {
+                        console.log('Document successfully updated!');
+                        return doc.ref.get();
+                    })
+                    .catch(error => {
+                        console.error('Error updating document: ', error);
+                    });
+            });
+        })
+        .catch(error => {
+            console.log('Error getting documents: ', error);
+        });
+}
+export const updateDatainSubcollectionmedical = (collectionName, collectionuid, subcollectionName, data, cond1, cond2, cond3) => {
+    const parentDocRef = db.collection(collectionName).doc(collectionuid);
+
+    // Access the specific subcollection
+    const subcollectionRef = parentDocRef.collection(subcollectionName);
+    const query = subcollectionRef.where(cond2, '==', data[cond2]).where(cond1, '==', data[cond1]).where(cond3, '==', data[cond3])
 
     query.get()
         .then(querySnapshot => {
@@ -769,11 +839,71 @@ export const updateDataInSubcollectionMedinvoice = (collectionName, collectionUi
             throw error;
         });
 }
+export const updateDataInSubcollectionMedinvoiceMedical = (collectionName, collectionUid, subcollectionName, data, cond1, cond2, cond3) => {
+    const parentDocRef = db.collection(collectionName).doc(collectionUid);
+
+    // Access the specific subcollection
+    const subcollectionRef = parentDocRef.collection(subcollectionName);
+    const query = subcollectionRef.where(cond2, '==', data[cond2]).where(cond1, '==', data[cond1]).where(cond3, '==', data[cond3]);
+
+    return query.get()
+        .then(querySnapshot => {
+            if (querySnapshot.size === 1) {
+                const doc = querySnapshot.docs[0];
+                return doc.ref.update({
+                    ...data,
+                })
+                    .then(() => {
+                        console.log('Document successfully updated!');
+                        return doc.ref.get();
+                    })
+                    .then(updatedDoc => {
+                        return updatedDoc.data();
+                    })
+                    .catch(error => {
+                        console.error('Error updating document: ', error);
+                        throw error;
+                    });
+            } else {
+                throw new Error('No or multiple documents found matching the conditions.');
+            }
+        })
+        .catch(error => {
+            console.log('Error getting or updating documents: ', error);
+            throw error;
+        });
+}
 
 export const updateDatainSubcollectionmedicineinvoice = (collectionName, collectionuid, subcollectionName, data, cond1, cond2) => {
     const parentDocRef = db.collection(collectionName).doc(collectionuid);
     const subcollectionRef = parentDocRef.collection(subcollectionName);
     const query = subcollectionRef.where(cond2, '==', data[cond2]).where(cond1, '==', data[cond1])
+    const timestampWithNanoseconds = data.timestamp.seconds * 1000 + Math.floor(data.timestamp.nanoseconds / 1e6);
+    const dateObject = new Date(timestampWithNanoseconds);
+    // const timestamp = new Date();
+    query.get()
+        .then(querySnapshot => {
+            querySnapshot.forEach(doc => {
+                doc.ref.update({
+                    ...data,
+                    timestamp: dateObject,
+                })
+                    .then(() => {
+                        console.log('Document successfully updated!');
+                    })
+                    .catch(error => {
+                        console.error('Error updating document: ', error);
+                    });
+            });
+        })
+        .catch(error => {
+            console.log('Error getting documents: ', error);
+        });
+}
+export const updateDatainSubcollectionmedicineinvoiceMedical = (collectionName, collectionuid, subcollectionName, data, cond1, cond2, cond3) => {
+    const parentDocRef = db.collection(collectionName).doc(collectionuid);
+    const subcollectionRef = parentDocRef.collection(subcollectionName);
+    const query = subcollectionRef.where(cond2, '==', data[cond2]).where(cond1, '==', data[cond1]).where(cond3, '==', data[cond3])
     const timestampWithNanoseconds = data.timestamp.seconds * 1000 + Math.floor(data.timestamp.nanoseconds / 1e6);
     const dateObject = new Date(timestampWithNanoseconds);
     // const timestamp = new Date();
@@ -898,6 +1028,35 @@ export const deleteDatainSubcollection = (collectionName, collectionuid, subcoll
     //     console.error('Error deleting documents: ', error);
     // }
 };
+export const deleteDatainSubcollectionMedical = (collectionName, collectionuid, subcollectionName, data, cond1, cond2, cond3) => {
+    const parentDocRef = db.collection(collectionName).doc(collectionuid);
+
+    // Access the specific subcollection
+    const subcollectionRef = parentDocRef.collection(subcollectionName);
+    const query = subcollectionRef.where(cond2, '==', data[cond2]).where(cond1, '==', data[cond1]).where(cond3, '==', data[cond3])
+    // const timestamp = new Date();
+    query.get()
+        .then(querySnapshot => {
+            querySnapshot.forEach(doc => {
+                doc.ref.update({
+                    ...data,
+                    deleted: 1,
+                })
+                    .then(() => {
+                        console.log('Document successfully updated!');
+                    })
+                    .catch(error => {
+                        console.error('Error updating document: ', error);
+                    });
+            });
+        })
+        .catch(error => {
+            console.log('Error getting documents: ', error);
+        });
+    // } catch (error) {
+    //     console.error('Error deleting documents: ', error);
+    // }
+};
 
 export const deleteDatainSubcollectionPatients = async (collectionName, collectionuid, subcollectionName, data, cond1, cond2) => {
     const parentDocRef = db.collection(collectionName).doc(collectionuid);
@@ -964,6 +1123,38 @@ export const deleteDatainSubcollectionMedicalAndPatients = (collectionName, coll
     //     console.error('Error deleting documents: ', error);
     // }
 };
+export const deleteDatainSubcollectionMedicalAndPatientsMedical = (collectionName, collectionuid, subcollectionName, data, cond1, cond2, cond3) => {
+    const parentDocRef = db.collection(collectionName).doc(collectionuid);
+    // Access the specific subcollection
+    const subcollectionRef = parentDocRef.collection(subcollectionName);
+    const query = subcollectionRef.where(cond2, '==', data[cond2]).where(cond1, '==', data[cond1]).where(cond3, '==', data[cond3]).where('deleted', '==', 0)
+    const timestamp = new Date();
+    const timestampWithNanoseconds = data.timestamp.seconds * 1000 + Math.floor(data.timestamp.nanoseconds / 1e6);
+    const dateObject = new Date(timestampWithNanoseconds);
+    query.get()
+        .then(querySnapshot => {
+            querySnapshot.forEach(doc => {
+                doc.ref.update({
+                    ...data,
+                    timestamp: dateObject,
+                    lastUpdated: timestamp,
+                    deleted: 1,
+                })
+                    .then(() => {
+                        console.log('Document successfully updated!');
+                    })
+                    .catch(error => {
+                        console.error('Error updating document: ', error);
+                    });
+            });
+        })
+        .catch(error => {
+            console.log('Error getting documents: ', error);
+        });
+    // } catch (error) {
+    //     console.error('Error deleting documents: ', error);
+    // }
+};
 // fill data in sub collection :-
 
 export const multimedicineStockUpdate = (arrayName, collectionName, collectionuid, subcollectionName, cond1, cond2) => {
@@ -975,7 +1166,7 @@ export const multimedicineStockUpdate = (arrayName, collectionName, collectionui
 export const filDatainsubcollection = (arrayName, collectionName, collectionuid, subcollectionName, cond1, cond2) => {
     console.log('arrayName', arrayName);
     arrayName.map(async (item) => {
-        await fillDeleteObject(collectionName, collectionuid, subcollectionName, item, cond1, cond2)
+        await fillmedicaluid(collectionName, collectionuid, subcollectionName, item, cond1, cond2)
     })
 }
 
@@ -1115,6 +1306,31 @@ export const updateHospitalProfile = (collectionName, collectionuid, subcollecti
     // Access the specific subcollection
     const subcollectionRef = parentDocRef.collection(subcollectionName);
     const query = subcollectionRef.where('hospitaluid', '==', data.hospitaluid)
+
+    query.get()
+        .then(querySnapshot => {
+            querySnapshot.forEach(doc => {
+                doc.ref.update({
+                    ...data
+                })
+                    .then(() => {
+                        console.log('Document successfully updated!');
+                    })
+                    .catch(error => {
+                        console.error('Error updating document: ', error);
+                    });
+            });
+        })
+        .catch(error => {
+            console.log('Error getting documents: ', error);
+        });
+}
+export const updateHospitalProfileMedical = (collectionName, collectionuid, subcollectionName, data) => {
+    const parentDocRef = db.collection(collectionName).doc(collectionuid);
+
+    // Access the specific subcollection
+    const subcollectionRef = parentDocRef.collection(subcollectionName);
+    const query = subcollectionRef.where('hospitaluid', '==', data.hospitaluid).where('medicaluid', '==', data.medicaluid)
 
     query.get()
         .then(querySnapshot => {
@@ -1297,7 +1513,7 @@ export const getOnlyChangesListener = (collectionName, collectionuid, subcollect
 // };
 
 
-export const fillDeleteObject = (collectionName, collectionuid, subcollectionName, data, cond1, cond2) => {
+export const fillmedicaluid = (collectionName, collectionuid, subcollectionName, data, cond1, cond2) => {
     const parentDocRef = db.collection(collectionName).doc(collectionuid);
     const timestampWithNanoseconds = data.timestamp.seconds * 1000 + Math.floor(data.timestamp.nanoseconds / 1e6);
     const dateObject = new Date(timestampWithNanoseconds);
@@ -1310,7 +1526,6 @@ export const fillDeleteObject = (collectionName, collectionuid, subcollectionNam
                 doc.ref.update({
                     ...data,
                     timestamp: dateObject,
-                    deleted: 0,
                 })
                     .then(() => {
                         console.log('Document successfully updated!');
@@ -1427,6 +1642,31 @@ export const updateDataincollection = async (collectionName, data) => {
 
     const timestamp = new Date();
     const query = parentDocRef.where('hospitaluid', '==', data.hospitaluid)
+    query.get()
+        .then(querySnapshot => {
+            querySnapshot.forEach(doc => {
+                doc.ref.update({
+                    ...data,
+                    timestamp: timestamp
+                })
+                    .then(() => {
+                        console.log('Document successfully updated!');
+                    })
+                    .catch(error => {
+                        console.error('Error updating document: ', error);
+                    });
+            });
+        })
+        .catch(error => {
+            console.log('Error getting documents: ', error);
+        });
+
+};
+export const updateDataincollectionMedical = async (collectionName, data) => {
+    const parentDocRef = db.collection(collectionName);
+
+    const timestamp = new Date();
+    const query = parentDocRef.where('hospitaluid', '==', data.hospitaluid).where('medicaluid', '==', data.medicaluid)
     query.get()
         .then(querySnapshot => {
             querySnapshot.forEach(doc => {

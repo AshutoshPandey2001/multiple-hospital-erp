@@ -56,6 +56,7 @@ const Login = () => {
           let hospitaluid = '';
           let druid = undefined;
           let permissions = undefined;
+
           db.collection('UserList').doc(user.uid).get().then((res) => {
             usertype = !res.exists ? null : res.data().userType;
             mobileno = !res.exists ? null : res.data().userMobileNo;
@@ -72,7 +73,8 @@ const Login = () => {
               userType: usertype,
               mobileNo: mobileno,
               druid: druid,
-              permissions: permissions
+              permissions: permissions,
+              userUID: user.uid
             }))
           }).catch((error) => {
             console.error("Error updating document: ", error);

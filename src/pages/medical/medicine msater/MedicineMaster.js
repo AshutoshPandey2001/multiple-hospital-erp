@@ -11,12 +11,12 @@ import { AiFillDelete } from 'react-icons/ai'
 import { useDispatch, useSelector } from 'react-redux';
 import { ADD_LAST_MEDICINES, ADD_MEDICINES, DELETE_MEDICINES, EDIT_MEDICINES, FILL_MEDICINES_STOCK, UPLOAD_MEDICINES, selectAllMedicines, selectLastMedicine } from 'src/redux/slice/medicinesMasterSlice';
 import Papa from "papaparse";
-import { addDatainsubcollection, addDatainsubcollectionmedicalAndPatients, addSingltObject, deleteDatainSubcollection, deleteDatainSubcollectionMedicalAndPatients, deleteSingltObject, filDatainsubcollection, getSubcollectionDataWithoutsnapshotMedicalAndPatients, setData, updateDatainSubcollection, updateDatainSubcollectionMedicalAndPatients, updateSingltObject, uploadArray } from 'src/services/firebasedb';
+import { addDatainsubcollection, addDatainsubcollectionmedicalAndPatients, fillmedicaluid, addSingltObject, deleteDatainSubcollection, deleteDatainSubcollectionMedicalAndPatients, deleteSingltObject, filDatainsubcollection, getSubcollectionDataWithoutsnapshotMedicalAndPatients, setData, updateDatainSubcollection, updateDatainSubcollectionMedicalAndPatients, updateSingltObject, uploadArray } from 'src/services/firebasedb';
 import Loaderspinner from 'src/comman/spinner/Loaderspinner';
 import CommanTable from 'src/comman/table/CommanTable';
 import { confirmAlert } from 'react-confirm-alert';
 import { toast } from 'react-toastify';
-import { selectUserId } from 'src/redux/slice/authSlice';
+import { selectUserId, selectUserUID } from 'src/redux/slice/authSlice';
 import { TfiReload } from 'react-icons/tfi'
 import { db } from 'src/firebaseconfig';
 import { ddMMyyyy, formatDateYYYYMMDD } from 'src/services/dateFormate';
@@ -31,12 +31,15 @@ const initalValues = {
     medicineType: '',
     medicineCapacity: '',
     mfrsName: '',
-    hospitaluid: ''
+    hospitaluid: '',
+    medicaluid: '',
 }
 const MedicineMaster = () => {
     const dispatch = useDispatch();
     const allMedicinesList = useSelector(selectAllMedicines)
     const hospitaluid = useSelector(selectUserId)
+    const medicaluserUID = useSelector(selectUserUID)
+
     const [show, setShow] = useState(false);
     const [medicinesList, setMedicinesList] = useState([]);
     const [medicinessFilter, setMedicinessFilter] = useState([]);
@@ -75,6 +78,7 @@ const MedicineMaster = () => {
         values.medicineType = '';
         values.medicineCapacity = '';
         values.mfrsName = '';
+        values.medicaluid = '';
         setUpdate(false)
         formik.resetForm();
     }
@@ -130,6 +134,8 @@ const MedicineMaster = () => {
             let medd = [...medicinessFilter]
             if (!update) {
                 values.hospitaluid = hospitaluid
+                values.medicaluid = medicaluserUID
+
                 let timestamp = new Date(values.expireDate).getTime();
                 let medicineCapacity = values.medicineCapacity ? values.medicineCapacity.toUpperCase() : ''; // If medicineCapacity doesn't exist, assign an empty string
                 values.medicineuid = values.medicineName.substring(0, 3).toUpperCase() + values.mfrsName.substring(0, 3).toUpperCase() + timestamp + medicineCapacity
@@ -216,7 +222,12 @@ const MedicineMaster = () => {
     });
     const { values, errors, touched, handleBlur, handleChange, handleSubmit } = formik;
     const editMedicines = (item) => {
-        // filDatainsubcollection(allMedicinesList, "Medicines", 'dHFKEhdhbOM4v6WRMb6z', 'medicines')
+        // filDatainsubcollection(allMedicinesList, "Medicines", 'dHFKEhdhbOM4v6WRMb6z', 'medicines','medicineuid', 'hospitaluid')
+        // allMedicinesList.map((item) => {
+        //     fillmedicaluid("Medicines", 'dHFKEhdhbOM4v6WRMb6z', 'medicines', { ...item, medicaluid: medicaluserUID }, 'medicineuid', 'hospitaluid')
+
+        // })
+        // return
         values.medicineuid = item.medicineuid;
         values.medicineName = item.medicineName;
         values.medicinePrice = item.medicinePrice;
@@ -289,47 +300,7 @@ const MedicineMaster = () => {
 
     }
 
-    // const csvtoJson = (files) => {
-    //     // setFiles(files[0].name)
-    //     medicine = [...medicinessFilter]
 
-    //     if (files) {
-
-    //         Papa.parse(files[0], {
-    //             header: true,
-    //             dynamicTyping: true,
-    //             complete: async function (results) {
-    //                 let tempData = [];
-    //                 let res = results.data
-
-    //                 await res.map(async (item) => {
-    //                     if (item.batchNumber) {
-    //                         item.expireDate = await formatDateYYYYMMDD(item.expireDate)
-    //                         let timestamp = new Date(item.expireDate).getTime();
-    //                         let medicineCapacity = item.medicineCapacity ? item.medicineCapacity.toString().toUpperCase() : ''; // If medicineCapacity doesn't exist, assign an empty string
-
-    //                         const medicineuid = item.medicineName.substring(0, 3).toUpperCase() + item.mfrsName.substring(0, 3).toUpperCase() + timestamp + medicineCapacity
-    //                         let findMedicine = medicine.findIndex((item1) => item1.medicineuid === medicineuid)
-    //                         if (findMedicine >= 0) {
-    //                             let totalStock = medicine[findMedicine].availableStock + item.availableStock;
-    //                             let newObj = { ...medicine[findMedicine], availableStock: totalStock }
-    //                             updateDatainSubcollectionMedicalAndPatients("Medicines", 'dHFKEhdhbOM4v6WRMb6z', 'medicines', newObj, 'medicineuid', 'hospitaluid')
-    //                         } else {
-    //                             addDatainsubcollectionmedicalAndPatients("Medicines", 'dHFKEhdhbOM4v6WRMb6z', 'medicines', { ...item, hospitaluid: hospitaluid, medicineuid: medicineuid })
-
-    //                         }
-    //                         tempData.push({ ...item, hospitaluid: hospitaluid })
-    //                     }
-    //                 })
-    //                 fetchData()
-
-    //                 setFiles('')
-
-    //             }
-    //         }
-    //         )
-    //     }
-    // }
     const csvtoJson = async (files) => {
         if (!files || files.length === 0) return;
         setIsLoading(true)
@@ -366,9 +337,9 @@ const MedicineMaster = () => {
                         const newObj = { ...medicine[findMedicine], availableStock: totalStock };
                         await updateDatainSubcollectionMedicalAndPatients("Medicines", 'dHFKEhdhbOM4v6WRMb6z', 'medicines', newObj, 'medicineuid', 'hospitaluid');
                     } else {
-                        await addDatainsubcollectionmedicalAndPatients("Medicines", 'dHFKEhdhbOM4v6WRMb6z', 'medicines', { ...item, hospitaluid: hospitaluid, medicineuid: medicineuid });
+                        await addDatainsubcollectionmedicalAndPatients("Medicines", 'dHFKEhdhbOM4v6WRMb6z', 'medicines', { ...item, hospitaluid: hospitaluid, medicineuid: medicineuid, medicaluid: medicaluserUID });
                     }
-                    tempData.push({ ...item, hospitaluid: hospitaluid });
+                    tempData.push({ ...item, hospitaluid: hospitaluid, medicaluid: medicaluserUID });
                 } catch (error) {
                     setIsLoading(false)
 

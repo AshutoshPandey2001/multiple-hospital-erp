@@ -20,6 +20,7 @@ import { selectUserId, selectpermissions } from 'src/redux/slice/authSlice';
 import { TfiReload } from 'react-icons/tfi'
 import { createUserWithEmailAndPassword, setPersistence, browserLocalPersistence } from 'firebase/auth';
 import { auth, db } from 'src/firebaseconfig';
+import { selectAllRoles } from 'src/redux/slice/userRolesSlice';
 
 const initalValues = {
     email: '',
@@ -48,6 +49,8 @@ const doctorMaster = () => {
     const hospitaluid = useSelector(selectUserId)
     const permissions = useSelector(selectpermissions)
     const [userpermissions, setUserpermissions] = useState([]);
+    const rolesPermissions = useSelector(selectAllRoles)
+    const [userType, setUserType] = useState()
     const columns = [
         { name: 'Id', selector: row => row.druid, sortable: true },
         { name: 'Dr Name', selector: row => row.drName, sortable: true },
@@ -77,6 +80,8 @@ const doctorMaster = () => {
 
     useEffect(() => {
         setUserpermissions(permissions?.find(permission => permission.module === "DOCTORS"))
+        console.log('rolesPermissions?.find(type => type.role === "Doctor")', rolesPermissions?.find(type => type.role === "Doctor"));
+        setUserType(rolesPermissions?.find(type => type.role === "Doctor"))
     }, [])
 
     const formik = useFormik({
@@ -93,13 +98,14 @@ const doctorMaster = () => {
                 let doctor = [...drFilter, Values]
                 try {
                     // await setData('Doctors', 'd3ryEUfqA2FMa0fEyxde', 'doctors', doctor)
-                    if (values.email) {
+                    if (values.email && userType) {
                         const userCredential = await createUserWithEmailAndPassword(auth, values.email, "Test@1234");
                         const user = userCredential.user;
                         await db.collection('UserList').doc(user.uid).set({
                             userEmail: values.email,
                             userName: values.drName,
-                            userType: "Doctor",
+                            userType: userType.role,
+                            permission: userType.permissions,
                             userPassword: "Test@1234",
                             hospitaluid: hospitaluid,
                             druid: values.druid

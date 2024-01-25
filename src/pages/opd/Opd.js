@@ -13,7 +13,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { ADD_LAST_OPD_DATA, ADD_OPD_PATIENTS, DELETE_OPD_PATIENTS, EDIT_OPD_PATIENTS, FILL_OPD_PATIENTS, selectOpdPatients, selectlastOpdData } from 'src/redux/slice/opdPatientsList';
 import Addpatientscommanmodel from '../../comman/comman model/Addpatientscommanmodel';
 import Table from 'react-bootstrap/Table';
-import { addDataincollection, addDatainsubcollection, addSingltObject, deleteDatainSubcollection, deleteSingltObject, filDatainsubcollection, fillDeleteObject, getData, getOnlyChangesLisitnor, getSubcollectionData, getSubcollectionDataWithoutsnapshot, setData, updateDatainSubcollection, updateDataincollection, updateSingltObject } from 'src/services/firebasedb';
+import { addDataincollection, addDatainsubcollection, addSingltObject, deleteDatainSubcollection, deleteSingltObject, filDatainsubcollection, fillmedicaluid, getData, getOnlyChangesLisitnor, getSubcollectionData, getSubcollectionDataWithoutsnapshot, setData, updateDatainSubcollection, updateDataincollection, updateSingltObject } from 'src/services/firebasedb';
 import CommanTable from 'src/comman/table/CommanTable';
 import Loaderspinner from '../../comman/spinner/Loaderspinner';
 import { confirmAlert } from 'react-confirm-alert';

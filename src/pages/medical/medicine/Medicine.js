@@ -14,7 +14,7 @@ import { ADD_LAST_PATIENT_DATA, FILL_PATIENTS, selectAllPatients, selectlastPati
 import { ADD_LAST_MEDICINES, FILL_MEDICINES_STOCK, selectAllMedicines, selectLastMedicine, UPDATE_MEDICINES } from 'src/redux/slice/medicinesMasterSlice';
 import { ADD_PATIENTS_MEDICINES, DELETE_PATIENTS_MEDICINES, EDIT_PATIENTS_MEDICINES, selectAllPatientsMedicines } from 'src/redux/slice/patientsMedicinesSlice';
 import { useDispatch, useSelector } from 'react-redux';
-import { addDataincollection, updateDataInSubcollectionMedinvoice, getSubcollectionDataWithoutsnapshot, getSubcollectionDataWithoutsnapshotPatients, addDatainsubcollection, addSingltObject, deleteDatainSubcollection, deleteSingltObject, filDatainsubcollection, getData, getSubcollectionDataWithoutsnapshotMedicalAndPatients, multimedicineStockUpdate, setData, updateDatainSubcollection, updateDatainSubcollectionMedicalAndPatients, updateDataincollection, updateSingltObject, uploadArray } from 'src/services/firebasedb';
+import { addDataincollection, updateDataInSubcollectionMedinvoice, fillmedicaluid, getSubcollectionDataWithoutsnapshot, getSubcollectionDataWithoutsnapshotPatients, addDatainsubcollection, addSingltObject, deleteDatainSubcollection, deleteSingltObject, filDatainsubcollection, getData, getSubcollectionDataWithoutsnapshotMedicalAndPatients, multimedicineStockUpdate, setData, updateDatainSubcollection, updateDatainSubcollectionMedicalAndPatients, updateDataincollection, updateSingltObject, uploadArray } from 'src/services/firebasedb';
 import Loaderspinner from 'src/comman/spinner/Loaderspinner';
 import CommanTable from 'src/comman/table/CommanTable';
 import { confirmAlert } from 'react-confirm-alert';
@@ -26,7 +26,7 @@ import SearchAutocomplete from 'src/comman/searchAutocomplete/SearchAutocomplete
 import { ddMMyyyy, yyyyMMdd } from 'src/services/dateFormate';
 import Table from 'react-bootstrap/Table';
 import PrintButton from 'src/comman/printpageComponents/PrintButton';
-import { selectUserId } from 'src/redux/slice/authSlice';
+import { selectUserId, selectUserUID } from 'src/redux/slice/authSlice';
 import { TfiReload } from 'react-icons/tfi'
 import { db } from 'src/firebaseconfig';
 import { debounce } from 'lodash';
@@ -135,7 +135,8 @@ let initalValues = {
     ],
     allMedTotalprice: '',
     pmeduid: '',
-    hospitaluid: ''
+    hospitaluid: '',
+    medicaluid: '',
 }
 const Medicine = () => {
     const navigate = useNavigate()
@@ -179,6 +180,8 @@ const Medicine = () => {
     const licenceNumber = useSelector(selectLicenceNumber)
     const contactNumber = useSelector(selectMedicalContactnumber)
     const lastPatientData = useSelector(selectlastPatientData)
+    const medicaluserUID = useSelector(selectUserUID)
+    const [allMedicineInvoice, setAllmedicineInvoice] = useState([])
     const [sendData, setSendData] = useState()
     const columns = [
         // { name: 'ID', selector: row => row.pid, sortable: true },
@@ -193,10 +196,10 @@ const Medicine = () => {
         {
             name: 'Action', cell: row => <span> {
                 row.paymentStatus === "Completed" ? <button onClick={() => viewInvoice(row)} style={{ color: 'skyblue', border: 'none' }}  ><BsEye size={22} /></button> :
-                    <button onClick={() => editPatientDetails(row)} style={{ color: 'orange', border: 'none' }}><MdEdit size={25} /></button>
+                    <button onClick={() => editmedicineinvoice(row)} style={{ color: 'orange', border: 'none' }}><MdEdit size={25} /></button>
             }
                 <button onClick={() => generateInvoice(row)} style={{ color: 'skyblue', border: 'none' }} >{row.paymentStatus === "Completed" ? <AiFillPrinter size={25} /> : <img src={billingicon} alt='billingicon' />}</button>
-                <button onClick={() => deletePatientsDetails(row)} style={{ color: 'red', border: 'none' }} ><AiFillDelete size={25} /></button>
+                <button onClick={() => deleteMedicineinvoice(row)} style={{ color: 'red', border: 'none' }} ><AiFillDelete size={25} /></button>
             </span>
         }
     ]
@@ -247,7 +250,17 @@ const Medicine = () => {
         };
     }, []);
 
-
+    // useEffect(() => {
+    //     const getAllinvoice = async () => {
+    //         const querySnapshot = await subcollectionRefMedicineInvoice.get();
+    //         let temp_data = [];
+    //         querySnapshot.forEach((doc) => {
+    //             temp_data.push(doc.data());
+    //         });
+    //         setAllmedicineInvoice([...temp_data])
+    //     }
+    //     getAllinvoice()
+    // }, [])
 
     const totalNumberOfData = async () => {
         try {
@@ -264,7 +277,7 @@ const Medicine = () => {
                     } else {
                         const snapshot = await subcollectionRefMedicineInvoice.get();
                         const totalDataCount = snapshot.size;
-                        await addDataincollection('MedicinePatientsCount', { hospitaluid: hospitaluid, count: totalDataCount });
+                        await addDataincollection('MedicinePatientsCount', { hospitaluid: hospitaluid, count: totalDataCount, medicaluid: medicaluserUID });
                         console.log('No documents found in the snapshot.');
                     }
                 });
@@ -352,6 +365,7 @@ const Medicine = () => {
 
             let medd = [...patientsMedicineList]
             values.medicineDate = values.medicineDate ? ddMMyyyy(values.medicineDate) : values.medicineDate;
+            values.medicaluid = medicaluserUID
             // await Values.medicines.map((item) => updateStock(item))
             await Promise.all(values.medicines.map((item) => updateStock(item)));
 
@@ -362,7 +376,7 @@ const Medicine = () => {
                 let med = [...patientsMedicineFilter, Values]
                 try {
                     await addDatainsubcollection("PatientsMedicines", 'GoKwC6l5NRWSonfUAal0', 'patientsMedicines', values)
-                    await updateDataincollection('MedicinePatientsCount', { hospitaluid: hospitaluid, count: totalnumData + 1 })
+                    await updateDataincollection('MedicinePatientsCount', { hospitaluid: hospitaluid, count: totalnumData + 1, medicaluid: medicaluserUID })
                     action.resetForm()
                     clearForm()
                     setShow(false)
@@ -428,7 +442,8 @@ const Medicine = () => {
             ],
             allMedTotalprice: '',
             pmeduid: '',
-            hospitaluid: ''
+            hospitaluid: '',
+            medicaluid: ''
         });
     };
 
@@ -469,7 +484,12 @@ const Medicine = () => {
     const viewInvoice = (item) => {
         navigate("/medical/medicine/medicineinvoice", { state: item })
     }
-    const editPatientDetails = (item) => {
+    const editmedicineinvoice = (item) => {
+        // console.log('allMedicineInvoice', allMedicineInvoice);
+        // allMedicineInvoice.map((item) => {
+        //     fillmedicaluid("PatientsMedicines", 'GoKwC6l5NRWSonfUAal0', 'patientsMedicines', { ...item, medicaluid: medicaluserUID }, 'pmeduid', 'hospitaluid')
+        // })
+        // return
         const {
             pid,
             pName,
@@ -505,7 +525,7 @@ const Medicine = () => {
         setShow(true)
         setUpdate(true)
     }
-    const deletePatientsDetails = async (item1) => {
+    const deleteMedicineinvoice = async (item1) => {
         confirmAlert({
             title: 'Confirm to Delete',
             message: 'Are you sure to delete this.',
@@ -580,11 +600,13 @@ const Medicine = () => {
     const handleOnSearch = (string, results) => {
         formik.setFieldValue('pName', string);
         formik.setFieldValue('hospitaluid', hospitaluid);
+        formik.setFieldValue('medicaluid', medicaluserUID);
 
     }
     const handleOnSearchmobileNumber = (string, results) => {
         formik.setFieldValue('pMobileNo', string);
         formik.setFieldValue('hospitaluid', hospitaluid);
+        formik.setFieldValue('medicaluid', medicaluserUID);
 
     }
 
@@ -707,6 +729,7 @@ const Medicine = () => {
                 values.pmeduid = Math.floor(315 + Math.random() * 8000);
                 setPatientsMedicineFilter([...patientsMedicineFilter, values]);
                 values.hospitaluid = hospitaluid
+                values.medicaluid = medicaluserUID
                 const newDocData = await addDatainsubcollection("PatientsMedicines", 'GoKwC6l5NRWSonfUAal0', 'patientsMedicines', values);
                 await updateDataincollection('MedicinePatientsCount', { hospitaluid: hospitaluid, count: totalnumData + 1 });
 

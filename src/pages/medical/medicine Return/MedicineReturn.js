@@ -28,7 +28,7 @@ import { TfiArrowCircleLeft } from 'react-icons/tfi'
 import SearchAutocomplete from 'src/comman/searchAutocomplete/SearchAutocomplete';
 import PrintButton from 'src/comman/printpageComponents/PrintButton';
 import { ddMMyyyy, yyyyMMdd } from 'src/services/dateFormate';
-import { selectUserId } from 'src/redux/slice/authSlice';
+import { selectUserId, selectUserUID } from 'src/redux/slice/authSlice';
 import { TfiReload } from 'react-icons/tfi'
 import { db } from 'src/firebaseconfig';
 import { debounce } from 'lodash';
@@ -198,7 +198,8 @@ let initalValues = {
     ],
     allMedTotalprice: '',
     returnuid: '',
-    hospitaluid: ''
+    hospitaluid: '',
+    medicaluid: '',
 
 }
 
@@ -241,6 +242,7 @@ const MedicineReturn = () => {
     const licenceNumber = useSelector(selectLicenceNumber)
     const contactNumber = useSelector(selectMedicalContactnumber)
     const [sendData, setSendData] = useState()
+    const medicaluserUID = useSelector(selectUserUID)
 
     const columns = [
         // { name: 'ID', selector: row => row.pid, sortable: true },
@@ -379,6 +381,7 @@ const MedicineReturn = () => {
             let medd = [...patientsReturnMedicineList]
             // const date = new Date(values.returnDate); // Convert input value to Date object
             // const formattedDate = date.toLocaleDateString("en-GB").split('/').join('-');
+            values.medicaluid = medicaluserUID
             values.returnDate = values.returnDate ? ddMMyyyy(values.returnDate) : values.returnDate;
             if (!update) {
                 values.invoiceuid = prevBillno + 1;
@@ -390,8 +393,8 @@ const MedicineReturn = () => {
 
                 try {
                     await addDatainsubcollection('ReturnMedicine', 'lGxMW7T2f7Dsb93A19qa', 'returnMedicine', values)
-                    await updateHospitalProfile('lastReturnMedicineBillNo', '4I3NWbYnR86xYlxbSHp4', 'lastReturnMedicineBillNo', { hospitaluid: hospitaluid, billNo: values.invoiceuid })
-                    await updateDataincollection('ReturnMedicinePatientsCount', { hospitaluid: hospitaluid, count: totalnumData + 1 })
+                    await updateHospitalProfile('lastReturnMedicineBillNo', '4I3NWbYnR86xYlxbSHp4', 'lastReturnMedicineBillNo', { hospitaluid: hospitaluid, billNo: values.invoiceuid, medicaluid: medicaluserUID })
+                    await updateDataincollection('ReturnMedicinePatientsCount', { hospitaluid: hospitaluid, count: totalnumData + 1, medicaluid: medicaluserUID })
 
                     // await setData('ReturnMedicine', 'lGxMW7T2f7Dsb93A19qa', 'count', totalnumData + 1)
                     setTotalNumData(totalnumData + 1)
@@ -461,7 +464,8 @@ const MedicineReturn = () => {
             ],
             allMedTotalprice: '',
             returnuid: '',
-            hospitaluid: ''
+            hospitaluid: '',
+            medicaluid: ''
 
         });
     };

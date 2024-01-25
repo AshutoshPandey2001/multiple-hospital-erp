@@ -5,7 +5,7 @@ import '../../Hospital master/hospitalprofile.css'
 import { useFormik } from 'formik';
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import { storage } from 'src/firebaseconfig';
-import { selectUserId } from 'src/redux/slice/authSlice';
+import { selectUserId, selectUserUID } from 'src/redux/slice/authSlice';
 import { useSelector } from 'react-redux';
 import { addDatainsubcollection, updateHospitalProfile } from 'src/services/firebasedb';
 import { selectContactnumber, selectHospitalAddress, selectHospitalLogo, selectHospitalName, selectSubscriptionExpireDate } from 'src/redux/slice/hospitalProfileSlice';
@@ -19,6 +19,7 @@ const initalValues = {
     licenceNumber: '',
     contactNumber: '',
     hospitaluid: '',
+    medicaluid: '',
 }
 const MedicalProfile = () => {
     const hospitaluid = useSelector(selectUserId)
@@ -32,6 +33,7 @@ const MedicalProfile = () => {
     const currentDate = new Date();
     const formattedDate = currentDate.toISOString().slice(0, 10);
     const [update, setUpdate] = useState(false)
+    const medicaluserUID = useSelector(selectUserUID)
     useEffect(() => {
         if (medicalLogo || medicallAddress || medicalName || contactNumber || licenceNumber) {
             values.medicalLogo = medicalLogo
@@ -55,6 +57,7 @@ const MedicalProfile = () => {
         // validationSchema: opdformSchema,
         onSubmit: async (values, { resetForm }) => {
             values.hospitaluid = hospitaluid
+            values.medicaluid = medicaluserUID
             try {
                 console.log('image', image);
                 if (image) {

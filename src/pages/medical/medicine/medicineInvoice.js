@@ -196,15 +196,6 @@ const medicineInvoice = () => {
                 contactNumber,
                 licenceNumber,
             })
-            // await setPrintContent(<PrintComponent data={{
-            //     data1: {
-            //         ...newObj,
-            //         medicalName,
-            //         medicalAddress,
-            //         contactNumber,
-            //         licenceNumber,
-            //     }
-            // }} />)
             toast.success("Invoice Saved SuccessFully...")
             setIsLoading(false)
             setTimeout(() => {
